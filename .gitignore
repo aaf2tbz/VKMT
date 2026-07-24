@@ -1,0 +1,5 @@
+third_party/
+build/
+*.build/
+.DS_Store
+scripts/smoke_vk
