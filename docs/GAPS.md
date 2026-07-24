@@ -59,6 +59,24 @@ VK_KHR_push_descriptor, maintenance5/6, all Vulkan 1.3 features
 - `wideLines` needs `useMetalPrivateAPI` (`MVKDevice.mm:2769`).
 - MoltenVK 1.4.2 minimum deployment: macOS 12.0.
 
+## Runtime notes (2026-07-24, Wine integration findings)
+
+- **winevulkan extension filtering**: Wine's Unix-side vulkan driver only
+  forwards extensions in its built-in list. MetalSharp's wine-11.5 build lacks
+  VK_EXT_transform_feedback, VK_EXT_robustness2, and
+  VK_EXT_texel_buffer_alignment entirely (`strings winevulkan.so` → 0 hits),
+  so vkd3d-proton under Wine sees none of the features we enabled natively.
+  Probe failures cascade: coopmat proc load → TF check → texel alignment →
+  robustness2. Short-term: `patches/vkd3d-proton-vkmt-wine-compat.patch`
+  demotes the TF/texel-alignment checks to WARN and makes the coopmat proc
+  optional. Proper fix: native arm64 Wine 11.12 build (`scripts/build-wine.sh`)
+  where we control the winevulkan extension list.
+- **Texel buffer alignment is a real MoltenVK gap too**: natively, MoltenVK
+  reports 16-byte `storageTexelBufferOffsetAlignment` (Metal
+  `minimumTextureBufferAlignment`), failing vkd3d's single-texel check even
+  without Wine filtering. Typed buffer views with byte offsets not divisible
+  by 16 will misbehave until MoltenVK gains offset emulation.
+
 ## Priority order (severity × effort)
 
 1. **robustness2: `robustBufferAccess2` + `nullDescriptor`** — fatal, medium

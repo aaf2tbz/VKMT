@@ -40,6 +40,14 @@ int main(void) {
     VkPhysicalDeviceFeatures2 f2 = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &f12 };
 
     // Chain the optional structs manually (ignored fields stay zero if unsupported).
+    VkPhysicalDeviceVulkan13Properties p13 = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES };
+    VkPhysicalDeviceProperties2 props2 = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, .pNext = &p13 };
+    vkGetPhysicalDeviceProperties2(dev, &props2);
+    printf("%-28s %s\n", "storageTexelSingleAlign", p13.storageTexelBufferOffsetSingleTexelAlignment ? "OK" : "** MISSING **");
+    printf("%-28s %u\n", "storageTexelAlignBytes", p13.storageTexelBufferOffsetAlignmentBytes);
+    printf("%-28s %s\n", "uniformTexelSingleAlign", p13.uniformTexelBufferOffsetSingleTexelAlignment ? "OK" : "** MISSING **");
+    printf("%-28s %u\n", "uniformTexelAlignBytes", p13.uniformTexelBufferOffsetAlignmentBytes);
+
     rob2.pNext = &tfProps;
     f13.pNext = &rob2;
     vkGetPhysicalDeviceFeatures2(dev, &f2);
