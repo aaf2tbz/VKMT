@@ -17,7 +17,7 @@ fi
 mkdir -p "$BLD"
 
 export PATH="$LLVM_MINGW/bin:/opt/homebrew/opt/bison/bin:/opt/homebrew/opt/flex/bin:/opt/homebrew/bin:$PATH"
-export PKG_CONFIG_PATH="/opt/homebrew/opt/freetype/lib/pkgconfig:/opt/homebrew/opt/fontconfig/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/freetype/lib/pkgconfig:/opt/homebrew/opt/fontconfig/lib/pkgconfig:/opt/homebrew/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 export CPPFLAGS="-I$VKMT/third_party/MoltenVK/External/Vulkan-Headers/include"
 export LDFLAGS="-L$VKMT/third_party/MoltenVK/Package/Release/MoltenVK/dynamic/dylib/macOS"
 
@@ -26,7 +26,8 @@ if [ ! -f Makefile ]; then
   "$SRC/configure" \
     --enable-archs=arm64ec,aarch64,x86_64,i386 \
     --with-vulkan --with-freetype --with-fontconfig --with-opengl \
-    --without-gstreamer --without-capi --without-dbus --without-gphoto \
+    --with-gstreamer --with-gnutls \
+    --without-capi --without-dbus --without-gphoto \
     --without-pcap --without-sane --without-udev --without-wayland --without-x
 fi
 make -j"$(sysctl -n hw.perflevel0.physicalcpu)"
