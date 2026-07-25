@@ -103,7 +103,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/thread.c wine/
  {
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/signal_arm64.c wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c
 --- /tmp/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-07-24 21:43:29
++++ wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-07-25 10:02:50
 @@ -61,6 +61,15 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(seh);
@@ -200,6 +200,15 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/signal_ar
          SP_sig(context)       = (ULONG_PTR)frame;
          PC_sig(context)       = (ULONG_PTR)__wine_syscall_dispatcher_return;
          return TRUE;
+@@ -1531,7 +1554,7 @@
+ 
+     context.X0  = (DWORD64)entry;
+     context.X1  = (DWORD64)arg;
+-    context.X18 = (DWORD64)teb;
++    context.X28 = (DWORD64)teb;  /* VKMT: PE TEB in x28 (Darwin scrubs x18) */
+     context.Sp  = (DWORD64)teb->Tib.StackBase;
+     context.Pc  = (DWORD64)pRtlUserThreadStart;
+ 
 @@ -1578,7 +1601,11 @@
      frame->sp    = (ULONG64)ctx;
      frame->pc    = (ULONG64)pLdrInitializeThunk;
@@ -408,6 +417,44 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntoskrnl.exe/instr.c
  static const BYTE *user_shared_data      = (BYTE *)0xfffff78000000000;
  
  static inline DWORD64 *get_int_reg( CONTEXT *context, int index )
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/win32u/message.c wine/wine-11.12/dlls/win32u/message.c
+--- /tmp/wine-11.12/dlls/win32u/message.c	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/win32u/message.c	2026-07-25 00:16:44
+@@ -45,7 +45,7 @@
+ #define QS_HARDWARE     0x40000000
+ #define QS_INTERNAL     (QS_DRIVER | QS_HARDWARE)
+ 
+-static const struct _KUSER_SHARED_DATA *user_shared_data = (struct _KUSER_SHARED_DATA *)0x7ffe0000;
++static const struct _KUSER_SHARED_DATA *user_shared_data = (struct _KUSER_SHARED_DATA *)0x17ffe0000 /* VKMT: above the macOS 4GB floor, keep in sync with ntdll/unix/virtual.c */;
+ 
+ static LONG atomic_load_long( const volatile LONG *ptr )
+ {
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/winevulkan/vulkan_private.h wine/wine-11.12/dlls/winevulkan/vulkan_private.h
+--- /tmp/wine-11.12/dlls/winevulkan/vulkan_private.h	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/winevulkan/vulkan_private.h	2026-07-25 00:40:44
+@@ -83,10 +83,14 @@
+ 
+ static inline void *conversion_context_alloc(struct conversion_context *pool, size_t size)
+ {
++    /* VKMT: zero-fill. Output-only structs are allocated without copying all
++     * client fields, and drivers (MoltenVK) may walk pointer members such as
++     * pNext chains that would otherwise contain stack/heap garbage. */
+     if (pool->used + size <= sizeof(pool->buffer))
+     {
+         void *ret = pool->buffer + pool->used;
+         pool->used += (size + sizeof(UINT64) - 1) & ~(sizeof(UINT64) - 1);
++        memset(ret, 0, size);
+         return ret;
+     }
+     else
+@@ -95,6 +99,7 @@
+         if (!(entry = malloc(sizeof(*entry) + size)))
+             return NULL;
+         list_add_tail(&pool->alloc_entries, entry);
++        memset(entry + 1, 0, size);
+         return entry + 1;
+     }
+ }
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/include/winnt.h wine/wine-11.12/include/winnt.h
 --- /tmp/wine-11.12/include/winnt.h	2026-06-29 13:32:59
 +++ wine/wine-11.12/include/winnt.h	2026-07-24 22:37:44

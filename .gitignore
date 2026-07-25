@@ -5,3 +5,4 @@ build/
 scripts/smoke_vk
 wine/
 test/prefix/
+test/prefix-arm64/

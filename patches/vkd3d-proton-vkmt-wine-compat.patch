@@ -31,6 +31,59 @@ index f6db6954..0a20e33f 100644
      }
  
      /* Disable unused Vulkan features. The following features need to remain enabled
+diff --git a/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_regions.comp b/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_regions.comp
+index 2978f0bb..666ac553 100644
+--- a/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_regions.comp
++++ b/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_regions.comp
+@@ -43,7 +43,11 @@ struct memory_region_t {
+ 
+ layout(buffer_reference, scalar)
+ buffer memory_regions_t {
+-  uvec3 region_count;
++  /* VKMT: scalar fields instead of uvec3 — Metal cannot take the address of
++   * a vector element, which breaks the atomic below in SPIRV-Cross MSL output. */
++  uint region_count_x;
++  uint region_count_y;
++  uint region_count_z;
+   uint  reserved;
+   memory_region_t memory_regions[];
+ };
+@@ -102,7 +106,7 @@ void main() {
+ 
+   // Allocate an output region structure from the scratch buffer
+   memory_regions_t region_buffer = memory_regions_t(scratch_buffer);
+-  uint out_index = atomicAdd(region_buffer.region_count.x, 1);
++  uint out_index = atomicAdd(region_buffer.region_count_x, 1);
+ 
+   // Compute absolute VAs for vkCmdDecompressMemoryIndirectCountNV
+   region_buffer.memory_regions[out_index] = memory_region_t(
+diff --git a/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_workgroups.comp b/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_workgroups.comp
+index aea1124c..7b5331c0 100644
+--- a/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_workgroups.comp
++++ b/libs/vkd3d/shaders/cs_emit_nv_memory_decompression_workgroups.comp
+@@ -48,7 +48,10 @@ struct memory_region_t {
+ 
+ layout(buffer_reference, scalar)
+ writeonly buffer memory_regions_t {
+-  uvec3 region_count;
++  /* VKMT: scalar fields instead of uvec3 — see regions shader. */
++  uint region_count_x;
++  uint region_count_y;
++  uint region_count_z;
+   uint  reserved;
+   memory_region_t memory_regions[];
+ };
+@@ -70,7 +73,9 @@ void main() {
+   // Reset memory region count that is later passed the decompression command.
+   if (stream_index == 0u) {
+     memory_regions_t region_buffer = memory_regions_t(scratch_buffer);
+-    region_buffer.region_count = uvec3(0u, 1u, 1u);
++    region_buffer.region_count_x = 0u;
++    region_buffer.region_count_y = 1u;
++    region_buffer.region_count_z = 1u;
+   }
+ 
+   if (stream_index >= stream_count)
 diff --git a/libs/vkd3d/vulkan_procs.h b/libs/vkd3d/vulkan_procs.h
 index d5cfbf95..97b83f5c 100644
 --- a/libs/vkd3d/vulkan_procs.h
