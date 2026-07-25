@@ -987,8 +987,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 16:03:37
-@@ -0,0 +1,336 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 17:11:28
+@@ -0,0 +1,413 @@
 +/*
 + * VKMT x86-64 emulator skeleton — simulation entry/exit and dispatch
 + *
@@ -1027,6 +1027,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64);
 +
 +extern void RetToEntryThunk(void);
++extern void EcCallRet(void);
 +
 +static inline CHPE_V2_CPU_AREA_INFO *vkmt_cpu_area(void)
 +{
@@ -1078,17 +1079,51 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +    switch (out.result)
 +    {
 +    case VKMT_INTERP_EXIT_NATIVE:
++    {
++        ULONGLONG rsp_g = ctx->gpr[VKMT_RSP];
++        ULONGLONG new_sp;
++        UINT i;
++
 +        ec->Pc = out.target;
-+        /* the EC callee returns with a plain `ret` (x30): point LR at the
-+         * RetToEntryThunk marker so the return pops the guest return address
-+         * off the guest stack and re-enters simulation */
-+        ec->Lr = (ULONG64)RetToEntryThunk;
++        /* x64->EC transition with no thunk in the path — ARM64EC ABI:
++         * args 1-4 in x0-x3 (= rcx,rdx,r8,r9 via the aliasing), args 5-8 in
++         * x4-x7 (the x64 caller put them at [rsp+0x28+8i] above the return
++         * address and shadow space), args 9+ on the stack at [sp+8i] (x64
++         * has them at [rsp+0x48+8i]).  Repack a generous fixed window below
++         * the guest rsp, and route the return through EcCallRet + the
++         * per-thread LIFO so the guest return address and post-call rsp
++         * survive the ABI conversion. */
++        if (ctx->ec_ret_depth < 64)
++        {
++            ctx->ec_ret_rip[ctx->ec_ret_depth] = *(ULONGLONG *)(ULONG_PTR)rsp_g;
++            ctx->ec_ret_rsp[ctx->ec_ret_depth] = rsp_g + 8;
++            ctx->ec_ret_depth++;
++        }
++        else ERR( "ec_ret LIFO overflow, guest return will be wrong\n" );
++        ec->X4 = *(ULONGLONG *)(ULONG_PTR)(rsp_g + 0x28);
++        ec->X5 = *(ULONGLONG *)(ULONG_PTR)(rsp_g + 0x30);
++        ec->X6 = *(ULONGLONG *)(ULONG_PTR)(rsp_g + 0x38);
++        ec->X7 = *(ULONGLONG *)(ULONG_PTR)(rsp_g + 0x40);
++        new_sp = (rsp_g - 0x100) & ~15ull;
++        for (i = 0; i < 30; i++)
++            *(ULONGLONG *)(ULONG_PTR)(new_sp + 8 * i) =
++                *(ULONGLONG *)(ULONG_PTR)(rsp_g + 0x48 + 8 * i);
++        ec->Sp = new_sp;
++        ec->Lr = (ULONG64)EcCallRet;
 +        cpu_area->InSimulation = 0;
-+        TRACE( "exit simulation to native pc %p (rax %p rsp %p)\n",
-+               (void *)out.target, (void *)ec->X8, (void *)ec->Sp );
++        TRACE( "exit simulation to native pc %p (rax %p rsp %p -> ec sp %p)\n",
++               (void *)out.target, (void *)ec->X8, (void *)rsp_g, (void *)new_sp );
++        TRACE( "  args rcx %p rdx %p r8 %p r9 %p; stack: %p %p %p %p\n",
++               (void *)ctx->gpr[VKMT_RCX], (void *)ctx->gpr[VKMT_RDX],
++               (void *)ctx->gpr[VKMT_R8], (void *)ctx->gpr[VKMT_R9],
++               (void *)*(ULONGLONG *)(ULONG_PTR)(new_sp),
++               (void *)*(ULONGLONG *)(ULONG_PTR)(new_sp + 8),
++               (void *)*(ULONGLONG *)(ULONG_PTR)(new_sp + 16),
++               (void *)*(ULONGLONG *)(ULONG_PTR)(new_sp + 24) );
 +        if (!(status = NtContinue( (CONTEXT *)ec, FALSE ))) break;
 +        ERR( "NtContinue failed: %lx\n", status );
 +        break;
++    }
 +
 +    case VKMT_INTERP_EXIT_RETURN:
 +        /* guest executed `ret` into the RetToEntryThunk marker: hand control
@@ -1154,17 +1189,45 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +    ec->AMD64_SegSs    = 0x2b;
 +    if (!ec->AMD64_MxCsr) ec->AMD64_MxCsr = ec->AMD64_MxCsr_copy = 0x1f80;
 +
-+    if (plant_marker)
++    if (plant_marker == 1)
 +    {
 +        struct vkmt_x64_context *ctx = vkmt_thread_context();
++        ULONGLONG thunk_sp = ec->Sp;
++        ULONGLONG new_sp;
++        UINT i;
 +
-+        *(ULONGLONG *)(ULONG_PTR)ec->Sp = (ULONGLONG)RetToEntryThunk;
++        /* build the x64 call frame the guest callee expects (reverse of the
++         * EXIT_NATIVE repack): [rsp]=retaddr marker, shadow space, args 5-8
++         * from x4-x7 at [rsp+0x28+8i], EC stack args ([thunk_sp+0x30+8i],
++         * above the exit thunk's 0x30 frame) at [rsp+0x48+8i] */
++        new_sp = (thunk_sp - 0x120) & ~15ull;
++        *(ULONGLONG *)(ULONG_PTR)new_sp = (ULONGLONG)RetToEntryThunk;
++        *(ULONGLONG *)(ULONG_PTR)(new_sp + 0x28) = ec->X4;
++        *(ULONGLONG *)(ULONG_PTR)(new_sp + 0x30) = ec->X5;
++        *(ULONGLONG *)(ULONG_PTR)(new_sp + 0x38) = ec->X6;
++        *(ULONGLONG *)(ULONG_PTR)(new_sp + 0x40) = ec->X7;
++        for (i = 0; i < 30; i++)
++            *(ULONGLONG *)(ULONG_PTR)(new_sp + 0x48 + 8 * i) =
++                *(ULONGLONG *)(ULONG_PTR)(thunk_sp + 0x30 + 8 * i);
++        ec->Sp = new_sp;
 +        /* save the thunk-entry frame: on EXIT_RETURN the guest's `ret` has
 +         * popped the marker, but the exit thunk epilogue must resume with
 +         * the exact SP/FP it had when it called us */
-+        cpu_area->EmulatorData[2] = (void *)(ULONG_PTR)ec->Sp;
++        cpu_area->EmulatorData[2] = (void *)(ULONG_PTR)thunk_sp;
 +        cpu_area->EmulatorData[3] = (void *)(ULONG_PTR)ec->Fp;
 +        if (ctx) ctx->native_ret = ec->Lr;
++    }
++    else if (plant_marker == 2)  /* EcCallRet: EC callee returned from a direct x64->EC call */
++    {
++        struct vkmt_x64_context *ctx = vkmt_thread_context();
++
++        if (ctx && ctx->ec_ret_depth)
++        {
++            ctx->ec_ret_depth--;
++            ec->Pc = ctx->ec_ret_rip[ctx->ec_ret_depth];
++            ec->Sp = ctx->ec_ret_rsp[ctx->ec_ret_depth];
++        }
++        else ERR( "EcCallRet with empty ec_ret LIFO\n" );
 +    }
 +
 +    TRACE( "simulation from EC: thread %04lx guest rip %p rsp %p native lr %p\n",
@@ -1279,6 +1342,20 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +}
 +
 +/**********************************************************************
++ *           EcCallRet  (xtajit64.@)
++ *
++ * Return trampoline planted in LR by EXIT_NATIVE when the guest called
++ * directly into EC code (no ientry thunk in the path, so no ABI
++ * conversion exists).  The guest return address and post-call rsp live
++ * in the per-thread ec_ret LIFO; mode 2 of vkmt_simulate_from_ec
++ * restores them.
++ */
++void __attribute__((naked)) EcCallRet(void)
++{
++    VKMT_CAPTURE_AND_SIMULATE( "mov x8, x0\n\t"          /* EC result -> guest rax */, 2 );
++}
++
++/**********************************************************************
 + *           BeginSimulation  (xtajit64.@)
 + *
 + * Called by ntdll's emulation dispatcher with the guest state already in
@@ -1327,8 +1404,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c wine/wine-11.12/dlls/xtajit64/vkmt/interp.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 16:00:04
-@@ -0,0 +1,2417 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 17:18:56
+@@ -0,0 +1,2412 @@
 +/*
 + * VKMT x86-64 emulator — interpreter core (M3)
 + *
@@ -1445,8 +1522,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +    for (i = 0; i < ARRAY_SIZE(primary_imm16); i++) tab_imm[primary_imm16[i]] = 4;
 +    for (i = 0; i < ARRAY_SIZE(primary_moffs); i++) tab_imm[primary_moffs[i]] = 5;
 +    tab_imm[0xc8] = 6;  /* enter imm16,imm8 */
-+    tab_imm[0xf6] = 1;  /* group3 /0 test r/m8,imm8 */
-+    tab_imm[0xf7] = 2;  /* group3 /0 test r/mz,immz */
++    /* group3 0xf6/0xf7: imm only for /0,/1 (test) — handled in vkmt_decode
++     * since it depends on modrm.reg */
 +
 +    /* 0F map */
 +    for (i = 0x00; i <= 0x03; i++) tab_modrm[0x100|i] = 1;
@@ -1459,7 +1536,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +    tab_modrm[0x138] = tab_modrm[0x13a] = 1;  /* 3-byte maps: decoded, then giveup */
 +    for (i = 0x40; i <= 0x4f; i++) tab_modrm[0x100|i] = 1;  /* cmov */
 +    tab_modrm[0x150] = 1;                     /* movmskps/pd */
-+    for (i = 0x54; i <= 0x5f; i++) tab_modrm[0x100|i] = 1;
++    for (i = 0x51; i <= 0x5f; i++) tab_modrm[0x100|i] = 1;
 +    for (i = 0x60; i <= 0x7f; i++) tab_modrm[0x100|i] = 1;
 +    for (i = 0x90; i <= 0x9f; i++) tab_modrm[0x100|i] = 1;  /* setcc */
 +    tab_modrm[0x1a3] = tab_modrm[0x1a4] = tab_modrm[0x1a5] = 1;
@@ -1652,6 +1729,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +        insn->imm_size = 3;
 +        break;
 +    }
++    if (op == 0xf6) insn->imm_size = ((insn->reg & 7) < 2) ? 1 : 0;
++    else if (op == 0xf7) insn->imm_size = ((insn->reg & 7) < 2) ? ((insn->pref & P_66) ? 2 : 4) : 0;
 +    if (insn->imm_size && insn->imm_size != 3)
 +    {
 +        insn->imm = 0;
@@ -1858,20 +1937,13 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +    }
 +    ERR( "\n" );
 +    {
-+        UINT start = ctx->exec_pos > 8192 ? ctx->exec_pos - 8192 : 0;
-+        ERR( "  last %u executed insns (rip eflags rax rcx; long tight loops elided):\n",
-+             ctx->exec_pos - start > 8192 ? 8192 : ctx->exec_pos - start );
++        UINT start = ctx->exec_pos > 400 ? ctx->exec_pos - 400 : 0;
++        ERR( "  last %u executed insns (rip eflags rax rcx):\n",
++             ctx->exec_pos - start > 400 ? 400 : ctx->exec_pos - start );
 +        for (i = start; i < ctx->exec_pos; i++)
-+        {
-+            ULONGLONG rip = ctx->exec_ring[i & 8191][0];
-+            /* elide repeated spins in ___chkstk_ms and similar 6-insn loops */
-+            if (i + 10 < ctx->exec_pos && rip == ctx->exec_ring[(i - 5) & 8191][0] &&
-+                rip == ctx->exec_ring[(i - 10) & 8191][0])
-+                continue;
 +            ERR( "    %p fl %08lx rax %016Ix rcx %016Ix\n",
-+                 (void *)rip, (ULONG)ctx->exec_ring[i & 8191][1],
++                 (void *)ctx->exec_ring[i & 8191][0], (ULONG)ctx->exec_ring[i & 8191][1],
 +                 ctx->exec_ring[i & 8191][2], ctx->exec_ring[i & 8191][3] );
-+        }
 +    }
 +}
 +
@@ -3748,8 +3820,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 16:03:10
-@@ -0,0 +1,106 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 16:12:43
+@@ -0,0 +1,114 @@
 +/*
 + * VKMT x86-64 emulator skeleton — private shared header
 + *
@@ -3817,6 +3889,14 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 +     * this because the RetToEntryThunk capture overwrites it with the
 +     * planted marker on EC-callee returns */
 +    ULONGLONG native_ret;
++    /* x64->EC call return LIFO: EXIT_NATIVE (guest call into EC code) has no
++     * thunk to convert the ABI, so the emulator repacks stack args itself
++     * (arm64 callee reads them at [sp], x64 caller put them at [rsp+0x20])
++     * and saves the guest return address / post-call rsp here; the
++     * EcCallRet trampoline restores them when the EC callee returns. */
++    ULONGLONG ec_ret_rip[64];
++    ULONGLONG ec_ret_rsp[64];
++    UINT      ec_ret_depth;
 +};
 +
 +/* context.c */

@@ -528,3 +528,31 @@ from x86-64 guest"), `return 7`): prints correctly, **process exit code
 7**, clean `wineserver -w`. This is the complete path: loader → exit
 thunk → ExitToX64 → CRT startup (~100k+ interpreted insns across dozens
 of simulation entries) → puts → EC ucrtbase → return marker → exit code.
+
+### M3b: math_x64.exe passes — ARM64EC arg convention resolved
+
+Probe 2 (`test/x64emu/math_x64.c`, -O2): 64/32/16/8-bit integer mul/div
+(incl. __int128 mulhi), shifts/rotates, scalar SSE2 double add/sub/mul/
+div/sqrt, 1000-term series, i2d/d2i conversions, packed ps/pd — prints
+`math_x64: OK (0 failures)`, exit 0.
+
+**ARM64EC argument convention (the M2 >4-arg/xmm-arg open question,
+resolved):** args 1-4 in x0-x3 (alias rcx/rdx/r8/r9), **args 5-8 in
+x4-x7**, args 9+ on the stack at [sp+8i]; FP args in v0-v7 (= xmm0-7).
+The x64 caller puts args 5+ at [rsp+0x28+8i] (retaddr+shadow at
+[rsp]..[rsp+0x27]). So EXIT_NATIVE (guest call into EC code, no thunk in
+the path) now: pushes the guest retaddr/rsp onto a per-thread LIFO,
+loads x4-x7 from [rsp_g+0x28..0x40], repacks a 30-qword stack window
+from [rsp_g+0x48] to a scratch frame below the guest rsp, plants
+Lr=&EcCallRet (new trampoline, mode 2: pops the LIFO, `mov x8,x0` for the
+result). ExitToX64 (EC→x64) does the mirror image: builds the x64 frame
+below the thunk sp — marker at [new_sp], x4-x7 → [new_sp+0x28+8i],
+EC stack args ([thunk_sp+0x30+8i]) → [new_sp+0x48+8i]. Confirmed by
+printf → `__stdio_common_vfprintf` (5th arg va_list in x4).
+
+Interpreter bugs fixed (all found with the exec-ring/conditional-bp
+dumps):
+3. group3 (0xf6/0xf7) immediate must be conditional on modrm.reg —
+   `idiv` (/7) has no imm, decoder was eating 4 bytes of the next insn.
+4. `0F 51` (sqrtsd) missing from the modrm table — 3-byte decode,
+   phantom instruction, then fallthrough into `call sqrt` (double sqrt).
