@@ -1,5 +1,7 @@
 # Native arm64 Wine — D3D12 probe bring-up (2026-07-25)
 
+Related docs: [EMULATION.md](EMULATION.md) (arm64ec/xtajit PE emulation log).
+
 Status: **PASS.** `D3D12CreateDevice(FL_11_0)` returns `S_OK` on native
 arm64-apple-darwin Wine 11.12 via vkd3d-proton → VKMT MoltenVK → Metal.
 No Rosetta anywhere in the stack.

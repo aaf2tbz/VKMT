@@ -1,12 +1,37 @@
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/configure wine/wine-11.12/configure
+--- /tmp/wine-11.12/configure	2026-06-29 13:32:59
++++ wine/wine-11.12/configure	2026-07-25 12:04:11
+@@ -7627,6 +7627,12 @@
+   e) eval "${wine_arch}_CFLAGS=\${CROSSCFLAGS:-\"-g -O2\"}" ;;
+ esac
+ fi
++        case $wine_arch in #(
++  aarch64|arm64ec) :
++    as_fn_append ${wine_arch}_CFLAGS " -ffixed-x18 -ffixed-x28" ;; #(
++  *) :
++     ;;
++esac
+     if eval test \${${wine_arch}_LDFLAGS+y}
+ then :
+ 
+@@ -12359,7 +12365,7 @@
+     SYSTEMCONFIGURATION_LIBS="-framework SystemConfiguration"
+ 
+ 
+-    WINELOADER_LDFLAGS="-Wl,-segalign,0x1000,-pagezero_size,0x1000,-sectcreate,__TEXT,__info_plist,loader/wine_info.plist"
++                    WINELOADER_LDFLAGS=""
+ 
+     case $HOST_ARCH in
+       i386) wine_use_preloader=yes ;;
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/configure.ac wine/wine-11.12/configure.ac
 --- /tmp/wine-11.12/configure.ac	2026-06-29 13:32:59
-+++ wine/wine-11.12/configure.ac	2026-07-24 22:12:49
++++ wine/wine-11.12/configure.ac	2026-07-25 12:04:04
 @@ -449,6 +449,8 @@
  
      CPPFLAGS=""
      AS_VAR_SET_IF([${wine_arch}_CFLAGS],[],[AS_VAR_SET([${wine_arch}_CFLAGS],[${CROSSCFLAGS:-"-g -O2"}])])
 +    dnl VKMT: PE TEB lives in x28 on Darwin (x18 is scrubbed by the kernel); keep clang from allocating it
-+    AS_VAR_IF([wine_arch],[aarch64],[AS_VAR_APPEND([${wine_arch}_CFLAGS],[" -ffixed-x18 -ffixed-x28"])])
++    AS_CASE([$wine_arch],[aarch64|arm64ec],[AS_VAR_APPEND([${wine_arch}_CFLAGS],[" -ffixed-x18 -ffixed-x28"])])
      AS_VAR_SET_IF([${wine_arch}_LDFLAGS],[],[AS_VAR_SET([${wine_arch}_LDFLAGS],[$CROSSLDFLAGS])])
      AS_VAR_SET_IF([${wine_arch}_CXX],[],[AS_VAR_COPY([${wine_arch}_CXX],[${wine_arch}_CC])])
      AS_VAR_SET_IF([${wine_arch}_CXXFLAGS],[],[AS_VAR_COPY([${wine_arch}_CXXFLAGS],[${wine_arch}_CFLAGS])])
