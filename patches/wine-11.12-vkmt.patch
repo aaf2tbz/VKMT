@@ -101,6 +101,25 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/thread.c wine/
  
  struct debug_info
  {
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/env.c wine/wine-11.12/dlls/ntdll/unix/env.c
+--- /tmp/wine-11.12/dlls/ntdll/unix/env.c	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/ntdll/unix/env.c	2026-07-25 11:11:28
+@@ -1789,6 +1789,15 @@
+ 
+     status = NtAllocateVirtualMemory( NtCurrentProcess(), (void **)&wow64_params, limit_2g - 1, &size,
+                                       MEM_COMMIT, PAGE_READWRITE );
++#if defined(__APPLE__) && defined(__aarch64__)
++    /* VKMT: macOS arm64 cannot map below 4GB, so the sub-2GB block needed
++     * by 32-bit processes is impossible on this host; fail cleanly. */
++    if (status)
++    {
++        ERR( "cannot start a 32-bit process on this host (no sub-4GB address space): %#x\n", status );
++        NtTerminateProcess( GetCurrentProcess(), status );
++    }
++#endif
+     assert( !status );
+ 
+     wow64_params->AllocationSize  = size;
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/signal_arm64.c wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c
 --- /tmp/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-06-29 13:32:59
 +++ wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-07-25 10:02:50
@@ -487,3 +506,15 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/include/winnt.h wine/wine
  }
  #elif defined(__x86_64__) && defined(__GNUC__)
  static FORCEINLINE struct _TEB * WINAPI NtCurrentTeb(void)
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/loader/wine.inf.in wine/wine-11.12/loader/wine.inf.in
+--- /tmp/wine-11.12/loader/wine.inf.in	2026-06-29 13:32:59
++++ wine/wine-11.12/loader/wine.inf.in	2026-07-25 11:28:24
+@@ -412,6 +412,8 @@
+ [Debugger]
+ HKLM,%CurrentVersionNT%\AeDebug,"Debugger",2,"winedbg --auto %ld %ld"
+ HKLM,%CurrentVersionNT%\AeDebug,"Auto",2,"1"
++; VKMT: never show the GUI crash dialog (hangs headless runs); dump to stderr instead
++HKCU,Software\Wine\WineDbg,"ShowCrashDialog",0x10001,0
+ HKCU,Software\Wine\Debug,"RelayExclude",2,"ntdll.RtlEnterCriticalSection;ntdll.RtlTryEnterCriticalSection;ntdll.RtlLeaveCriticalSection;kernel32.48;kernel32.49;kernel32.94;kernel32.95;kernel32.96;kernel32.97;kernel32.98;kernel32.TlsGetValue;kernel32.TlsSetValue;kernel32.FlsGetValue;kernel32.FlsSetValue;kernel32.SetLastError"
+ HKCU,Software\Wine\Debug,"RelayFromExclude",2,"winex11.drv;winemac.drv;user32;gdi32;advapi32;kernel32"
+ 

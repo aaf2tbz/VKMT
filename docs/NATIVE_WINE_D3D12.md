@@ -118,3 +118,25 @@ Required work:
   registers (same recipe as the CRT).
 - i386/x86_64 guest support via an emulation boundary (GEM/FEX-style) —
   planned, no Rosetta.
+
+## First-boot & debugger hygiene (2026-07-25, third pass)
+
+- **32-bit launches fail cleanly now.** The syswow64 rundll32 that wineboot
+  spawns for wine.inf's Wow64Install used to die on `assert(!status)` in
+  `build_wow64_parameters` (the sub-2GB wow64 block can't exist on macOS
+  arm64). It now logs a clear ERR and exits. This assert was also the
+  "winedbg: Internal crash"/hanging seen on crash handling.
+- **`0x7ffe0324` stray read:** already fixed by the earlier KUSD relocation;
+  kernel32/kernelbase read `0x1:7ffe0000`. Remaining `0x7ffe` hits in the
+  tree are AND-masks or the wow64 debug hack at `ntdll/process.c:739`.
+- **RpcSs "failed to open" on first boot** is the upstream services race;
+  the service registers during boot and starts on demand afterwards
+  (verified `sc start rpcss` → RUNNING). Cosmetic.
+- **winedbg --auto hang fixed:** the crash dialog (DialogBoxW via winemac)
+  blocked forever in unattended sessions. `ShowCrashDialog=0` is now the
+  default in new prefixes (wine.inf.in); --auto prints exception, register
+  dump, and a symbolized backtrace to stderr and exits. Interactive winedbg
+  (bt, info reg) works; `be_arm64_single_step` is still a stub, and
+  `info share` on huge DWARF dlls is slow — use `bt`/`info locals` instead.
+- **Caveat learned:** `pkill -9 wineserver` loses unflushed registry
+  writes; run `wineserver -w` to flush before killing.
