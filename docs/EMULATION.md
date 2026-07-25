@@ -570,3 +570,15 @@ Interpreter bug fixed:
    imm8 table — same decode-misalignment class as bug 1 (this time it
    produced both a bogus check failure AND a truncated pointer;
    diagnosed via conditional rip breakpoints printing registers).
+
+### M3d: thread_x64.exe passes
+
+Probe 4 (`test/x64emu/thread_x64.c`, -O2): CreateThread x4, each worker
+does a 200k-iteration integer loop, LocalAlloc + TlsSetValue/TlsGetValue
+round trip, WaitForMultipleObjects, GetExitCodeThread — all four sums
+identical (258433085493875), all tls_ok 1, `thread_x64: OK (0
+failures)`, exit 0. No interpreter changes needed: new threads enter
+simulation through the M2 BeginSimulation path (NtContinue-to-x64 from
+the unix side), per-thread cpu area/context init from M1/M2 just works,
+and locked-RMW atomics (`InterlockedIncrement/Add`) hold up under real
+contention.
