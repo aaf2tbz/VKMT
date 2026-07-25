@@ -572,6 +572,1016 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/winevulkan/vulkan_pr
          return entry + 1;
      }
  }
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/Makefile.in wine/wine-11.12/dlls/xtajit64/Makefile.in
+--- /tmp/wine-11.12/dlls/xtajit64/Makefile.in	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/xtajit64/Makefile.in	2026-07-25 14:36:10
+@@ -5,4 +5,7 @@
+ EXTRADLLFLAGS = -nodefaultlibs
+ 
+ SOURCES = \
+-	cpu.c
++	cpu.c \
++	vkmt/context.c \
++	vkmt/dispatch.c \
++	vkmt/interp_stub.c
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/wine-11.12/dlls/xtajit64/cpu.c
+--- /tmp/wine-11.12/dlls/xtajit64/cpu.c	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/xtajit64/cpu.c	2026-07-25 14:36:01
+@@ -1,7 +1,8 @@
+ /*
+- * x86-64 emulation on ARM64
++ * x86-64 emulation on ARM64 — VKMT emulator skeleton (M2)
+  *
+  * Copyright 2024 Alexandre Julliard
++ * Copyright 2026 Avery Felts
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -16,6 +17,11 @@
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ *
++ * Thin xtajit64.dll export layer; the implementation lives in vkmt/.
++ * The control-flow entries (BeginSimulation/DispatchJump/ExitToX64/
++ * RetToEntryThunk) are naked asm routines exported directly from
++ * vkmt/dispatch.c.
+  */
+ 
+ #include <stdarg.h>
+@@ -27,56 +33,12 @@
+ #include "winternl.h"
+ #include "wine/debug.h"
+ 
+-WINE_DEFAULT_DEBUG_CHANNEL(xtajit);
++#include "vkmt/vkmt.h"
+ 
++WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64);
+ 
+-/**********************************************************************
+- *           DispatchJump  (xtajit64.@)
+- *
+- * Implementation of __os_arm64x_x64_jump.
+- */
+-void WINAPI DispatchJump(void)
+-{
+-    ERR( "x64 emulation not implemented\n" );
+-    NtTerminateProcess( GetCurrentProcess(), 1 );
+-}
+ 
+-
+ /**********************************************************************
+- *           RetToEntryThunk  (xtajit64.@)
+- *
+- * Implementation of __os_arm64x_dispatch_ret.
+- */
+-void WINAPI RetToEntryThunk(void)
+-{
+-    ERR( "x64 emulation not implemented\n" );
+-    NtTerminateProcess( GetCurrentProcess(), 1 );
+-}
+-
+-
+-/**********************************************************************
+- *           ExitToX64  (xtajit64.@)
+- *
+- * Implementation of __os_arm64x_dispatch_call_no_redirect.
+- */
+-void WINAPI ExitToX64(void)
+-{
+-    ERR( "x64 emulation not implemented\n" );
+-    NtTerminateProcess( GetCurrentProcess(), 1 );
+-}
+-
+-
+-/**********************************************************************
+- *           BeginSimulation  (xtajit64.@)
+- */
+-void WINAPI BeginSimulation(void)
+-{
+-    ERR( "x64 emulation not implemented\n" );
+-    NtTerminateProcess( GetCurrentProcess(), 1 );
+-}
+-
+-
+-/**********************************************************************
+  *           BTCpu64FlushInstructionCache  (xtajit64.@)
+  */
+ void WINAPI BTCpu64FlushInstructionCache( void *addr, SIZE_T size )
+@@ -90,22 +52,7 @@
+  */
+ BOOLEAN WINAPI BTCpu64IsProcessorFeaturePresent( UINT feature )
+ {
+-    static const ULONGLONG x86_features =
+-        (1ull << PF_COMPARE_EXCHANGE_DOUBLE) |
+-        (1ull << PF_MMX_INSTRUCTIONS_AVAILABLE) |
+-        (1ull << PF_XMMI_INSTRUCTIONS_AVAILABLE) |
+-        (1ull << PF_RDTSC_INSTRUCTION_AVAILABLE) |
+-        (1ull << PF_XMMI64_INSTRUCTIONS_AVAILABLE) |
+-        (1ull << PF_NX_ENABLED) |
+-        (1ull << PF_SSE3_INSTRUCTIONS_AVAILABLE) |
+-        (1ull << PF_COMPARE_EXCHANGE128) |
+-        (1ull << PF_FASTFAIL_AVAILABLE) |
+-        (1ull << PF_RDTSCP_INSTRUCTION_AVAILABLE) |
+-        (1ull << PF_SSSE3_INSTRUCTIONS_AVAILABLE) |
+-        (1ull << PF_SSE4_1_INSTRUCTIONS_AVAILABLE) |
+-        (1ull << PF_SSE4_2_INSTRUCTIONS_AVAILABLE);
+-
+-    return feature < 64 && (x86_features & (1ull << feature));
++    return vkmt_is_processor_feature_present( feature );
+ }
+ 
+ 
+@@ -123,7 +70,7 @@
+  */
+ void WINAPI BTCpu64NotifyReadFile( HANDLE handle, void *addr, SIZE_T size, BOOL is_post, NTSTATUS status )
+ {
+-    TRACE( "%p %p %Ix\n", handle, addr, size );
++    TRACE( "%p %p %Ix is_post %d status %lx\n", handle, addr, size, is_post, status );
+ }
+ 
+ 
+@@ -152,7 +99,7 @@
+  */
+ void WINAPI NotifyMemoryAlloc( void *addr, SIZE_T size, ULONG type, ULONG prot, BOOL is_post, NTSTATUS status )
+ {
+-    TRACE( "%p %Ix\n", addr, size );
++    TRACE( "%p %Ix type %lx prot %lx is_post %d status %lx\n", addr, size, type, prot, is_post, status );
+ }
+ 
+ 
+@@ -161,7 +108,7 @@
+  */
+ void WINAPI NotifyMemoryFree( void *addr, SIZE_T size, ULONG type, BOOL is_post, NTSTATUS status )
+ {
+-    TRACE( "%p %Ix %lx\n", addr, size, type );
++    TRACE( "%p %Ix type %lx is_post %d status %lx\n", addr, size, type, is_post, status );
+ }
+ 
+ 
+@@ -170,7 +117,7 @@
+  */
+ void WINAPI NotifyMemoryProtect( void *addr, SIZE_T size, ULONG prot, BOOL is_post, NTSTATUS status )
+ {
+-    TRACE( "%p %Ix %lx\n", addr, size, prot );
++    TRACE( "%p %Ix prot %lx is_post %d status %lx\n", addr, size, prot, is_post, status );
+ }
+ 
+ 
+@@ -179,7 +126,7 @@
+  */
+ void WINAPI NotifyUnmapViewOfSection( void *addr, BOOL is_post, NTSTATUS status )
+ {
+-    TRACE( "%p\n", addr );
++    TRACE( "%p is_post %d status %lx\n", addr, is_post, status );
+ }
+ 
+ 
+@@ -188,7 +135,7 @@
+  */
+ NTSTATUS WINAPI ProcessInit(void)
+ {
+-    return STATUS_SUCCESS;
++    return vkmt_process_init();
+ }
+ 
+ 
+@@ -197,7 +144,7 @@
+  */
+ void WINAPI ProcessTerm( HANDLE handle, BOOL is_post, NTSTATUS status )
+ {
+-    TRACE( "%p\n", handle );
++    vkmt_process_term( handle, is_post, status );
+ }
+ 
+ 
+@@ -206,7 +153,7 @@
+  */
+ void WINAPI ResetToConsistentState( EXCEPTION_RECORD *rec, CONTEXT *context, ARM64_NT_CONTEXT *arm_ctx )
+ {
+-    TRACE( "%p %p %p\n", rec, context, arm_ctx );
++    vkmt_reset_to_consistent_state( rec, context, arm_ctx );
+ }
+ 
+ 
+@@ -215,7 +162,7 @@
+  */
+ NTSTATUS WINAPI ThreadInit(void)
+ {
+-    return STATUS_SUCCESS;
++    return vkmt_thread_init();
+ }
+ 
+ 
+@@ -224,7 +171,7 @@
+  */
+ void WINAPI ThreadTerm( HANDLE handle, LONG exit_code )
+ {
+-    TRACE( "%p %lx\n", handle, exit_code );
++    vkmt_thread_term( handle, exit_code );
+ }
+ 
+ 
+@@ -233,9 +180,7 @@
+  */
+ void WINAPI UpdateProcessorInformation( SYSTEM_CPU_INFORMATION *info )
+ {
+-    info->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64;
+-    info->ProcessorLevel = 21;
+-    info->ProcessorRevision = 1;
++    vkmt_update_processor_information( info );
+ }
+ 
+ 
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c wine/wine-11.12/dlls/xtajit64/vkmt/context.c
+--- /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c	1969-12-31 17:00:00
++++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 14:36:10
+@@ -0,0 +1,171 @@
++/*
++ * VKMT x86-64 emulator skeleton — process/thread lifecycle and guest context
++ *
++ * Copyright 2026 Avery Felts
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
++#include <stdarg.h>
++
++#include "vkmt.h"
++
++WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64);
++
++static inline CHPE_V2_CPU_AREA_INFO *vkmt_cpu_area(void)
++{
++    return NtCurrentTeb()->ChpeV2CpuAreaInfo;
++}
++
++/**********************************************************************
++ *           vkmt_context_from_ec
++ *
++ * Snapshot the live EC context into the emulator-private guest context.
++ */
++void vkmt_context_from_ec( struct vkmt_x64_context *ctx, const ARM64EC_NT_CONTEXT *ec )
++{
++    ctx->rax = ec->X8;  ctx->rcx = ec->X0;  ctx->rdx = ec->X1;  ctx->rbx = ec->X27;
++    ctx->rsp = ec->Sp;  ctx->rbp = ec->Fp;  ctx->rsi = ec->X25; ctx->rdi = ec->X26;
++    ctx->r8  = ec->X2;  ctx->r9  = ec->X3;  ctx->r10 = ec->X4;  ctx->r11 = ec->X5;
++    ctx->r12 = ec->X19; ctx->r13 = ec->X20; ctx->r14 = ec->X21; ctx->r15 = ec->X22;
++    ctx->rip    = ec->Pc;
++    ctx->eflags = ec->AMD64_EFlags;
++    ctx->mxcsr  = ec->AMD64_MxCsr;
++    ctx->fcw    = ec->AMD64_ControlWord;
++    memcpy( ctx->xmm, ec->V, sizeof(ctx->xmm) );
++}
++
++/**********************************************************************
++ *           vkmt_context_to_ec
++ */
++void vkmt_context_to_ec( ARM64EC_NT_CONTEXT *ec, const struct vkmt_x64_context *ctx )
++{
++    ec->X8  = ctx->rax; ec->X0  = ctx->rcx; ec->X1  = ctx->rdx; ec->X27 = ctx->rbx;
++    ec->Sp  = ctx->rsp; ec->Fp  = ctx->rbp; ec->X25 = ctx->rsi; ec->X26 = ctx->rdi;
++    ec->X2  = ctx->r8;  ec->X3  = ctx->r9;  ec->X4  = ctx->r10; ec->X5  = ctx->r11;
++    ec->X19 = ctx->r12; ec->X20 = ctx->r13; ec->X21 = ctx->r14; ec->X22 = ctx->r15;
++    ec->Pc           = ctx->rip;
++    ec->AMD64_EFlags = ctx->eflags;
++    ec->AMD64_MxCsr  = ec->AMD64_MxCsr_copy = ctx->mxcsr;
++    ec->AMD64_ControlWord = ctx->fcw;
++    memcpy( ec->V, ctx->xmm, sizeof(ctx->xmm) );
++}
++
++/**********************************************************************
++ *           vkmt_thread_context
++ */
++struct vkmt_x64_context *vkmt_thread_context(void)
++{
++    CHPE_V2_CPU_AREA_INFO *cpu_area = vkmt_cpu_area();
++
++    if (!cpu_area) return NULL;
++    if (!cpu_area->EmulatorData[0])
++        cpu_area->EmulatorData[0] = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY,
++                                                     sizeof(struct vkmt_x64_context) );
++    return cpu_area->EmulatorData[0];
++}
++
++/**********************************************************************
++ *           vkmt_process_init
++ */
++NTSTATUS vkmt_process_init(void)
++{
++    TRACE( "VKMT x86-64 emulator skeleton (M2): process init\n" );
++    return STATUS_SUCCESS;
++}
++
++/**********************************************************************
++ *           vkmt_process_term
++ */
++void vkmt_process_term( HANDLE handle, BOOL is_post, NTSTATUS status )
++{
++    TRACE( "process term handle %p is_post %d status %lx\n", handle, is_post, status );
++}
++
++/**********************************************************************
++ *           vkmt_thread_init
++ */
++NTSTATUS vkmt_thread_init(void)
++{
++    CHPE_V2_CPU_AREA_INFO *cpu_area = vkmt_cpu_area();
++
++    TRACE( "thread %04lx init, cpu area %p\n",
++                     GetCurrentThreadId(), cpu_area );
++    if (!cpu_area)
++    {
++        ERR( "thread %04lx has no CHPE cpu area\n", GetCurrentThreadId() );
++        return STATUS_UNSUCCESSFUL;
++    }
++    if (!vkmt_thread_context())
++    {
++        ERR( "failed to allocate guest context\n" );
++        return STATUS_NO_MEMORY;
++    }
++    return STATUS_SUCCESS;
++}
++
++/**********************************************************************
++ *           vkmt_thread_term
++ */
++void vkmt_thread_term( HANDLE handle, LONG exit_code )
++{
++    CHPE_V2_CPU_AREA_INFO *cpu_area = vkmt_cpu_area();
++
++    TRACE( "thread term handle %p exit_code %lx\n", handle, exit_code );
++    if (cpu_area && cpu_area->EmulatorData[0])
++    {
++        RtlFreeHeap( GetProcessHeap(), 0, cpu_area->EmulatorData[0] );
++        cpu_area->EmulatorData[0] = NULL;
++    }
++}
++
++/**********************************************************************
++ *           vkmt_is_processor_feature_present
++ *
++ * Baseline for a modern x64 CPU, matching what Windows' xtajit reports
++ * (through SSE4.2; no AVX until the interpreter supports it).
++ */
++BOOLEAN vkmt_is_processor_feature_present( UINT feature )
++{
++    static const ULONGLONG x86_features =
++        (1ull << PF_COMPARE_EXCHANGE_DOUBLE) |
++        (1ull << PF_MMX_INSTRUCTIONS_AVAILABLE) |
++        (1ull << PF_XMMI_INSTRUCTIONS_AVAILABLE) |
++        (1ull << PF_RDTSC_INSTRUCTION_AVAILABLE) |
++        (1ull << PF_XMMI64_INSTRUCTIONS_AVAILABLE) |
++        (1ull << PF_NX_ENABLED) |
++        (1ull << PF_SSE3_INSTRUCTIONS_AVAILABLE) |
++        (1ull << PF_COMPARE_EXCHANGE128) |
++        (1ull << PF_FASTFAIL_AVAILABLE) |
++        (1ull << PF_RDTSCP_INSTRUCTION_AVAILABLE) |
++        (1ull << PF_SSSE3_INSTRUCTIONS_AVAILABLE) |
++        (1ull << PF_SSE4_1_INSTRUCTIONS_AVAILABLE) |
++        (1ull << PF_SSE4_2_INSTRUCTIONS_AVAILABLE);
++
++    return feature < 64 && (x86_features & (1ull << feature));
++}
++
++/**********************************************************************
++ *           vkmt_update_processor_information
++ */
++void vkmt_update_processor_information( SYSTEM_CPU_INFORMATION *info )
++{
++    /* cf. the x86_64 unix side: AMD64 architecture, family/model in
++     * level/revision, no feature bits */
++    info->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64;
++    info->ProcessorLevel        = 21;   /* Zen 2 family */
++    info->ProcessorRevision     = 1;
++    info->ProcessorFeatureBits  = 0;
++}
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c
+--- /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	1969-12-31 17:00:00
++++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 14:51:44
+@@ -0,0 +1,312 @@
++/*
++ * VKMT x86-64 emulator skeleton — simulation entry/exit and dispatch
++ *
++ * Copyright 2026 Avery Felts
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ *
++ * ABI conventions (derived from ntdll/signal_arm64ec.c and llvm-mingw
++ * thunk disassembly; see docs/EMULATION.md, M2 section):
++ *
++ *  - BeginSimulation: plain EC call; guest state already converted into
++ *    cpu_area->ContextAmd64 by ntdll; InSimulation already 1. Never returns.
++ *  - ExitToX64 / DispatchJump: entered via blr/br from exit thunks with
++ *    x9 = x64 target, x0-x7 = args, sp = guest stack, lr = native return
++ *    address. Guest RAX is handed back to native code in x8.
++ *  - RetToEntryThunk: entered via br from entry thunks when a native call
++ *    from the emulator returns; x8 = guest RAX, [sp] = x64 return address.
++ */
++
++#include <stdarg.h>
++
++#include "vkmt.h"
++
++WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64);
++
++extern void RetToEntryThunk(void);
++
++static inline CHPE_V2_CPU_AREA_INFO *vkmt_cpu_area(void)
++{
++    return NtCurrentTeb()->ChpeV2CpuAreaInfo;
++}
++
++static UINT cpsr_to_eflags( UINT cpsr )  /* cf. ntdll/unwind.h */
++{
++    UINT ret = 0x202;
++
++    if (cpsr & 0x00200000) ret |= 0x0100;  /* trap */
++    if (cpsr & 0x10000000) ret |= 0x0800;  /* overflow */
++    if (cpsr & 0x20000000) ret |= 0x0001;  /* carry */
++    if (cpsr & 0x40000000) ret |= 0x0040;  /* zero */
++    if (cpsr & 0x80000000) ret |= 0x0080;  /* negative */
++    return ret;
++}
++
++/**********************************************************************
++ *           vkmt_simulate
++ *
++ * Common simulation loop: run the interpreter skeleton on the per-thread
++ * guest context, then leave via NtContinue (native target) or terminate
++ * cleanly with a loud diagnostic.  Called on the emulator stack.
++ */
++static void vkmt_simulate( CHPE_V2_CPU_AREA_INFO *cpu_area )
++{
++    ARM64EC_NT_CONTEXT *ec = cpu_area->ContextAmd64;
++    struct vkmt_x64_context *ctx = vkmt_thread_context();
++    struct vkmt_interp_outcome out;
++    NTSTATUS status;
++
++    if (!ctx)
++    {
++        ERR( "no per-thread guest context, cannot simulate\n" );
++        NtTerminateProcess( GetCurrentProcess(), STATUS_NO_MEMORY );
++    }
++
++    cpu_area->InSimulation = 1;
++    vkmt_context_from_ec( ctx, ec );
++
++    TRACE( "enter simulation: thread %04lx guest rip %p rsp %p\n",
++           GetCurrentThreadId(), (void *)ctx->rip, (void *)ctx->rsp );
++
++    vkmt_interp_run( ctx, &out );
++
++    vkmt_context_to_ec( ec, ctx );
++
++    switch (out.result)
++    {
++    case VKMT_INTERP_EXIT_NATIVE:
++        ec->Pc = out.target;
++        cpu_area->InSimulation = 0;
++        TRACE( "exit simulation to native pc %p (rax %p rsp %p)\n",
++               (void *)out.target, (void *)ec->X8, (void *)ec->Sp );
++        if (!(status = NtContinue( (CONTEXT *)ec, FALSE ))) break;
++        ERR( "NtContinue failed: %lx\n", status );
++        break;
++
++    case VKMT_INTERP_EXIT_RETURN:
++        /* guest executed `ret` into the RetToEntryThunk marker: hand control
++         * back to the EC caller at the native return address captured on
++         * entry; guest RAX is already in X8 where the thunk expects it, and
++         * the thunk epilogue needs its own entry SP/FP back (the guest's
++         * stack usage is discarded with the call frame). */
++        ec->Pc = ec->Lr;
++        ec->Sp = (ULONG64)cpu_area->EmulatorData[2];
++        ec->Fp = (ULONG64)cpu_area->EmulatorData[3];
++        cpu_area->InSimulation = 0;
++        TRACE( "guest returned to EC caller at %p (rax %p)\n",
++               (void *)ec->Pc, (void *)ec->X8 );
++        if (!(status = NtContinue( (CONTEXT *)ec, FALSE ))) break;
++        ERR( "NtContinue failed: %lx\n", status );
++        break;
++
++    default:
++        ERR( "VKMT M2 skeleton: cannot continue guest execution at rip %p "
++             "(opcode %02lx) — terminating process cleanly; "
++             "full x86-64 interpretation lands in M3\n",
++             (void *)ctx->rip, out.opcode );
++        NtTerminateProcess( GetCurrentProcess(), STATUS_ILLEGAL_INSTRUCTION );
++    }
++    NtTerminateProcess( GetCurrentProcess(), STATUS_UNSUCCESSFUL );
++}
++
++/**********************************************************************
++ *           vkmt_begin_simulation  (C body of BeginSimulation)
++ */
++void vkmt_begin_simulation(void)
++{
++    CHPE_V2_CPU_AREA_INFO *cpu_area = vkmt_cpu_area();
++    ARM64EC_NT_CONTEXT *ec = cpu_area->ContextAmd64;
++
++    TRACE( "BeginSimulation: thread %04lx guest rip %p rsp %p\n",
++           GetCurrentThreadId(), (void *)ec->Pc, (void *)ec->Sp );
++    vkmt_simulate( cpu_area );
++}
++
++/**********************************************************************
++ *           vkmt_simulate_from_ec  (C body of ExitToX64/DispatchJump/RetToEntryThunk)
++ *
++ * plant_marker: ExitToX64/DispatchJump plant the RetToEntryThunk marker
++ * on top of the guest stack, so a guest `ret` pops it and takes the
++ * EXIT_RETURN path back to the native caller.
++ */
++void vkmt_simulate_from_ec( int plant_marker )
++{
++    CHPE_V2_CPU_AREA_INFO *cpu_area = vkmt_cpu_area();
++    ARM64EC_NT_CONTEXT *ec = cpu_area->ContextAmd64;
++
++    /* the asm entry captured raw NZCV into EmulatorData[1] */
++    ec->AMD64_EFlags = cpsr_to_eflags( (UINT)(ULONG_PTR)cpu_area->EmulatorData[1] );
++    cpu_area->EmulatorData[1] = 0;
++
++    /* mirror context_arm_to_x64() fixups that ntdll would normally do */
++    ec->ContextFlags   = CONTEXT_AMD64_ALL;
++    ec->AMD64_SegCs    = 0x33;
++    ec->AMD64_SegDs    = 0x2b;
++    ec->AMD64_SegEs    = 0x2b;
++    ec->AMD64_SegFs    = 0x53;
++    ec->AMD64_SegGs    = 0x2b;
++    ec->AMD64_SegSs    = 0x2b;
++    if (!ec->AMD64_MxCsr) ec->AMD64_MxCsr = ec->AMD64_MxCsr_copy = 0x1f80;
++
++    if (plant_marker)
++    {
++        *(ULONGLONG *)(ULONG_PTR)ec->Sp = (ULONGLONG)RetToEntryThunk;
++        /* save the thunk-entry frame: on EXIT_RETURN the guest's `ret` has
++         * popped the marker, but the exit thunk epilogue must resume with
++         * the exact SP/FP it had when it called us */
++        cpu_area->EmulatorData[2] = (void *)(ULONG_PTR)ec->Sp;
++        cpu_area->EmulatorData[3] = (void *)(ULONG_PTR)ec->Fp;
++    }
++
++    TRACE( "simulation from EC: thread %04lx guest rip %p rsp %p native lr %p\n",
++           GetCurrentThreadId(), (void *)ec->Pc, (void *)ec->Sp, (void *)ec->Lr );
++    vkmt_simulate( cpu_area );
++}
++
++/*
++ * Register capture for the thunk-entered paths.  Stores the guest-visible
++ * ARM64EC registers into cpu_area->ContextAmd64 (see include/winnt.h
++ * ARM64EC_NT_CONTEXT for the x64<->arm64 aliasing), raw NZCV into
++ * EmulatorData[1], sets InSimulation, switches to the emulator stack and
++ * calls the C body.  Clobbers x9/x16/x17 only.
++ *
++ * The caller places the guest rip in x9 before the capture (already true
++ * for ExitToX64/DispatchJump; RetToEntryThunk pops it first).
++ */
++#define VKMT_CAPTURE_AND_SIMULATE(first_insn, plant_marker) \
++    asm( first_insn \
++         "ldr x16, [x28, %[teb]]\n\t"           /* cpu area */ \
++         "ldr x17, [x16, %[area_ctx]]\n\t"      /* ContextAmd64 */ \
++         "str x9,  [x17, %[ctx_pc]]\n\t"        /* guest rip */ \
++         "mov w9, #1\n\t" \
++         "strb w9, [x16, %[area_insim]]\n\t"    /* InSimulation = 1 */ \
++         "stp x0,  x1,  [x17, %[ctx_x0]]\n\t" \
++         "stp x2,  x3,  [x17, %[ctx_x2]]\n\t" \
++         "stp x4,  x5,  [x17, %[ctx_x4]]\n\t" \
++         "stp x6,  x7,  [x17, %[ctx_x6]]\n\t" \
++         "str x8,       [x17, %[ctx_x8]]\n\t" \
++         "stp x10, x11, [x17, %[ctx_x10]]\n\t" \
++         "str x12,      [x17, %[ctx_x12]]\n\t" \
++         "str x15,      [x17, %[ctx_x15]]\n\t" \
++         "stp x19, x20, [x17, %[ctx_x19]]\n\t" \
++         "stp x21, x22, [x17, %[ctx_x21]]\n\t" \
++         "stp x25, x26, [x17, %[ctx_x25]]\n\t" \
++         "str x27,      [x17, %[ctx_x27]]\n\t" \
++         "mov x9, sp\n\t" \
++         "stp x9,  x29, [x17, %[ctx_sp]]\n\t"   /* Sp, Fp (adjacent) */ \
++         "str x30,      [x17, %[ctx_lr]]\n\t"   /* native return address */ \
++         "mrs x9, nzcv\n\t" \
++         "str x9, [x16, %[area_nzcv]]\n\t"      /* raw cpsr scratch */ \
++         "add x9, x17, %[ctx_v]\n\t"            /* guest xmm0-15 = v0-v15 */ \
++         "stp q0,  q1,  [x9], #32\n\t" \
++         "stp q2,  q3,  [x9], #32\n\t" \
++         "stp q4,  q5,  [x9], #32\n\t" \
++         "stp q6,  q7,  [x9], #32\n\t" \
++         "stp q8,  q9,  [x9], #32\n\t" \
++         "stp q10, q11, [x9], #32\n\t" \
++         "stp q12, q13, [x9], #32\n\t" \
++         "stp q14, q15, [x9]\n\t" \
++         "ldr x9, [x16, %[area_stk]]\n\t"       /* EmulatorStackBase */ \
++         "and x9, x9, #0xfffffffffffffff0\n\t" \
++         "mov sp, x9\n\t" \
++         "mov w0, #" #plant_marker "\n\t" \
++         "bl vkmt_simulate_from_ec\n\t" \
++         "brk #1\n\t" \
++         :: [teb]        "i" (offsetof( TEB, ChpeV2CpuAreaInfo )), \
++            [area_ctx]   "i" (offsetof( CHPE_V2_CPU_AREA_INFO, ContextAmd64 )), \
++            [area_insim] "i" (offsetof( CHPE_V2_CPU_AREA_INFO, InSimulation )), \
++            [area_stk]   "i" (offsetof( CHPE_V2_CPU_AREA_INFO, EmulatorStackBase )), \
++            [area_nzcv]  "i" (offsetof( CHPE_V2_CPU_AREA_INFO, EmulatorData[1] )), \
++            [ctx_pc]     "i" (offsetof( ARM64EC_NT_CONTEXT, Pc )), \
++            [ctx_x0]     "i" (offsetof( ARM64EC_NT_CONTEXT, X0 )), \
++            [ctx_x2]     "i" (offsetof( ARM64EC_NT_CONTEXT, X2 )), \
++            [ctx_x4]     "i" (offsetof( ARM64EC_NT_CONTEXT, X4 )), \
++            [ctx_x6]     "i" (offsetof( ARM64EC_NT_CONTEXT, X6 )), \
++            [ctx_x8]     "i" (offsetof( ARM64EC_NT_CONTEXT, X8 )), \
++            [ctx_x10]    "i" (offsetof( ARM64EC_NT_CONTEXT, X10 )), \
++            [ctx_x12]    "i" (offsetof( ARM64EC_NT_CONTEXT, X12 )), \
++            [ctx_x15]    "i" (offsetof( ARM64EC_NT_CONTEXT, X15 )), \
++            [ctx_x19]    "i" (offsetof( ARM64EC_NT_CONTEXT, X19 )), \
++            [ctx_x21]    "i" (offsetof( ARM64EC_NT_CONTEXT, X21 )), \
++            [ctx_x25]    "i" (offsetof( ARM64EC_NT_CONTEXT, X25 )), \
++            [ctx_x27]    "i" (offsetof( ARM64EC_NT_CONTEXT, X27 )), \
++            [ctx_sp]     "i" (offsetof( ARM64EC_NT_CONTEXT, Sp )), \
++            [ctx_lr]     "i" (offsetof( ARM64EC_NT_CONTEXT, Lr )), \
++            [ctx_v]      "i" (offsetof( ARM64EC_NT_CONTEXT, V )) )
++
++/**********************************************************************
++ *           ExitToX64  (xtajit64.@)
++ *
++ * Implementation of __os_arm64x_dispatch_call_no_redirect.
++ * Entered from exit thunks with x9 = x64 target.
++ */
++void __attribute__((naked)) ExitToX64(void)
++{
++    VKMT_CAPTURE_AND_SIMULATE( "", 1 );
++}
++
++/**********************************************************************
++ *           DispatchJump  (xtajit64.@)
++ *
++ * Implementation of __os_arm64x_dispatch_fptr.
++ * Tail jump into x64 code; same convention as ExitToX64.
++ */
++void __attribute__((naked)) DispatchJump(void)
++{
++    VKMT_CAPTURE_AND_SIMULATE( "", 1 );
++}
++
++/**********************************************************************
++ *           RetToEntryThunk  (xtajit64.@)
++ *
++ * Implementation of __os_arm64x_dispatch_ret.
++ * Entered from entry thunk epilogues with x8 = guest rax and the x64
++ * return address on top of the guest stack.
++ */
++void __attribute__((naked)) RetToEntryThunk(void)
++{
++    VKMT_CAPTURE_AND_SIMULATE( "ldr x9, [sp], #8\n\t" /* guest rip = x64 return address */, 0 );
++}
++
++/**********************************************************************
++ *           BeginSimulation  (xtajit64.@)
++ *
++ * Called by ntdll's emulation dispatcher with the guest state already in
++ * ContextAmd64 and InSimulation = 1.  Switch to the emulator stack and
++ * run the simulation loop.  Never returns.
++ */
++void __attribute__((naked)) BeginSimulation(void)
++{
++    asm( "ldr x16, [x28, %[teb]]\n\t"
++         "ldr x9, [x16, %[area_stk]]\n\t"
++         "and x9, x9, #0xfffffffffffffff0\n\t"
++         "mov sp, x9\n\t"
++         "bl vkmt_begin_simulation\n\t"
++         "brk #1\n\t"
++         :: [teb]      "i" (offsetof( TEB, ChpeV2CpuAreaInfo )),
++            [area_stk] "i" (offsetof( CHPE_V2_CPU_AREA_INFO, EmulatorStackBase )) );
++}
++
++/**********************************************************************
++ *           vkmt_reset_to_consistent_state
++ *
++ * Called by ntdll's exception path with the guest context before
++ * dispatching to x64/EC handlers.  M2: nothing to reconcile yet.
++ */
++void vkmt_reset_to_consistent_state( EXCEPTION_RECORD *rec, CONTEXT *context, ARM64_NT_CONTEXT *arm_ctx )
++{
++    TRACE( "rec %p (code %lx) context %p arm_ctx %p\n",
++           rec, rec ? rec->ExceptionCode : 0, context, arm_ctx );
++}
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp_stub.c wine/wine-11.12/dlls/xtajit64/vkmt/interp_stub.c
+--- /tmp/wine-11.12/dlls/xtajit64/vkmt/interp_stub.c	1969-12-31 17:00:00
++++ wine/wine-11.12/dlls/xtajit64/vkmt/interp_stub.c	2026-07-25 14:45:55
+@@ -0,0 +1,206 @@
++/*
++ * VKMT x86-64 emulator skeleton — minimal interpreter stub (M2)
++ *
++ * Copyright 2026 Avery Felts
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ *
++ * Deliberately tiny decode set — enough for a hand-written
++ * `mov eax,imm; ret` snippet and the most common prologue/branch
++ * instructions, plus the two exit conditions (native EC target and the
++ * RetToEntryThunk marker).  Everything else is a loud giveup; M3 replaces
++ * this with the real interpreter.
++ */
++
++#include <stdarg.h>
++
++#include "vkmt.h"
++
++WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64);
++
++extern void RetToEntryThunk(void);
++
++#define VKMT_INTERP_MAX_INSNS 10000000   /* runaway-guest guard */
++
++static inline void push( struct vkmt_x64_context *ctx, ULONGLONG val )
++{
++    ctx->rsp -= 8;
++    *(ULONGLONG *)(ULONG_PTR)ctx->rsp = val;
++}
++
++static inline ULONGLONG pop( struct vkmt_x64_context *ctx )
++{
++    ULONGLONG val = *(ULONGLONG *)(ULONG_PTR)ctx->rsp;
++    ctx->rsp += 8;
++    return val;
++}
++
++void vkmt_interp_run( struct vkmt_x64_context *ctx, struct vkmt_interp_outcome *out )
++{
++    ULONGLONG *reg[16];
++    ULONG count = 0;
++
++    reg[0] = &ctx->rax; reg[1] = &ctx->rcx; reg[2]  = &ctx->rdx; reg[3]  = &ctx->rbx;
++    reg[4] = &ctx->rsp; reg[5] = &ctx->rbp; reg[6]  = &ctx->rsi; reg[7]  = &ctx->rdi;
++    reg[8] = &ctx->r8;  reg[9] = &ctx->r9;  reg[10] = &ctx->r10; reg[11] = &ctx->r11;
++    reg[12] = &ctx->r12; reg[13] = &ctx->r13; reg[14] = &ctx->r14; reg[15] = &ctx->r15;
++
++    for (;;)
++    {
++        const BYTE *ip = (const BYTE *)(ULONG_PTR)ctx->rip;
++        UINT rex = 0, op, modrm, rm, r;
++
++        if (!ip)
++        {
++            out->result = VKMT_INTERP_GIVEUP;
++            out->opcode = 0;
++            return;
++        }
++        /* the marker is inside our own (EC) module, so check it before the
++         * generic EC-code test */
++        if (ip == (const BYTE *)RetToEntryThunk)
++        {
++            out->result = VKMT_INTERP_EXIT_RETURN;
++            out->target = ctx->rip;
++            return;
++        }
++        if (RtlIsEcCode( (ULONG_PTR)ip ))
++        {
++            out->result = VKMT_INTERP_EXIT_NATIVE;
++            out->target = ctx->rip;
++            return;
++        }
++        if (++count > VKMT_INTERP_MAX_INSNS)
++        {
++            out->result = VKMT_INTERP_GIVEUP;
++            out->opcode = 0x1bad;
++            return;
++        }
++
++        if ((ip[0] & 0xf0) == 0x40) { rex = ip[0]; ip++; }  /* REX prefix */
++        op = *ip;
++
++        if (op == 0x90)  /* nop */
++        {
++            ctx->rip = (ULONG_PTR)(ip + 1);
++        }
++        else if (op >= 0xb8 && op <= 0xbf)  /* mov r,imm */
++        {
++            r = (op & 7) | ((rex & 1) << 3);
++            if (rex & 8) { *reg[r] = *(const ULONGLONG *)(ip + 1); ctx->rip = (ULONG_PTR)(ip + 9); }
++            else         { *reg[r] = *(const ULONG *)(ip + 1);     ctx->rip = (ULONG_PTR)(ip + 5); }
++        }
++        else if (op >= 0x50 && op <= 0x57)  /* push r64 */
++        {
++            push( ctx, *reg[(op & 7) | ((rex & 1) << 3)] );
++            ctx->rip = (ULONG_PTR)(ip + 1);
++        }
++        else if (op >= 0x58 && op <= 0x5f)  /* pop r64 */
++        {
++            *reg[(op & 7) | ((rex & 1) << 3)] = pop( ctx );
++            ctx->rip = (ULONG_PTR)(ip + 1);
++        }
++        else if ((op == 0x89 || op == 0x8b) && (ip[1] >> 6) == 3)  /* mov r,r (register-direct) */
++        {
++            modrm = ip[1];
++            rm = (modrm & 7) | ((rex & 1) << 3);
++            r  = ((modrm >> 3) & 7) | ((rex & 4) << 1);
++            if (op == 0x89) { if (rex & 8) *reg[rm] = *reg[r]; else *reg[rm] = (ULONG)*reg[r]; }
++            else            { if (rex & 8) *reg[r] = *reg[rm]; else *reg[r] = (ULONG)*reg[rm]; }
++            ctx->rip = (ULONG_PTR)(ip + 2);
++        }
++        else if ((op == 0x31 || op == 0x33) && (ip[1] >> 6) == 3)  /* xor r,r */
++        {
++            modrm = ip[1];
++            rm = (modrm & 7) | ((rex & 1) << 3);
++            r  = ((modrm >> 3) & 7) | ((rex & 4) << 1);
++            if (op == 0x31) *reg[rm] = (ULONG)(*reg[rm] ^ *reg[r]);
++            else            *reg[r]  = (ULONG)(*reg[r] ^ *reg[rm]);
++            ctx->rip = (ULONG_PTR)(ip + 2);
++        }
++        else if (op == 0x83 && (ip[1] >> 6) == 3 && (ip[1] & 7) == 4 &&
++                 ((ip[1] >> 3) & 7) == 5)  /* sub rsp,imm8 */
++        {
++            ctx->rsp -= (signed char)ip[2];
++            ctx->rip = (ULONG_PTR)(ip + 3);
++        }
++        else if (op == 0x83 && (ip[1] >> 6) == 3 && (ip[1] & 7) == 4 &&
++                 ((ip[1] >> 3) & 7) == 0)  /* add rsp,imm8 */
++        {
++            ctx->rsp += (signed char)ip[2];
++            ctx->rip = (ULONG_PTR)(ip + 3);
++        }
++        else if (op == 0xe8)  /* call rel32 */
++        {
++            const BYTE *next = ip + 5;
++            push( ctx, (ULONG_PTR)next );
++            ctx->rip = (ULONG_PTR)(next + *(const INT *)(ip + 1));
++        }
++        else if (op == 0xe9)  /* jmp rel32 */
++        {
++            ctx->rip = (ULONG_PTR)(ip + 5 + *(const INT *)(ip + 1));
++        }
++        else if (op == 0xeb)  /* jmp rel8 */
++        {
++            ctx->rip = (ULONG_PTR)(ip + 2 + *(const signed char *)(ip + 1));
++        }
++        else if (op == 0xff && (ip[1] >> 6) == 3 && ((ip[1] >> 3) & 7) == 2)  /* call r/m64 */
++        {
++            const BYTE *next = ip + 2;
++            push( ctx, (ULONG_PTR)next );
++            ctx->rip = *reg[(ip[1] & 7) | ((rex & 1) << 3)];
++        }
++        else if (op == 0xff && (ip[1] >> 6) == 3 && ((ip[1] >> 3) & 7) == 4)  /* jmp r/m64 */
++        {
++            ctx->rip = *reg[(ip[1] & 7) | ((rex & 1) << 3)];
++        }
++        else if (op == 0xff && (ip[1] >> 6) == 0 && (ip[1] & 7) == 5 &&
++                 ((ip[1] >> 3) & 7) == 2)  /* call [rip+disp32] */
++        {
++            const BYTE *next = ip + 6;
++            push( ctx, (ULONG_PTR)next );
++            ctx->rip = *(const ULONGLONG *)(next + *(const INT *)(ip + 2));
++        }
++        else if (op == 0xff && (ip[1] >> 6) == 0 && (ip[1] & 7) == 5 &&
++                 ((ip[1] >> 3) & 7) == 4)  /* jmp [rip+disp32] */
++        {
++            const BYTE *next = ip + 6;
++            ctx->rip = *(const ULONGLONG *)(next + *(const INT *)(ip + 2));
++        }
++        else if (op == 0xc3)  /* ret */
++        {
++            ctx->rip = pop( ctx );
++        }
++        else if (op == 0xc2)  /* ret imm16 */
++        {
++            ctx->rip = pop( ctx );
++            ctx->rsp += *(const USHORT *)(ip + 1);
++        }
++        else if (op == 0xcc)  /* int3 */
++        {
++            ERR( "guest int3 at rip %p\n", (void *)ctx->rip );
++            out->result = VKMT_INTERP_GIVEUP;
++            out->opcode = op;
++            return;
++        }
++        else
++        {
++            out->result = VKMT_INTERP_GIVEUP;
++            out->opcode = op;
++            ctx->rip    = (ULONG_PTR)ip;
++            return;
++        }
++    }
++}
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
+--- /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	1969-12-31 17:00:00
++++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 14:49:37
+@@ -0,0 +1,84 @@
++/*
++ * VKMT x86-64 emulator skeleton — private shared header
++ *
++ * Copyright 2026 Avery Felts
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
++#ifndef __VKMT_X64EMU_H
++#define __VKMT_X64EMU_H
++
++#include "ntstatus.h"
++#include "windef.h"
++#include "winbase.h"
++#include "winnt.h"
++#include "winternl.h"
++#include "wine/debug.h"
++
++/* debug channel: each .c file sets WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64) */
++
++/* Private per-thread guest x86-64 context.  The live register file during
++ * simulation is the cpu area's ContextAmd64 (that is what ntdll fills and
++ * what NtContinue consumes); this block is the emulator's own copy, used by
++ * the interpreter and extended by M3 (decode caches, flags state, ...).
++ * Linked from CHPE_V2_CPU_AREA_INFO.EmulatorData[0]. */
++struct vkmt_x64_context
++{
++    ULONGLONG rax, rcx, rdx, rbx, rsp, rbp, rsi, rdi;
++    ULONGLONG r8, r9, r10, r11, r12, r13, r14, r15;
++    ULONGLONG rip;
++    ULONG     eflags;
++    ULONG     mxcsr;
++    USHORT    fcw;
++    USHORT    pad[3];
++    M128A     xmm[16];
++};
++
++/* context.c */
++NTSTATUS vkmt_process_init(void);
++void     vkmt_process_term( HANDLE handle, BOOL is_post, NTSTATUS status );
++NTSTATUS vkmt_thread_init(void);
++void     vkmt_thread_term( HANDLE handle, LONG exit_code );
++void     vkmt_update_processor_information( SYSTEM_CPU_INFORMATION *info );
++BOOLEAN  vkmt_is_processor_feature_present( UINT feature );
++
++struct vkmt_x64_context *vkmt_thread_context(void);
++void vkmt_context_from_ec( struct vkmt_x64_context *ctx, const ARM64EC_NT_CONTEXT *ec );
++void vkmt_context_to_ec( ARM64EC_NT_CONTEXT *ec, const struct vkmt_x64_context *ctx );
++
++/* dispatch.c */
++void vkmt_begin_simulation(void);       /* C body for BeginSimulation */
++void     vkmt_simulate_from_ec( int plant_marker ); /* C body for ExitToX64/DispatchJump/RetToEntryThunk */
++void vkmt_reset_to_consistent_state( EXCEPTION_RECORD *rec, CONTEXT *context, ARM64_NT_CONTEXT *arm_ctx );
++
++/* interp_stub.c — interpreter skeleton result codes */
++enum vkmt_interp_result
++{
++    VKMT_INTERP_EXIT_NATIVE,   /* guest RIP reached native (EC) code; exit target in rip */
++    VKMT_INTERP_EXIT_RETURN,   /* guest returned to the RetToEntryThunk marker */
++    VKMT_INTERP_GIVEUP         /* cannot continue (unsupported opcode / null rip) */
++};
++
++struct vkmt_interp_outcome
++{
++    enum vkmt_interp_result result;
++    ULONGLONG target;          /* EXIT_NATIVE: native pc */
++    ULONG     opcode;          /* GIVEUP: offending opcode byte(s) */
++};
++
++void vkmt_interp_run( struct vkmt_x64_context *ctx, struct vkmt_interp_outcome *out );
++
++#endif /* __VKMT_X64EMU_H */
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/include/winnt.h wine/wine-11.12/include/winnt.h
 --- /tmp/wine-11.12/include/winnt.h	2026-06-29 13:32:59
 +++ wine/wine-11.12/include/winnt.h	2026-07-25 13:38:08
@@ -609,3 +1619,84 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/loader/wine.inf.in wine/w
  HKCU,Software\Wine\Debug,"RelayExclude",2,"ntdll.RtlEnterCriticalSection;ntdll.RtlTryEnterCriticalSection;ntdll.RtlLeaveCriticalSection;kernel32.48;kernel32.49;kernel32.94;kernel32.95;kernel32.96;kernel32.97;kernel32.98;kernel32.TlsGetValue;kernel32.TlsSetValue;kernel32.FlsGetValue;kernel32.FlsSetValue;kernel32.SetLastError"
  HKCU,Software\Wine\Debug,"RelayFromExclude",2,"winex11.drv;winemac.drv;user32;gdi32;advapi32;kernel32"
  
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/tools/makedep.c wine/wine-11.12/tools/makedep.c
+--- /tmp/wine-11.12/tools/makedep.c	2026-06-29 13:32:59
++++ wine/wine-11.12/tools/makedep.c	2026-07-25 14:42:32
+@@ -3579,6 +3579,12 @@
+         output_filenames( all_libs );
+         output_filename( arch_make_variable( "LDFLAGS", link_arch ));
+         output( "\n" );
++        /* VKMT: LLVM's aarch64 TLS lowering hardcodes x18 (TEB.TlsSlots), but
++         * VKMT keeps the TEB in x28 on Darwin; rewrite [x18] operands to
++         * [x28] in every freshly linked arm64ec PE (no-op when no sites or
++         * when the script is absent). */
++        if (!strcmp( archs.str[link_arch], "arm64ec" ))
++            output( "\t@if [ -f $(srcdir)/tools/vkmt-fix-x18-tls.py ]; then python3 $(srcdir)/tools/vkmt-fix-x18-tls.py $@; fi\n" );
+     }
+ }
+ 
+@@ -4009,6 +4015,13 @@
+     output_filenames( all_libs );
+     output_filename( arch_make_variable( "LDFLAGS", link_arch ));
+     output( "\n" );
++
++    /* VKMT: LLVM's aarch64 TLS lowering hardcodes x18 (TEB.TlsSlots), but
++     * VKMT keeps the TEB in x28 on Darwin; rewrite [x18] operands to
++     * [x28] in every freshly linked arm64ec PE (no-op when no sites or
++     * when the script is absent). */
++    if (!strcmp( archs.str[link_arch], "arm64ec" ))
++        output( "\t@if [ -f $(srcdir)/tools/vkmt-fix-x18-tls.py ]; then python3 $(srcdir)/tools/vkmt-fix-x18-tls.py $@; fi\n" );
+ 
+     if (!make->data_only && !arch && unix_lib_supported) output_fake_module( make, spec_file );
+ }
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/tools/vkmt-fix-x18-tls.py wine/wine-11.12/tools/vkmt-fix-x18-tls.py
+--- /tmp/wine-11.12/tools/vkmt-fix-x18-tls.py	1969-12-31 17:00:00
++++ wine/wine-11.12/tools/vkmt-fix-x18-tls.py	2026-07-25 14:36:34
+@@ -0,0 +1,47 @@
++#!/usr/bin/env python3
++# VKMT: rewrite [x18] base-register memory operands to [x28] in aarch64 PE
++# binaries. LLVM's Windows-aarch64 TLS lowering hardcodes x18 (TEB.TlsSlots);
++# VKMT keeps the TEB in x28. Safe because all our PE code is built with
++# -ffixed-x18, so no legitimate x18 allocation remains in .text.
++import re, struct, subprocess, sys
++
++BIN = "/Volumes/AverySSD/toolchains/llvm-mingw-20260616-ucrt-macos-universal/bin"
++
++def patch(path):
++    out = subprocess.run([f"{BIN}/llvm-objdump", "-d", "--no-show-raw-insn", path],
++                         capture_output=True, text=True).stdout
++    sites = [int(m.group(1), 16) for line in out.splitlines()
++             if (m := re.match(r"\s*([0-9a-f]+):.*\[x18[,\]]", line))]
++    if not sites:
++        print(f"{path}: no [x18] operands found")
++        return
++
++    hdr = subprocess.run([f"{BIN}/llvm-readobj", "--sections", "--file-headers", path],
++                         capture_output=True, text=True).stdout
++    image_base = int(re.search(r"ImageBase: (0x[0-9a-fA-F]+)", hdr).group(1), 16)
++    secs = []  # (vma, fileoff, size)
++    for m in re.finditer(r"VirtualAddress: (0x[0-9a-f]+)\n(?:.*\n)*?\s+RawDataSize: (\d+)\n\s+PointerToRawData: (0x[0-9a-f]+)", hdr):
++        rva, size, off = int(m.group(1), 16), int(m.group(2)), int(m.group(3), 16)
++        secs.append((image_base + rva, off, size))
++
++    data = bytearray(open(path, "rb").read())
++    patched = 0
++    for va in sites:
++        for vma, off, size in secs:
++            if vma <= va < vma + size:
++                fo = off + (va - vma)
++                (w,) = struct.unpack_from("<I", data, fo)
++                rn = (w >> 5) & 0x1F
++                if rn != 18:
++                    print(f"{path}: WARNING word at {va:#x} has Rn={rn}, expected 18 ({w:#010x})")
++                    break
++                struct.pack_into("<I", data, fo, (w & ~(0x1F << 5)) | (28 << 5))
++                patched += 1
++                break
++        else:
++            print(f"{path}: WARNING no section for vaddr {va:#x}")
++    open(path, "wb").write(data)
++    print(f"{path}: patched {patched}/{len(sites)} [x18]->[x28] sites")
++
++for p in sys.argv[1:]:
++    patch(p)

@@ -194,3 +194,254 @@ stub was never entered.
   ImageBase `0x180000000`; native-half symbols appear at plain RVAs —
   handy for offline symbolication of EC crashes (fault RVA = pc − module
   base; both halves land in one map).
+
+
+---
+
+## M2 (2026-07-25): xtajit64 emulator skeleton — derived ABI conventions
+
+The stub xtajit64 ("x64 emulation not implemented" → NtTerminateProcess) is
+replaced by our own interface-complete skeleton in
+`dlls/xtajit64/vkmt/` (thin export layer stays in `dlls/xtajit64/cpu.c`).
+**No x86 execution yet** beyond a minimal decode skeleton; M3 fills in the
+interpreter. This section is the ABI reference M3 is built against.
+
+### Where the emulator gets invoked (verified in source + disassembly)
+
+There are exactly four entry points from native code into the emulator:
+
+1. **`BeginSimulation()`** — called as an ordinary EC function
+   (`pBeginSimulation()` in `dispatch_emulation`,
+   `dlls/ntdll/signal_arm64ec.c:1264`). Reached whenever the unix side
+   resumes a thread whose target PC is not EC code
+   (`signal_set_full_context`, `dlls/ntdll/unix/signal_arm64.c:379-387`:
+   the resume frame PC is redirected to `KiUserEmulationDispatcher` with a
+   full native context placed on the stack). Before the call, ntdll has:
+   - converted the saved native context into the cpu area:
+     `context_arm_to_x64( cpu_area->ContextAmd64, arm_ctx )`
+   - set `cpu_area->InSimulation = 1`
+   So at `BeginSimulation` entry **all guest state lives in
+   `cpu_area->ContextAmd64`** (an `ARM64EC_NT_CONTEXT`); the native
+   registers belong to the dispatcher and may be clobbered. The function
+   must never return (its caller does `brk #1` afterwards) — it leaves via
+   `NtContinue` or process termination.
+
+2. **`ExitToX64()`** (`__os_arm64x_dispatch_call_no_redirect`) — `blr`'d
+   from inside llvm-mingw `$iexit_thunk$` thunks when EC code calls an x64
+   function. Verified from ntdll.dll disassembly:
+   ```
+   $iexit_thunk$cdecl$i8$i8:
+     sub sp, sp, #0x30
+     stp x29, x30, [sp, #0x20]
+     add x29, sp, #0x20
+     ldr x16, [__os_arm64x_dispatch_call_no_redirect]
+     blr x16                    ; -> ExitToX64
+     mov x0, x8                 ; guest RAX comes back in x8
+     ldp x29, x30, [sp, #0x20]
+     add sp, sp, #0x30
+     ret
+   ```
+   At `ExitToX64` entry: **x9 = x64 target address** (placed by
+   `arm64x_check_call`'s `.Lexit`: `mov x9, x11`), x0–x7 = EC args,
+   sp = guest stack (the thunk's 0x30 frame: saved fp/lr at `[sp,#0x20]`,
+   16 bytes free at `[sp,#0x00]` — believed to be the slot where the
+   emulator writes the `RetToEntryThunk` marker as the guest return
+   address; **unverified, confirm in M3**), lr = return address into the
+   thunk epilogue. Return protocol: emulator resumes native execution with
+   guest RAX in x8 and PC = the lr it saw at entry (the thunk then does
+   `mov x0, x8; ret` back into EC code).
+
+3. **`DispatchJump()`** (`__os_arm64x_dispatch_fptr`) — same convention as
+   `ExitToX64` (x9 = x64 target) but tail-called for indirect *jumps* into
+   x64 code; no new frame is created, so a guest `ret` lands directly on
+   the EC caller's return address (which is EC code → plain exit-to-native).
+
+4. **`RetToEntryThunk()`** (`__os_arm64x_dispatch_ret`) — `br`'d to from
+   the epilogue of `$ientry_thunk$` thunks when a native (EC) function that
+   was called *from the emulator* returns:
+   ```
+   $ientry_thunk$cdecl$...:
+     sub sp, sp, #0xd0 ; save q6-q15, fp/lr
+     ldp x8, x5, [x4, #0x20] ; reload args from a descriptor buffer in x4:
+     ldr q0,     [x4, #0x40] ;   +0x20 x4, +0x28 x5, +0x30 x6/x7,
+     ldp x6, x7, [x4, #0x30] ;   +0x40 q0, +0x50 extra (stack-arg/retaddr?)
+     ldr x10,    [x4, #0x50] ;   (exact x4 descriptor semantics: M3)
+     blr x9                  ; x9 = native EC function
+     ldr x1, [__os_arm64x_dispatch_ret]
+     mov x8, x0              ; result -> guest RAX in x8
+     ...restore..., add sp, sp, #0xd0
+     br x1                   ; -> RetToEntryThunk
+   ```
+   At `RetToEntryThunk` entry: x8 = guest RAX, sp = guest RSP as at
+   entry-thunk entry, and `[sp]` = the x64 return address the guest pushed
+   with its `call`. So the re-entry convention is: capture regs,
+   guest RIP = pop([sp]), re-enter simulation.
+
+### Guest state representation
+
+`CHPE_V2_CPU_AREA_INFO` (include/winternl.h:352), per thread, allocated by
+M1 in `dlls/ntdll/unix/thread.c:1217-1241` (above 4GB on Darwin):
+- `InSimulation` (0x00), `InSyscallCallback` (0x01) — cooperative flags
+  read by `signal_arm64.c` suspend machinery; emulator must set
+  `InSimulation=1` while interpreting and clear it before any `NtContinue`
+  back to native code.
+- `EmulatorStackBase` (0x08) / `EmulatorStackLimit` (0x10) — private
+  emulator stack (256KB); entry points switch SP here before running C.
+- `ContextAmd64` (0x18) → `ARM64EC_NT_CONTEXT` (0x4d0 bytes, lives inline
+  in the reserved area at `EmulatorDataInline`). THE guest register file.
+- `EmulatorData[4]` (0x30) — emulator-private slots; VKMT uses
+  `[0]` = per-thread `vkmt_x64_context*`, `[1]` = raw NZCV scratch during
+  ExitToX64/DispatchJump entry.
+
+x64 ↔ ARM64EC register aliasing inside `ARM64EC_NT_CONTEXT`
+(include/winnt.h:1908-2012; this is what the interpreter reads/writes):
+
+| x64 | ARM64EC field | offset | x64 | ARM64EC field | offset |
+|-----|---------------|--------|-----|---------------|--------|
+| rax | X8   | 0x078 | r8  | X2  | 0x0b8 |
+| rcx | X0   | 0x080 | r9  | X3  | 0x0c0 |
+| rdx | X1   | 0x088 | r10 | X4  | 0x0c8 |
+| rbx | X27  | 0x090 | r11 | X5  | 0x0d0 |
+| rsp | Sp   | 0x098 | r12 | X19 | 0x0d8 |
+| rbp | Fp   | 0x0a0 | r13 | X20 | 0x0e0 |
+| rsi | X25  | 0x0a8 | r14 | X21 | 0x0e8 |
+| rdi | X26  | 0x0b0 | r15 | X22 | 0x0f0 |
+| rip | Pc   | 0x0f8 | lr (native ret) | Lr | 0x120 |
+| rflags | AMD64_EFlags | 0x044 | xmm0-15 | V[0..15] | 0x1a0 |
+
+EFlags ↔ CPSR (from ntdll `cpsr_to_eflags`): N→SF(0x80), Z→ZF(0x40),
+C→CF(0x01), V→OF(0x800), plus always-set 0x002 and IF 0x200. Raw NZCV has
+no place in the EC context, so the asm entry stashes it in
+`EmulatorData[1]` and C code converts.
+
+### Leaving simulation
+
+Uniform exit for all paths: write final guest state into `ContextAmd64`,
+set `Pc` = native (EC) target, `InSimulation = 0`, then
+`NtContinue( (CONTEXT *)ContextAmd64, FALSE )` (EC ntdll converts
+x64→native and resumes; if the target were still x64 the unix side would
+bounce us straight back into `KiUserEmulationDispatcher` →
+`BeginSimulation`, which is the correct re-entry loop).
+
+The interpreter decides to exit when the next guest RIP is:
+- EC code (`RtlIsEcCode(rip)`) → exit to native at that PC
+  (covers guest `call`/`jmp`/`ret` into EC thunks and EC return addresses);
+- equal to `&RetToEntryThunk` (the marker) → guest `ret` from an
+  ExitToX64-entered call: exit to native at the saved native lr
+  (`ContextAmd64->Lr`), guest RAX already in X8;
+- 0 → giveup diagnostic (guest returned from a top-level entry).
+
+### Skeleton behavior for M2 (no real x86 execution)
+
+`vkmt/interp_stub.c` decodes a deliberately tiny subset — enough to run a
+hand-written `mov eax,imm; ret` snippet and typical prologue prefixes:
+`nop`, `mov r32,imm32` / `mov r64,imm64` (B8+rd), register-direct
+`mov r64,r64` (89/8B mod=3), `push/pop r64`, `add/sub rsp,imm8`,
+`call/jmp rel`, `call/jmp r/m64` (FF /2,/4 mod=3), `ret`/`ret imm16`,
+`int3`. Anything else → loud `ERR` diagnostic ("VKMT M2 skeleton:
+unsupported guest opcode …") and clean `NtTerminateProcess(
+STATUS_ILLEGAL_INSTRUCTION )` — replacing the stub's blanket terminate.
+All Notify*/BTCpu64* hooks log on the `vkmtx64` debug channel.
+
+### Implementation notes (what actually landed)
+
+- `dlls/xtajit64/cpu.c` is now a thin export layer; implementation in
+  `dlls/xtajit64/vkmt/`: `vkmt.h`, `context.c` (process/thread lifecycle,
+  per-thread `vkmt_x64_context` in `EmulatorData[0]`, feature bits,
+  `UpdateProcessorInformation` → AMD64/level 21/revision 1), `dispatch.c`
+  (naked `BeginSimulation`/`ExitToX64`/`DispatchJump`/`RetToEntryThunk`,
+  `vkmt_simulate` loop, `ResetToConsistentState`), `interp_stub.c`.
+  Debug channel `vkmtx64`.
+- **Observed entry path:** the x64 exe entry point is reached via
+  **ExitToX64** (loader → exit thunk → `blr ExitToX64`, x9 = exe entry),
+  not via `BeginSimulation`. `BeginSimulation` fires on the
+  `NtContinue`-to-x64 path (thread starts, syscall re-entry,
+  `STATUS_EMULATION_SYSCALL`); both funnel into the same `vkmt_simulate`.
+- **Return-marker protocol (now implemented + verified):** on
+  ExitToX64/DispatchJump entry the emulator writes `&RetToEntryThunk` to
+  the guest stack top and stashes the thunk-entry SP/FP in
+  `EmulatorData[2..3]`. A guest `ret` pops the marker → EXIT_RETURN →
+  `NtContinue` with `Pc = entry-time lr` (thunk epilogue), **SP/FP
+  restored to entry values** (the guest frame is discarded; the thunk's
+  own epilogue must see its exact entry SP — first version of this
+  crashed with c0000005 at caller+4 until the restore was added).
+  Guest RAX lands in x8, thunk does `mov x0, x8` → the EC caller sees a
+  normal return value.
+- **x64-half discovery:** a guest call to a hybrid-dll API (e.g.
+  `ExitProcess` via IAT) lands in the dll's **x64 half** (real x64 code,
+  not EC per `RtlIsEcCode`), which then transitions to the EC half
+  internally. So M3 cannot avoid interpreting those prologues — API calls
+  are not a cheap "jump straight to native" escape.
+- Interpreter subset: as listed above plus rip-relative `call/jmp
+  [rip+disp32]` (FF /2,/4 mod=0 rm=101).
+
+### TLS fixup wiring (M1 follow-up, done)
+
+`tools/makedep.c` now emits a post-link command for every module whose
+link arch is arm64ec (covers arm64x too): runs
+`tools/vkmt-fix-x18-tls.py $@` (a copy of `scripts/fix-x18-tls.py`,
+shipped in the wine patch; guarded by `if [ -f ]`, silent skip when
+absent). Make-level hook in `output_module()` — the single rule every PE
+dll/exe link goes through — no winegcc changes needed. Gotcha found:
+`$(top_srcdir)` is not defined in the generated top-level Makefile; the
+hook uses `$(srcdir)`. Verified: `touch libs/icucommon/chariter.cpp &&
+make dlls/icu/aarch64-windows/icu.dll` relinks and prints
+`dlls/icu/aarch64-windows/icu.dll: patched 22/22 [x18]->[x28] sites`;
+post-link scan `llvm-objdump -d | grep -c '\[x18, #0x'` → **0**.
+Full rescan of every `aarch64-windows`/`arm64ec-windows` PE in build-ec
+with the corrected `\[x18, #0x` pattern → **0 offenders**.
+
+### Test results (verbatim highlights)
+
+- Regression, fresh prefix: `wine cmd /c echo OK` → `OK`.
+- Regression, `test/prefix-ec2`, `C:\hello_ec.exe` → `hello from arm64ec`,
+  `exit=42`.
+- `test/x64emu/entry_x64.exe` (normal-CRT hello+`return 7`), fresh
+  `test/prefix-x64`, `WINEDEBUG=+vkmtx64`:
+  ```
+  0024:trace:vkmtx64:vkmt_process_init VKMT x86-64 emulator skeleton (M2): process init
+  0024:trace:vkmtx64:vkmt_thread_init thread 0024 init, cpu area 0000000105CB0000
+  0024:trace:vkmtx64:vkmt_simulate_from_ec simulation from EC: thread 0024 guest rip 0000000140001480 rsp 0000000105AEF500 native lr 00006FFFFFA56364
+  0024:trace:vkmtx64:vkmt_simulate enter simulation: thread 0024 guest rip 0000000140001480 rsp 0000000105AEF500
+  0024:err:vkmtx64:vkmt_simulate VKMT M2 skeleton: cannot continue guest execution at rip 0000000140001487 (opcode 8b) — terminating process cleanly; full x86-64 interpretation lands in M3
+  ```
+  → process exit code 0x1d (STATUS_ILLEGAL_INSTRUCTION), no crash/hang,
+  `wineserver -w` returns 0. (All Notify* traffic visible on the channel.)
+- `test/x64emu/ret_snippet_x64.exe` (hand-written `mov eax,7; ret`,
+  `-nostdlib -e entry`):
+  ```
+  0024:trace:vkmtx64:vkmt_simulate_from_ec simulation from EC: thread 0024 guest rip 0000000140001000 rsp 000000010755FFB0 native lr 00006FFFFF68F9FC
+  0024:trace:vkmtx64:vkmt_simulate enter simulation: thread 0024 guest rip 0000000140001000 rsp 000000010755FFB0
+  0024:trace:vkmtx64:vkmt_simulate guest returned to EC caller at 00006FFFFF68F9FC (rax 0000000000000007)
+  0024:trace:vkmtx64:vkmt_process_term process term handle 0000000000000000 is_post 0 status 0
+  ```
+  → **process exit code 7**: full enter→interpret→return→native round
+  trip with the exit-code value propagated through x8 → x0.
+- `test/x64emu/exit_native_x64.exe` (`mov ecx,7; jmp [rip+__imp_ExitProcess]`):
+  interpreter followed the IAT into kernel32's **x64 half** and gave up
+  cleanly at its prologue (`48 89` memory-form mov) — expected for M2,
+  see the x64-half note above.
+
+### Open questions / M3 scope (honest assessment)
+
+- **M3 is a real interpreter, no shortcuts.** The two biggest hopes for
+  avoiding full decode turned out false: (1) the CRT entry runs dozens of
+  x64 instructions before any native call; (2) hybrid-dll API calls route
+  through the dll's x64 half first, so even "just call ExitProcess"
+  needs memory-operand decode. Expect entry_x64's `hello` to need:
+  full ModRM/SIB memory addressing, flag-tracking ALU, jcc, movs/stos,
+  SSE movs, and the `syscall`/fast-forward sequences.
+- **Confirm the ExitToX64 marker slot** ([thunk sp+0]) against a call
+  with >4 args and against floating-point args (entry thunks save
+  q6–q15; xmm0–3 argument passing is untested).
+- **`$ientry_thunk` x4-descriptor layout** (+0x20/+0x30/+0x40/+0x50) needs
+  confirmation the first time the emulator exits to native through an
+  entry thunk rather than a plain EC return address.
+- KiUserExceptionDispatcher's `dispatch_ret`-based unwind and
+  `ResetToConsistentState` are stubs; exception flow across the
+  x64/EC boundary is unexplored.
+- Guest FPU/SSE state: v0–v15 captured on thunk entry, mxcsr defaults to
+  0x1f80; no per-instruction FP decode yet.
+- Debuggers: winedbg auto-attach after a guest giveup couldn't get the
+  first exception (debugger process itself trips emulation paths) —
+  worth fixing early in M3, debugging the interpreter needs it.
