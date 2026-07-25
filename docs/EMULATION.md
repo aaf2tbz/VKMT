@@ -556,3 +556,17 @@ dumps):
    `idiv` (/7) has no imm, decoder was eating 4 bytes of the next insn.
 4. `0F 51` (sqrtsd) missing from the modrm table — 3-byte decode,
    phantom instruction, then fallthrough into `call sqrt` (double sqrt).
+
+### M3c: mem_x64.exe passes
+
+Probe 3 (`test/x64emu/mem_x64.c`, -O2): VirtualAlloc 4MB (lands at
+0x1xxxxxxxx, above 4GB as required), memset/memcpy/memmove loops with
+value checks, per-page touch, decommit/recommit/release, CreateFile +
+CreateFileMapping + MapViewOfFile write/flush/read-back round trip —
+`mem_x64: OK (0 failures)`, exit 0.
+
+Interpreter bug fixed:
+5. ALU accumulator imm8 forms (04/0c/14/1c/24/2c/34/3c) missing from the
+   imm8 table — same decode-misalignment class as bug 1 (this time it
+   produced both a bogus check failure AND a truncated pointer;
+   diagnosed via conditional rip breakpoints printing registers).
