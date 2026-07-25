@@ -23,6 +23,8 @@ export LDFLAGS="-L$VKMT/third_party/MoltenVK/Package/Release/MoltenVK/dynamic/dy
 
 cd "$BLD"
 if [ ! -f Makefile ]; then
+  # VKMT: PE TEB lives in x28 (Darwin scrubs x18); reserve x28 in all aarch64 PE code.
+  aarch64_CFLAGS="-g -O2 -ffixed-x18 -ffixed-x28" \
   "$SRC/configure" \
     --enable-archs=arm64ec,aarch64,x86_64,i386 \
     --with-vulkan --with-freetype --with-fontconfig --with-opengl \
