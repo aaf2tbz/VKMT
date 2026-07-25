@@ -445,3 +445,86 @@ with the corrected `\[x18, #0x` pattern → **0 offenders**.
 - Debuggers: winedbg auto-attach after a guest giveup couldn't get the
   first exception (debugger process itself trips emulation paths) —
   worth fixing early in M3, debugging the interpreter needs it.
+
+---
+
+## M3 (2026-07-25): real x86-64 interpreter — entry_x64.exe passes
+
+`dlls/xtajit64/vkmt/interp.c` replaces the M2 stub with a full
+decode→execute interpreter (decoder fills a `vkmt_insn` metadata struct —
+prefixes/opcode/ModRM/SIB/disp/imm/resolved EA — reusable by a future JIT;
+execute stage is separate). RFLAGS: **always-compute** (every ALU op
+materialises CF/OF/AF/SF/ZF/PF immediately; no lazy state).
+
+Coverage: full ModRM/SIB/REX + rip-relative addressing, 8/16/32/64
+operands (incl. no-REX high-byte regs), ALU groups + group1 imm, flag-
+accurate add/sub/and/or/xor/test/cmp, shifts/rotates (rcl/rcr via carry
+loop), mul/imul/div/idiv (incl. 128-bit), inc/dec/neg/not, jcc8/jcc32/
+loop/jrcxz/cmov/setcc, movzx/movsx/movsxd, lea, xchg, bswap, bsf/bsr,
+bt/bts/btr/btc (+bit-string mem addressing), shld/shrd, popcnt,
+cmpxchg/cmpxchg8b/16b and xadd with host `__atomic` RMW for LOCK forms,
+string ops (movs/stos/scas/cmps/lods + rep; rep movsb/stosb have
+memcpy/memset fast paths), push/pop/pushf/popf/enter/leave, cbw/cwde/cdqe
++cwd/cdq/cqo, sahf/lahf, xlat, clc/stc/cmc/cld/std, CPUID (GenuineIntel
+baseline matching UpdateProcessorInformation: SSE..SSE4.2, POPCNT, NX,
+RDTSCP, long mode), RDTSC/RDTSCP (NtQueryPerformanceCounter-based),
+mfence/lfence/sfence as nops, ldmxcsr/stmxcsr, x87: fldcw/fnstcw/fninit/
+fnstsw only — anything else x87 is a loud giveup.
+SSE/SSE2: movups/movaps/movdqa/movdqu/movss/movsd/movd/movq/movlps/
+movhps/movhlps/movlhps/movddup, add/sub/mul/div/min/max/sqrt ps/pd/ss/sd
+(local Newton sqrt — no libm in PE link), cvt family (cvtsi2ss/sd,
+cvt(t)s(s|d)2si, cvtss2sd/sd2ss/ps2pd/pd2ps, cvtdq2ps/ps2dq/tps2dq),
+ucomiss/ucomisd, cmpps/pd/ss/sd (8 predicates), and/andn/or/xor ps/pd,
+pxor/pand/pandn/por, pcmpeq/pcmpgt b/w/d, padd/psub b/w/d/q, pshufd/
+pshuflw/pshufhw, shufps/shufpd, unpcklps/pd, punpcklbw/lwd/lqdq/hqdq,
+psll/psrl/psra w/d/q + pslldq/psrldq, movmskps/pd, movnti.
+
+### Boundary discoveries (M2 open questions resolved)
+
+- **IAT slots in a pure-x64 exe point at the *EC halves* of ARM64X dlls**
+  (verified: `__imp___acrt_iob_func` = ucrtbase EC `__acrt_iob_func`, arm64
+  code at dll RVA 0xBD5FC). So guest calls into dll code exit to native
+  immediately via `RtlIsEcCode` — hybrid transitions need no x64-half
+  interpretation for wine's own dlls. (llvm-objdump prints the *EC* half
+  at plain RVAs with base 0x180000000.)
+- **x64→EC call protocol:** when the interpreter exits to native at an EC
+  target it must plant `Lr = &RetToEntryThunk` in the context — the EC
+  callee returns with a plain `ret` (x30); without the marker it rets to
+  0 (M2 never exercised EXIT_NATIVE; first attempt crashed execute-at-0).
+  RetToEntryThunk therefore now also runs when a *native* EC callee
+  returns (not only via `$ientry_thunk$`): it does `mov x8, x0` first
+  (EC result → guest RAX; idempotent with the real ientry thunks which
+  already do it), then pops the guest return address. >4-arg/xmm-arg
+  EC calls need nothing special: stack args are read off the guest stack
+  and xmm args flow through ec->V (captured/restored on every switch) —
+  confirmed working by puts/__acrt_iob_func/setvbuf/fflush.
+- **ec->Lr cannot back the EXIT_RETURN path:** the RetToEntryThunk capture
+  overwrites `ContextAmd64->Lr` with the planted marker on every EC-callee
+  return, so the ExitToX64-entry lr is now saved separately
+  (`vkmt_x64_context.native_ret`). Using ec->Lr caused an infinite
+  marker→marker ping-pong (observed).
+
+### Interpreter bugs found via the exec-ring dump (new debug tool)
+
+The giveup dump now prints guest regs, 32 bytes at rip, last 16 branch
+targets, and the last up-to-8192 executed instructions
+(rip/eflags/rax/rcx ring in the per-thread context; tight loops elided).
+`vkmt_reset_to_consistent_state` dumps the *live* guest context when a
+host fault happens mid-simulation — this is how these were found:
+
+1. Missing immz table entries for ALU accumulator forms
+   (05/0d/15/1d/25/2d/35/3d) — `cmp rax,imm32` decoded 4 bytes short.
+2. `cmp` (ALU index 7) fell into the XOR branch of the shared ALU helper —
+   flags always wrong for `cmp` (CF never set); `___chkstk_ms` probed the
+   stack into the guard page (c00000fd).
+
+Null-page guest operands (< 0x10000) are caught at decode time and turned
+into a clean giveup with the full dump (exempt: lea, hint nops, prefetch).
+
+### Result
+
+`entry_x64.exe` (full mingw CRT startup, puts("VKMT entry_x64: hello
+from x86-64 guest"), `return 7`): prints correctly, **process exit code
+7**, clean `wineserver -w`. This is the complete path: loader → exit
+thunk → ExitToX64 → CRT startup (~100k+ interpreted insns across dozens
+of simulation entries) → puts → EC ucrtbase → return marker → exit code.
