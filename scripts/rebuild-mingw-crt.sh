@@ -57,3 +57,55 @@ done
 echo "VKMT CRT installed into $TCLIB (stock copies in $BK)"
 echo "NOTE: any PE binary linked against the stock CRT must be RELINKED (not recompiled)."
 echo "NOTE: run scripts/fix-x18-tls.py on every freshly linked PE binary."
+
+# --- C++ runtime (libunwind, libc++abi, libc++; needed by DXVK) ---
+# Built from llvm-project at the exact commit the toolchain's clang was
+# built from (see `aarch64-w64-mingw32-clang++ --version`).
+if [ "${1:-}" = "cxx" ]; then
+  LLVMSHA=${LLVM_SHA:-ca7933e47d3a3451d81e72ac174dcb5aa28b59d1}
+  if [ ! -d "$SRC/llvm-project" ]; then
+    git clone --filter=blob:none --no-checkout --depth 1 https://github.com/llvm/llvm-project.git "$SRC/llvm-project"
+  fi
+  cd "$SRC/llvm-project"
+  git sparse-checkout init --cone || true
+  git sparse-checkout set cmake llvm/cmake llvm/utils/llvm-lit libcxx libcxxabi libunwind runtimes \
+      libc/shared libc/src/__support libc/hdr libc/include/llvm-libc-macros libc/include/llvm-libc-types
+  git fetch --depth 1 origin "$LLVMSHA" || true
+  git checkout "$LLVMSHA"
+
+  mkdir -p "$SRC/build-cxxrt" && cd "$SRC/build-cxxrt"
+  [ -f build.ninja ] || cmake -G Ninja -S "$SRC/llvm-project/runtimes" -B . \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=$TC/bin/aarch64-w64-mingw32-clang \
+    -DCMAKE_CXX_COMPILER=$TC/bin/aarch64-w64-mingw32-clang++ \
+    -DCMAKE_SYSTEM_NAME=Windows \
+    -DCMAKE_AR=$TC/bin/aarch64-w64-mingw32-ar \
+    -DCMAKE_RANLIB=$TC/bin/aarch64-w64-mingw32-ranlib \
+    -DCMAKE_C_FLAGS="$FLAGS" \
+    -DCMAKE_CXX_FLAGS="$FLAGS -I$SRC/llvm-project/libc" \
+    -DLLVM_ENABLE_RUNTIMES='libunwind;libcxxabi;libcxx' \
+    -DLIBUNWIND_USE_COMPILER_RT=ON -DLIBUNWIND_ENABLE_SHARED=ON -DLIBUNWIND_ENABLE_STATIC=ON \
+    -DLIBCXXABI_USE_COMPILER_RT=ON -DLIBCXXABI_USE_LLVM_UNWINDER=ON -DLIBCXXABI_ENABLE_SHARED=OFF \
+    -DLIBCXXABI_ENABLE_STATIC=ON -DLIBCXXABI_ENABLE_STATIC_UNWINDER=ON \
+    -DLIBCXX_USE_COMPILER_RT=ON -DLIBCXX_ENABLE_SHARED=ON -DLIBCXX_ENABLE_STATIC=ON \
+    -DLIBCXX_HAS_WIN32_THREAD_API=ON -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON -DLIBCXX_INCLUDE_BENCHMARKS=OFF \
+    -DCMAKE_INSTALL_PREFIX=$PWD/stage
+  ninja
+  ninja install
+
+  for f in libc++.a libc++.dll.a libc++abi.a libc++experimental.a libunwind.a libunwind.dll.a libc++.modules.json; do
+    [ -f "$BK/$f" ] || cp "$TCLIB/$f" "$BK/$f" 2>/dev/null || true
+    cp "stage/lib/$f" "$TCLIB/$f" || true
+  done
+  for f in libc++.dll libunwind.dll; do
+    [ -f "$BK/$f" ] || cp "$TC/aarch64-w64-mingw32/bin/$f" "$BK/$f"
+    cp "stage/bin/$f" "$TC/aarch64-w64-mingw32/bin/$f"
+  done
+  [ -d "$BK/include-c++" ] || cp -R "$TC/aarch64-w64-mingw32/include/c++" "$BK/include-c++"
+  rm -rf "$TC/aarch64-w64-mingw32/include/c++"
+  cp -R stage/include/c++ "$TC/aarch64-w64-mingw32/include/c++"
+  for f in __libunwind_config.h libunwind.h unwind.h unwind_arm64.h unwind_itanium.h; do
+    [ -f "stage/include/$f" ] && cp "stage/include/$f" "$TC/aarch64-w64-mingw32/include/$f"
+  done
+  echo "VKMT C++ runtime installed into $TC"
+fi

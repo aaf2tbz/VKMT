@@ -97,3 +97,24 @@ index d5cfbf95..97b83f5c 100644
  
  /* VK_AMD_anti_lag */
  VK_DEVICE_EXT_PFN(vkAntiLagUpdateAMD)
+diff --git a/meson.build b/meson.build
+index 9a607264..f9bf67e3 100644
+--- a/meson.build
++++ b/meson.build
+@@ -180,6 +180,16 @@ dxil_spirv_dep = dxil_spirv.get_variable('dxil_spirv_dep')
+ subdir('include')
+ subdir('libs')
+ 
++# VKMT: LLVM's Windows TLS lowering hardcodes [x18,#0x58], but on Darwin PE
++# keeps the TEB in x28. Rewrite the operands in every freshly linked PE dll.
++if vkd3d_platform == 'windows' and host_machine.cpu_family() == 'aarch64'
++  custom_target('fix-x18-tls',
++    input   : [d3d12core_lib, d3d12_lib],
++    output  : 'fix-x18-tls.stamp',
++    command : ['sh', '-c', 'python3 /Volumes/AverySSD/VKMT/scripts/fix-x18-tls.py "$@" && touch "$0"', '@OUTPUT@', '@INPUT@'],
++    build_by_default : true)
++endif
++
+ if vkd3d_platform == 'windows'
+   # MinGW LD on x86 emits incorrect implib with ordinal suffixes.
+   # As a workaround, just link to the system D3D12.

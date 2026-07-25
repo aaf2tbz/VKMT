@@ -79,6 +79,36 @@ llvm-addr2line -e <dll> -f -C <ImageBase + (faultPC - loadBase)>
 (vkd3d/wine PE dlls carry DWARF.) For "which register got clobbered"
 questions, `WINEDEBUG=+seh` prints the full dispatch context.
 
+## DXVK dxgi (2026-07-25, second pass)
+
+DXVK's dxgi.dll now works for the D3D12 path:
+
+```
+CreateDXGIFactory1: 0x00000000
+adapter 0: Apple M4 (VID:106b PID:1b000209)
+D3D12CreateDevice(FL_11_0): 0x00000000
+PROBE OK
+```
+
+Required work:
+
+- **libc++/libc++abi/libunwind rebuilt** from llvm-project at the exact
+  clang commit (`ca7933e4`) with `-ffixed-x18 -ffixed-x28` and installed
+  into the toolchain — the stock ones clobber x28 like the CRT did.
+  `scripts/rebuild-mingw-crt.sh cxx` reproduces it. The remaining 2
+  "x28 writes" per archive are balanced unwinder context save/restore.
+- **DXVK patches** (`patches/dxvk-vkmt-moltenvk.patch`):
+  - `geometryShader`, `shaderCullDistance` no longer required (MoltenVK
+    lacks both; only two missing required features on Apple M4).
+  - `VK_EXT_depth_clip_enable` no longer required. When absent, D3D
+    depth-clip semantics are mapped through Metal's clip mode
+    (`depthClampEnable = !depthClipEnable`), which is exact for Metal.
+  - meson post-link `fix-x18-tls` custom_target (also added to
+    vkd3d-proton's meson.build) so freshly linked PE dlls are patched
+    automatically on every ninja run.
+- Probe exe must be linked against the fixed CRT too (rebuild with
+  `-nostartfiles ... -ld3d12 -ldxgi -ldxguid -lole32`).
+
 ## Known remaining issues
 
 - First-boot rpcss ordering + a stray `0x7ffe0324` read (intermittent).
