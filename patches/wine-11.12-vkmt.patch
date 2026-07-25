@@ -114,6 +114,45 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64.c
                     "ldrb w0, [x0, 0x02]\n\t"        /* peb->BeingDebugged */
                     "cbz w0, 1f\n\t"
                     "bl DbgBreakPoint\n"
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64ec.c wine/wine-11.12/dlls/ntdll/signal_arm64ec.c
+--- /tmp/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-07-25 13:07:05
+@@ -1372,7 +1372,7 @@
+                    ".seh_handler user_callback_handler, @except\n\t"
+                    "ldr x0, [sp]\n\t"             /* args */
+                    "ldp w1, w2, [sp, #0x08]\n\t"  /* len, id */
+-                   "ldr x3, [x18, 0x60]\n\t"      /* peb */
++                   "ldr x3, [x28, 0x60]\n\t"      /* peb (VKMT: TEB in x28 on Darwin) */
+                    "ldr x3, [x3, 0x58]\n\t"       /* peb->KernelCallbackTable */
+                    "ldr x15, [x3, x2, lsl #3]\n\t"
+                    "blr x15\n\t"
+@@ -1896,7 +1896,7 @@
+     asm( ".seh_proc \"#arm64x_check_call\"\n\t"
+          ".seh_endprologue\n\t"
+          /* check for EC code */
+-         "ldr x16, [x18, #0x60]\n\t"        /* peb */
++         "ldr x16, [x28, #0x60]\n\t"        /* peb (VKMT: TEB in x28 on Darwin) */
+          "lsr x17, x11, #18\n\t"            /* dest / page_size / 64 */
+          "ldr x16, [x16, #0x368]\n\t"       /* peb->EcCodeBitMap */
+          "lsr x9, x11, #12\n\t"             /* dest / page_size */
+@@ -2052,7 +2052,7 @@
+          "ldr w2, [x1, #0x30]\n\t"     /* context->ContextFlags */
+          "orr w2, w2, #0x20000000\n\t" /* CONTEXT_UNWOUND_TO_CALL */
+          "str w2, [x1, #0x30]\n\t"
+-         "ldr x3, [x18, #0x60]\n\t"    /* peb */
++         "ldr x3, [x28, #0x60]\n\t"    /* peb (VKMT: TEB in x28 on Darwin) */
+          "ldrb w2, [x3, #2]\n\t"       /* peb->BeingDebugged */
+          "cbnz w2, 1f\n\t"
+          "bl \"#dispatch_exception\"\n"
+@@ -2156,7 +2156,7 @@
+          ".seh_save_fplr_x 16\n\t"
+          ".seh_endprologue\n\t"
+          ".seh_handler DbgUiRemoteBreakin_handler, @except\n\t"
+-         "ldr x0, [x18, #0x60]\n\t"  /* NtCurrentTeb()->Peb */
++         "ldr x0, [x28, #0x60]\n\t"  /* NtCurrentTeb()->Peb (VKMT: TEB in x28 on Darwin) */
+          "ldrb w0, [x0, 0x02]\n\t"   /* peb->BeingDebugged */
+          "cbz w0, 1f\n\t"
+          "bl \"#DbgBreakPoint\"\n"
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/thread.c wine/wine-11.12/dlls/ntdll/thread.c
 --- /tmp/wine-11.12/dlls/ntdll/thread.c	2026-06-29 13:32:59
 +++ wine/wine-11.12/dlls/ntdll/thread.c	2026-07-24 23:09:55
@@ -147,7 +186,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/env.c win
      wow64_params->AllocationSize  = size;
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/signal_arm64.c wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c
 --- /tmp/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-07-25 10:02:50
++++ wine/wine-11.12/dlls/ntdll/unix/signal_arm64.c	2026-07-25 14:05:37
 @@ -61,6 +61,15 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(seh);
@@ -310,6 +349,27 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/signal_ar
                     "stp x18, x19, [x10, #0x90]\n\t"
                     "stp x20, x21, [x10, #0xa0]\n\t"
                     "stp x22, x23, [x10, #0xb0]\n\t"
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/thread.c wine/wine-11.12/dlls/ntdll/unix/thread.c
+--- /tmp/wine-11.12/dlls/ntdll/unix/thread.c	2026-06-29 13:32:59
++++ wine/wine-11.12/dlls/ntdll/unix/thread.c	2026-07-25 12:50:51
+@@ -1221,8 +1221,17 @@
+         const SIZE_T chpev2_stack_size = 0x40000;
+ 
+         /* emulator stack */
++#if defined(__APPLE__) && defined(__aarch64__)
++        /* VKMT: no mappings below 4GB exist on this host; place the emulator
++         * stack and cpu area in the normal (above-4GB) address space. */
++        if ((status = virtual_alloc_thread_stack( &stack, 0, 0, chpev2_stack_size, chpev2_stack_size, FALSE )))
++            return status;
++        FIXME( "VKMT: arm64ec emulator stack at %p-%p, cpu area %p\n",
++               stack.StackLimit, stack.StackBase, stack.DeallocationStack );
++#else
+         if ((status = virtual_alloc_thread_stack( &stack, limit_4g, 0, chpev2_stack_size, chpev2_stack_size, FALSE )))
+             return status;
++#endif
+ 
+         cpu_area = stack.DeallocationStack;
+         cpu_area->ContextAmd64 = (ARM64EC_NT_CONTEXT *)&cpu_area->EmulatorDataInline;
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/unix_private.h wine/wine-11.12/dlls/ntdll/unix/unix_private.h
 --- /tmp/wine-11.12/dlls/ntdll/unix/unix_private.h	2026-06-29 13:32:59
 +++ wine/wine-11.12/dlls/ntdll/unix/unix_private.h	2026-07-24 21:44:37
@@ -323,7 +383,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/unix_priv
      return pthread_getspecific( thread_data_key );
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/virtual.c wine/wine-11.12/dlls/ntdll/unix/virtual.c
 --- /tmp/wine-11.12/dlls/ntdll/unix/virtual.c	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/ntdll/unix/virtual.c	2026-07-24 23:24:16
++++ wine/wine-11.12/dlls/ntdll/unix/virtual.c	2026-07-25 12:51:00
 @@ -184,6 +184,11 @@
  /* Note: these are Windows limits, you cannot change them. */
  #if defined(__i386__) || defined(__x86_64__)
@@ -449,6 +509,19 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/unix/virtual.c
      teb_block_pos = 30;
      ptr = (char *)teb_block + 30 * block_size;
      data_size = 2 * block_size;
+@@ -5089,7 +5158,12 @@
+     {
+         if (!is_wow64())
+         {
++#if defined(__APPLE__) && defined(__aarch64__)
++            /* VKMT: keep address_space_start at the 4GB floor; nothing can be
++             * mapped below it on this host (affects arm64ec guests too). */
++#else
+             address_space_start = (void *)0x10000;
++#endif
+ #ifndef __APPLE__  /* don't free the zerofill section on macOS */
+             if ((main_image_info.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA) &&
+                 (main_image_info.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE))
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntoskrnl.exe/instr.c wine/wine-11.12/dlls/ntoskrnl.exe/instr.c
 --- /tmp/wine-11.12/dlls/ntoskrnl.exe/instr.c	2026-06-29 13:32:59
 +++ wine/wine-11.12/dlls/ntoskrnl.exe/instr.c	2026-07-24 23:09:55
@@ -501,33 +574,26 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/winevulkan/vulkan_pr
  }
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/include/winnt.h wine/wine-11.12/include/winnt.h
 --- /tmp/wine-11.12/include/winnt.h	2026-06-29 13:32:59
-+++ wine/wine-11.12/include/winnt.h	2026-07-24 22:37:44
-@@ -2597,7 +2597,15 @@
++++ wine/wine-11.12/include/winnt.h	2026-07-25 13:38:08
+@@ -2597,7 +2597,10 @@
      return (struct _TEB *)__readfsdword( 0x18 );
  }
  #elif (defined(__aarch64__) || defined(__arm64ec__)) && defined(__GNUC__)
+-register struct _TEB *__wine_current_teb __asm__("x18");
 +/* VKMT: on Darwin the kernel scrubs x18 on every kernel->user boundary, so the
-+ * Windows TEB cannot live there. VKMT aarch64 PE builds use -ffixed-x28 and
-+ * keep the TEB in x28, a normal callee-saved register that Darwin preserves.
-+ * (arm64ec keeps x18 for now; EC support is a later phase.) */
-+# if defined(__arm64ec__)
- register struct _TEB *__wine_current_teb __asm__("x18");
-+# else
++ * Windows TEB cannot live there. VKMT aarch64/arm64ec PE builds use -ffixed-x28
++ * and keep the TEB in x28, a normal callee-saved register that Darwin preserves. */
 +register struct _TEB *__wine_current_teb __asm__("x28");
-+# endif
  static FORCEINLINE struct _TEB * WINAPI NtCurrentTeb(void)
  {
      return __wine_current_teb;
-@@ -2605,7 +2613,12 @@
+@@ -2605,7 +2608,8 @@
  #elif (defined(__aarch64__) || defined(__arm64ec__)) && defined(_MSC_VER)
  static FORCEINLINE struct _TEB * WINAPI NtCurrentTeb(void)
  {
-+# if defined(__arm64ec__)
-     return (struct _TEB *)__getReg(18);
-+# else
+-    return (struct _TEB *)__getReg(18);
 +    /* VKMT: PE TEB in x28 on Darwin (kernel scrubs x18); built with -ffixed-x28 */
 +    return (struct _TEB *)__getReg(28);
-+# endif
  }
  #elif defined(__x86_64__) && defined(__GNUC__)
  static FORCEINLINE struct _TEB * WINAPI NtCurrentTeb(void)
