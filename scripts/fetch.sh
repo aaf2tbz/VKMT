@@ -8,6 +8,7 @@ mkdir -p "$TP"
 MOLTENVK_REV=db66022459ffb663aa2b50f6b018bc2e124f5edf
 VKD3D_REV=3dfc6f07d0953b1e8b41705275c2c59cc7374fc5
 DXMT_REV=589adb780354b461645b29999cefaf533594ee99
+FEX_REV=1cc4b93e7a71c883ec021b71359f136394dc1f3c
 DXMT_RELEASE_URL=https://github.com/3Shain/dxmt/releases/download/v0.80/dxmt-v0.80-builtin.tar.gz
 DXMT_RELEASE_SHA256=8f260e36b5739e68f3bad613381441385c4dc7b85b78ba8de653d5a6a264529d
 
@@ -50,4 +51,13 @@ git -C "$TP/dxmt-src-v0.80" apply --check ../../patches/dxmt-v0.80-xcode27-arm64
   && git -C "$TP/dxmt-src-v0.80" apply ../../patches/dxmt-v0.80-xcode27-arm64.patch \
   || echo "DXMT patch already applied or conflicts; check git -C $TP/dxmt-src-v0.80 status"
 
-echo "Fetch complete. Build with scripts/build-moltenvk.sh and scripts/build-vkd3d-proton.sh"
+# FEX's Windows/WoW64 module is a native ARM64 PE CPU provider for Wine. It
+# translates i386 guest instructions while Wine retains syscall/Unixlib ABI.
+if [ ! -d "$TP/FEX-2607/.git" ]; then
+  git clone --recurse-submodules https://github.com/FEX-Emu/FEX.git "$TP/FEX-2607"
+fi
+git -C "$TP/FEX-2607" fetch --quiet origin --tags
+git -C "$TP/FEX-2607" checkout --quiet --detach "$FEX_REV"
+git -C "$TP/FEX-2607" submodule update --init --recursive
+
+echo "Fetch complete. Build with scripts/build-moltenvk.sh, scripts/build-vkd3d-proton.sh, and scripts/build-fex-wow64.sh"

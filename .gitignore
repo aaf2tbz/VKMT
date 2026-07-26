@@ -11,3 +11,4 @@ test/prefix-ec2/
 test/prefix-x64/
 test/dxmt_arm64_probe.exe
 test/dxmt_x64_probe.exe
+test/i386_smoke.exe

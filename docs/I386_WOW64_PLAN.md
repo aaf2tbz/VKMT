@@ -2,21 +2,18 @@
 
 ## Decision
 
-The i386 implementation is a native ARM64 Wine CPU backend named
-`xtajit.dll`, using Wine's existing WoW64 CPU-provider ABI.  It is *not* an
-embedded FEX or QEMU user-mode process.
+The i386 implementation is FEX's native ARM64 Windows/WoW64 CPU-provider,
+built as `xtajit.dll` and loaded through Wine's existing WoW64 CPU-provider
+ABI.  This is not FEX's Linux user-mode executable: the Windows module does
+only x86 instruction translation, while Wine continues to perform NT syscall
+conversion and Unix-call dispatch.  Consequently every Unix library remains
+native ARM64 and no x86 rootfs, i386 Mach-O binary, QEMU process, or Rosetta is
+involved.
 
-FEX targets ARM64 Linux and expects the Linux process, signal, loader, and
-syscall environment.  QEMU user mode similarly implements a guest ABI by
-forwarding guest syscalls to the host OS and only documents Linux/BSD host
-support.  Neither can be placed inside a macOS Wine process and made to
-service Windows NT syscalls without replacing the very Wine boundary we need
-to preserve.  QEMU is GPL-2.0-or-later, so embedding its TCG implementation
-would also impose an unsuitable distribution constraint on the Wine tree.
-
-They remain useful as external instruction-semantics test oracles.  The
-shipping implementation must be built from source in this tree and call the
-existing Wine WoW64 dispatch interfaces.
+FEX-2607 is pinned at commit `1cc4b93e7a71c883ec021b71359f136394dc1f3c` and
+is built from `third_party/FEX-2607`.  The build uses the project LLVM-mingw
+toolchain and reserves `x28`, matching the native ARM64 Wine TEB ABI on
+Darwin.  QEMU remains unnecessary and is not part of the shipped stack.
 
 ## What already exists
 
@@ -31,6 +28,13 @@ requires process data below 4 GiB, but native ARM64 Darwin does not provide a
 usable sub-4-GiB mapping.  Merely removing the rejection would truncate host
 pointers stored in PEB32/TEB32 structures and corrupt the process.
 
+The restriction is verified on the target host: normal ARM64 processes reserve
+the first 4 GiB in `__PAGEZERO`, and `MAP_FIXED` allocations in that range fail
+with `ENOMEM`.  Linking a diagnostic binary with a smaller `__PAGEZERO` causes
+macOS to terminate it at launch, so this is not a linker flag that Wine can
+safely use.  FEX supplies the CPU translation layer but cannot by itself alter
+this Darwin virtual-memory contract.
+
 ## M6.0 — i386 execution substrate (hard gate)
 
 Implement a 32-bit **guest virtual-address** layer whose 32-bit values never
@@ -39,17 +43,14 @@ conversion at the WoW64 boundary must be explicit and checked.
 
 Work items:
 
-1. Introduce `dlls/xtajit` as an ARM64 CPU-provider DLL, with the full
-   `BTCpu*` contract required by `dlls/wow64/syscall.c`.
-2. Define guest-address allocation, lookup, protection, unmap, and image-map
-   notifications.  Preserve the Windows 32-bit address-space rules without
-   casting host pointers to `ULONG`.
+1. Build and stage FEX's ARM64 `xtajit.dll`, with the complete `BTCpu*`
+   contract required by `dlls/wow64/syscall.c`.
+2. Resolve Darwin's unavailable sub-4-GiB host mapping without casting a high
+   host pointer to `ULONG`.  This must preserve the Windows guest address
+   space, allocation, protection, unmap, and image-map notifications.
 3. Route PEB32, TEB32, `WOW32Reserved`, syscall thunks, stack setup, context
-   get/set, and exception delivery through that mapping layer.
-4. Start with an interpreter that is correct for the Windows/i386 ABI;
-   translation/JIT is an optimisation phase after compatibility is proven.
-   FEX/QEMU instruction traces may be used only to cross-check semantics.
-5. Add independent fixtures: process start/exit, arithmetic and control flow,
+   get/set, and exception delivery through that safe address boundary.
+4. Add independent fixtures: process start/exit, arithmetic and control flow,
    read/write guest memory, `LoadLibrary`, NT syscall return, TLS, exceptions,
    and a second thread.
 
