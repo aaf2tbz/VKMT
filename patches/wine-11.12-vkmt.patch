@@ -631,8 +631,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/winevulkan/vulkan_pr
  }
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/Makefile.in wine/wine-11.12/dlls/xtajit64/Makefile.in
 --- /tmp/wine-11.12/dlls/xtajit64/Makefile.in	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/xtajit64/Makefile.in	2026-07-25 15:21:40
-@@ -5,4 +5,7 @@
++++ wine/wine-11.12/dlls/xtajit64/Makefile.in	2026-07-25 22:59:06
+@@ -5,4 +5,8 @@
  EXTRADLLFLAGS = -nodefaultlibs
  
  SOURCES = \
@@ -640,10 +640,11 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/Makefile.in
 +	cpu.c \
 +	vkmt/context.c \
 +	vkmt/dispatch.c \
++	vkmt/jit.c \
 +	vkmt/interp.c
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/wine-11.12/dlls/xtajit64/cpu.c
 --- /tmp/wine-11.12/dlls/xtajit64/cpu.c	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/xtajit64/cpu.c	2026-07-25 14:36:01
++++ wine/wine-11.12/dlls/xtajit64/cpu.c	2026-07-25 22:59:06
 @@ -1,7 +1,8 @@
  /*
 - * x86-64 emulation on ARM64
@@ -666,7 +667,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
   */
  
  #include <stdarg.h>
-@@ -27,56 +33,12 @@
+@@ -27,61 +33,18 @@
  #include "winternl.h"
  #include "wine/debug.h"
  
@@ -725,7 +726,13 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
   *           BTCpu64FlushInstructionCache  (xtajit64.@)
   */
  void WINAPI BTCpu64FlushInstructionCache( void *addr, SIZE_T size )
-@@ -90,22 +52,7 @@
+ {
+     TRACE( "%p %Ix\n", addr, size );
++    vkmt_jit_invalidate( addr, size );
+ }
+ 
+ 
+@@ -90,22 +53,7 @@
   */
  BOOLEAN WINAPI BTCpu64IsProcessorFeaturePresent( UINT feature )
  {
@@ -749,7 +756,15 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -123,7 +70,7 @@
+@@ -115,6 +63,7 @@
+ void WINAPI BTCpu64NotifyMemoryDirty( void *addr, SIZE_T size )
+ {
+     TRACE( "%p %Ix\n", addr, size );
++    vkmt_jit_invalidate( addr, size );
+ }
+ 
+ 
+@@ -123,7 +72,7 @@
   */
  void WINAPI BTCpu64NotifyReadFile( HANDLE handle, void *addr, SIZE_T size, BOOL is_post, NTSTATUS status )
  {
@@ -758,7 +773,15 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -152,7 +99,7 @@
+@@ -133,6 +82,7 @@
+ void WINAPI FlushInstructionCacheHeavy( void *addr, SIZE_T size )
+ {
+     TRACE( "%p %Ix\n", addr, size );
++    vkmt_jit_invalidate( addr, size );
+ }
+ 
+ 
+@@ -152,7 +102,7 @@
   */
  void WINAPI NotifyMemoryAlloc( void *addr, SIZE_T size, ULONG type, ULONG prot, BOOL is_post, NTSTATUS status )
  {
@@ -767,7 +790,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -161,7 +108,7 @@
+@@ -161,7 +111,7 @@
   */
  void WINAPI NotifyMemoryFree( void *addr, SIZE_T size, ULONG type, BOOL is_post, NTSTATUS status )
  {
@@ -776,16 +799,17 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -170,7 +117,7 @@
+@@ -170,7 +120,8 @@
   */
  void WINAPI NotifyMemoryProtect( void *addr, SIZE_T size, ULONG prot, BOOL is_post, NTSTATUS status )
  {
 -    TRACE( "%p %Ix %lx\n", addr, size, prot );
 +    TRACE( "%p %Ix prot %lx is_post %d status %lx\n", addr, size, prot, is_post, status );
++    if (is_post && !status) vkmt_jit_invalidate( addr, size );
  }
  
  
-@@ -179,7 +126,7 @@
+@@ -179,7 +130,7 @@
   */
  void WINAPI NotifyUnmapViewOfSection( void *addr, BOOL is_post, NTSTATUS status )
  {
@@ -794,7 +818,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -188,7 +135,7 @@
+@@ -188,7 +139,7 @@
   */
  NTSTATUS WINAPI ProcessInit(void)
  {
@@ -803,7 +827,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -197,7 +144,7 @@
+@@ -197,7 +148,7 @@
   */
  void WINAPI ProcessTerm( HANDLE handle, BOOL is_post, NTSTATUS status )
  {
@@ -812,7 +836,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -206,7 +153,7 @@
+@@ -206,7 +157,7 @@
   */
  void WINAPI ResetToConsistentState( EXCEPTION_RECORD *rec, CONTEXT *context, ARM64_NT_CONTEXT *arm_ctx )
  {
@@ -821,7 +845,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -215,7 +162,7 @@
+@@ -215,7 +166,7 @@
   */
  NTSTATUS WINAPI ThreadInit(void)
  {
@@ -830,7 +854,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -224,7 +171,7 @@
+@@ -224,7 +175,7 @@
   */
  void WINAPI ThreadTerm( HANDLE handle, LONG exit_code )
  {
@@ -839,7 +863,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  }
  
  
-@@ -233,9 +180,7 @@
+@@ -233,9 +184,7 @@
   */
  void WINAPI UpdateProcessorInformation( SYSTEM_CPU_INFORMATION *info )
  {
@@ -852,8 +876,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c wine/wine-11.12/dlls/xtajit64/vkmt/context.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 22:39:36
-@@ -0,0 +1,189 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 23:14:20
+@@ -0,0 +1,190 @@
 +/*
 + * VKMT x86-64 emulator skeleton — process/thread lifecycle and guest context
 + *
@@ -955,8 +979,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 + */
 +NTSTATUS vkmt_process_init(void)
 +{
-+    TRACE( "VKMT x86-64 emulator skeleton (M2): process init\n" );
-+    return STATUS_SUCCESS;
++    TRACE( "VKMT x86-64 emulator skeleton (M5): process init\n" );
++    return vkmt_jit_process_init();
 +}
 +
 +/**********************************************************************
@@ -965,6 +989,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +void vkmt_process_term( HANDLE handle, BOOL is_post, NTSTATUS status )
 +{
 +    TRACE( "process term handle %p is_post %d status %lx\n", handle, is_post, status );
++    if (is_post) vkmt_jit_process_term();
 +}
 +
 +/**********************************************************************
@@ -1499,8 +1524,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c wine/wine-11.12/dlls/xtajit64/vkmt/interp.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 22:39:36
-@@ -0,0 +1,2407 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 23:14:20
+@@ -0,0 +1,2406 @@
 +/*
 + * VKMT x86-64 emulator — interpreter core (M3)
 + *
@@ -1562,23 +1587,6 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +#define P_LOCK 0x08
 +#define P_FS   0x10
 +#define P_GS   0x20
-+
-+struct vkmt_insn
-+{
-+    const BYTE *start;     /* first byte of the instruction */
-+    UINT   len;            /* total length in bytes */
-+    UINT   opcode;         /* 0x000-0x0ff primary map, 0x100-0x1ff for 0F map */
-+    UINT   rex;            /* REX byte, 0 when absent */
-+    UINT   pref;           /* P_* bits */
-+    BOOL   has_modrm;
-+    UINT   reg;            /* modrm.reg, REX.R-extended (0-15) */
-+    UINT   rm;             /* modrm.rm, REX.B-extended, when rm_is_reg */
-+    BOOL   rm_is_reg;
-+    ULONGLONG ea;          /* effective address, when !rm_is_reg */
-+    ULONGLONG imm;
-+    UINT   imm_size;       /* bytes */
-+    BOOL   bad_ea;         /* resolved memory operand in the null page (< 0x10000) */
-+};
 +
 +/*************************************************************************
 + * Decode tables: which opcodes carry a ModRM byte and an immediate.
@@ -1735,7 +1743,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +/*************************************************************************
 + * Decoder
 + */
-+static void vkmt_decode( struct vkmt_x64_context *ctx, struct vkmt_insn *insn )
++void vkmt_decode( struct vkmt_x64_context *ctx, struct vkmt_insn *insn )
 +{
 +    const BYTE *ip = (const BYTE *)(ULONG_PTR)ctx->rip;
 +    UINT op;
@@ -3840,6 +3848,17 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +    return TRUE;
 +}
 +
++/* Shared by the interpreter and the generated tier-0 stubs. */
++BOOL vkmt_execute_decoded( struct vkmt_x64_context *ctx, const struct vkmt_insn *insn )
++{
++    ctx->exec_ring[ctx->exec_pos & 8191][0] = ctx->rip;
++    ctx->exec_ring[ctx->exec_pos & 8191][1] = ctx->eflags;
++    ctx->exec_ring[ctx->exec_pos & 8191][2] = ctx->gpr[VKMT_RAX];
++    ctx->exec_ring[ctx->exec_pos & 8191][3] = ctx->gpr[VKMT_RCX];
++    ctx->exec_pos++;
++    return vkmt_execute( ctx, insn );
++}
++
 +/*************************************************************************
 + * Main interpreter loop
 + */
@@ -3893,13 +3912,18 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +            return;
 +        }
 +
++        {
++            UINT compiled = vkmt_jit_run_block( ctx );
++            if (compiled)
++            {
++                count += compiled - 1;  /* the loop's pre-increment counted one */
++                if (count > VKMT_MAX_INSNS_PER_RUN) continue;
++                continue;
++            }
++        }
++
 +        vkmt_decode( ctx, &insn );
-+        ctx->exec_ring[ctx->exec_pos & 8191][0] = ctx->rip;
-+        ctx->exec_ring[ctx->exec_pos & 8191][1] = ctx->eflags;
-+        ctx->exec_ring[ctx->exec_pos & 8191][2] = ctx->gpr[VKMT_RAX];
-+        ctx->exec_ring[ctx->exec_pos & 8191][3] = ctx->gpr[VKMT_RCX];
-+        ctx->exec_pos++;
-+        if (!vkmt_execute( ctx, &insn ))
++        if (!vkmt_execute_decoded( ctx, &insn ))
 +        {
 +            out->result = VKMT_INTERP_GIVEUP;
 +            out->opcode = insn.opcode;
@@ -3908,10 +3932,237 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +        }
 +    }
 +}
+diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c wine/wine-11.12/dlls/xtajit64/vkmt/jit.c
+--- /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c	1969-12-31 17:00:00
++++ wine/wine-11.12/dlls/xtajit64/vkmt/jit.c	2026-07-25 23:15:29
+@@ -0,0 +1,223 @@
++/*
++ * VKMT x86-64 emulator — M5 tier-0 ARM64 block cache
++ *
++ * A block is a small straight-line sequence of register-only guest
++ * instructions.  The generated ARM64 body follows AAPCS64, preserves x29/x30
++ * and directly implements a deliberately small set of guest operations.
++ * Unsupported instructions remain in the interpreter.  This establishes a
++ * W^X code cache, block lookup, and safe SMC retirement without crossing an
++ * ARM64EC ABI boundary from generated code.
++ */
++
++#include <stdarg.h>
++
++#include "vkmt.h"
++
++WINE_DEFAULT_DEBUG_CHANNEL(vkmtx64);
++
++#define VKMT_JIT_MAX_INSNS 16
++
++struct vkmt_jit_block
++{
++    struct vkmt_jit_block *next;
++    ULONGLONG rip;
++    ULONG epoch;
++    UINT count;
++    SIZE_T code_size;
++    void *code;
++    struct vkmt_insn insn[VKMT_JIT_MAX_INSNS];
++};
++
++static RTL_CRITICAL_SECTION jit_cs;
++static BOOL jit_ready;
++static ULONG jit_epoch;
++static struct vkmt_jit_block *jit_blocks;
++static PVOID jit_build_base;
++static SIZE_T jit_build_size;
++
++static void emit32( BYTE **p, ULONG insn )
++{
++    memcpy( *p, &insn, sizeof(insn) );
++    *p += sizeof(insn);
++}
++
++/* movz/movk xd, #imm16, lsl #(16 * hw) */
++static void emit_ptr( BYTE **p, UINT reg, const void *ptr )
++{
++    ULONGLONG value = (ULONG_PTR)ptr;
++    UINT hw;
++
++    emit32( p, 0xd2800000 | ((value & 0xffff) << 5) | reg );
++    for (hw = 1; hw != 4; hw++)
++        emit32( p, 0xf2800000 | (hw << 21) | (((value >> (16 * hw)) & 0xffff) << 5) | reg );
++}
++
++static BOOL jit_eligible( const struct vkmt_insn *insn )
++{
++    UINT op = insn->opcode;
++
++    if (op == 0x90) return !insn->rex;  /* REX.B changes this into xchg */
++    if (op >= 0xb8 && op <= 0xbf && !(insn->pref & 0x01)) return TRUE;
++    if (!insn->has_modrm || !insn->rm_is_reg || (op & 0x100)) return FALSE;
++    /* Register-only ALU/move/shift forms have no captured effective address.
++     * The shared executor retains the exact x86 flags and corner semantics. */
++    return (op <= 0x3b && (op & 7) <= 3) || (op >= 0x80 && op <= 0x8b) ||
++           op == 0x8d || (op >= 0xc0 && op <= 0xc1);
++}
++
++static struct vkmt_jit_block *jit_compile( struct vkmt_x64_context *ctx )
++{
++    struct vkmt_jit_block *block;
++    BYTE *code, *p;
++    PVOID base;
++    SIZE_T size, protect_size;
++    ULONG old_prot;
++    MEM_EXTENDED_PARAMETER param = { 0 };
++    UINT i;
++
++    block = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*block) );
++    if (!block) return NULL;
++    block->rip = ctx->rip;
++    for (i = 0; i < VKMT_JIT_MAX_INSNS; i++)
++    {
++        struct vkmt_x64_context probe = *ctx;
++
++        probe.rip = block->rip;
++        if (i) probe.rip = (ULONG_PTR)(block->insn[i - 1].start + block->insn[i - 1].len);
++        vkmt_decode( &probe, &block->insn[i] );
++        if (!jit_eligible( &block->insn[i] )) break;
++        block->count++;
++    }
++    if (!block->count) goto fail;
++
++    block->code_size = 16 + block->count * 40 + 8;
++    size = (block->code_size + 0xfff) & ~0xfffull;
++    base = NULL;
++    /* Mark this as EC code.  On an ARM64EC process, the ntdll signal layer
++     * otherwise treats a dynamically allocated executable address as x64
++     * guest code and routes it back to the emulator instead of executing the
++     * ARM64 instructions we emitted. */
++    param.Type = MemExtendedParameterAttributeFlags;
++    param.ULong64 = MEM_EXTENDED_PARAMETER_EC_CODE;
++    if (NtAllocateVirtualMemoryEx( GetCurrentProcess(), &base, &size,
++                                   MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE, &param, 1 )) goto fail;
++    jit_build_base = base;
++    jit_build_size = size;
++    code = p = base;
++    emit32( &p, 0xa9be7bfd );             /* stp x29, x30, [sp, #-32]! */
++    emit32( &p, 0x910003fd );             /* mov x29, sp */
++    emit32( &p, 0xf9000be0 );             /* str x0, [sp, #16] */
++    for (i = 0; i < block->count; i++)
++    {
++        emit32( &p, 0xf9400be0 );         /* ldr x0, [sp, #16] */
++        emit_ptr( &p, 1, &block->insn[i] );
++        emit_ptr( &p, 16, vkmt_execute_decoded );
++        emit32( &p, 0xd63f0200 );         /* blr x16 */
++    }
++    emit32( &p, 0xa8c27bfd );             /* ldp x29, x30, [sp], #32 */
++    emit32( &p, 0xd65f03c0 );             /* ret */
++    NtFlushInstructionCache( GetCurrentProcess(), code, p - code );
++    protect_size = size;
++    if (NtProtectVirtualMemory( GetCurrentProcess(), &base, &protect_size,
++                                PAGE_EXECUTE_READ, &old_prot ))
++    {
++        NtFreeVirtualMemory( GetCurrentProcess(), &base, &size, MEM_RELEASE );
++        goto fail;
++    }
++    block->code = code;
++    jit_build_base = NULL;
++    jit_build_size = 0;
++    TRACE( "JIT block %p: %u guest insns -> %p (%Iu bytes)\n",
++           (void *)block->rip, block->count, code, block->code_size );
++    return block;
++
++fail:
++    jit_build_base = NULL;
++    jit_build_size = 0;
++    RtlFreeHeap( GetProcessHeap(), 0, block );
++    return NULL;
++}
++
++NTSTATUS vkmt_jit_process_init(void)
++{
++    if (!jit_ready)
++    {
++        RtlInitializeCriticalSection( &jit_cs );
++        jit_epoch = 1;
++        jit_ready = TRUE;
++    }
++    return STATUS_SUCCESS;
++}
++
++void vkmt_jit_process_term(void)
++{
++    struct vkmt_jit_block *block, *next;
++
++    if (!jit_ready) return;
++    RtlEnterCriticalSection( &jit_cs );
++    for (block = jit_blocks; block; block = next)
++    {
++        PVOID base = block->code;
++        SIZE_T size = 0;
++        next = block->next;
++        if (base) NtFreeVirtualMemory( GetCurrentProcess(), &base, &size, MEM_RELEASE );
++        RtlFreeHeap( GetProcessHeap(), 0, block );
++    }
++    jit_blocks = NULL;
++    RtlLeaveCriticalSection( &jit_cs );
++}
++
++void vkmt_jit_invalidate( void *addr, SIZE_T size )
++{
++    if (!jit_ready || !addr || !size) return;
++    if (jit_build_base && (BYTE *)addr < (BYTE *)jit_build_base + jit_build_size &&
++        (BYTE *)addr + size > (BYTE *)jit_build_base) return;
++    /* Retire, rather than free, blocks: another guest thread may currently
++     * be in one.  The post-invalidation lookup can never select its epoch. */
++    RtlEnterCriticalSection( &jit_cs );
++    jit_epoch++;
++    if (!jit_epoch) jit_epoch = 1;
++    RtlLeaveCriticalSection( &jit_cs );
++    TRACE( "JIT retired blocks after guest code change %p +%Ix (epoch %lu)\n", addr, size, jit_epoch );
++}
++
++UINT vkmt_jit_run_block( struct vkmt_x64_context *ctx )
++{
++    struct vkmt_jit_block *block;
++    void (WINAPI *run)(struct vkmt_x64_context *);
++    UINT total = 0;
++
++    if (!jit_ready || !ctx->rip) return 0;
++    for (;;)
++    {
++        RtlEnterCriticalSection( &jit_cs );
++        for (block = jit_blocks; block; block = block->next)
++            if (block->epoch == jit_epoch && block->rip == ctx->rip) break;
++        if (block)
++        {
++            RtlLeaveCriticalSection( &jit_cs );
++            run = (void *)block->code;
++            run( ctx );
++            total += block->count;
++            /* A block contains only linear instructions.  Follow its
++             * fall-through through the cache rather than returning to the
++             * decoder between linked blocks; bound a chain for fairness. */
++            if (total >= VKMT_JIT_MAX_INSNS * 4) break;
++            continue;
++        }
++        block = jit_compile( ctx );
++        if (block)
++        {
++            block->epoch = jit_epoch;
++            block->next = jit_blocks;
++            jit_blocks = block;
++        }
++        RtlLeaveCriticalSection( &jit_cs );
++        if (!block) break;
++        run = (void *)block->code;
++        run( ctx );
++        total += block->count;
++        if (total >= VKMT_JIT_MAX_INSNS * 4) break;
++    }
++    return total;
++}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 22:51:39
-@@ -0,0 +1,124 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 22:59:06
+@@ -0,0 +1,148 @@
 +/*
 + * VKMT x86-64 emulator skeleton — private shared header
 + *
@@ -4016,7 +4267,23 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 +void     vkmt_simulate_from_ec( int plant_marker ); /* C body for ExitToX64/DispatchJump/RetToEntryThunk */
 +void vkmt_reset_to_consistent_state( EXCEPTION_RECORD *rec, CONTEXT *context, ARM64_NT_CONTEXT *arm_ctx );
 +
-+/* interp.c — interpreter result codes */enum vkmt_interp_result
++/* Decoder metadata is deliberately independent of the execution tier.  M5
++ * caches only register-only instances: memory EAs are resolved by decode and
++ * therefore must never be reused after the guest registers have changed. */
++struct vkmt_insn
++{
++    const BYTE *start;
++    UINT len, opcode, rex, pref;
++    BOOL has_modrm;
++    UINT reg, rm;
++    BOOL rm_is_reg;
++    ULONGLONG ea, imm;
++    UINT imm_size;
++    BOOL bad_ea;
++};
++
++/* interp.c — interpreter result codes */
++enum vkmt_interp_result
 +{
 +    VKMT_INTERP_EXIT_NATIVE,   /* guest RIP reached native (EC) code; exit target in rip */
 +    VKMT_INTERP_EXIT_RETURN,   /* guest returned to the RetToEntryThunk marker */
@@ -4031,6 +4298,14 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 +};
 +
 +void vkmt_interp_run( struct vkmt_x64_context *ctx, struct vkmt_interp_outcome *out );
++void vkmt_decode( struct vkmt_x64_context *ctx, struct vkmt_insn *insn );
++BOOL vkmt_execute_decoded( struct vkmt_x64_context *ctx, const struct vkmt_insn *insn );
++
++/* jit.c — tier-0 block cache and its memory-coherency notifications */
++NTSTATUS vkmt_jit_process_init(void);
++void vkmt_jit_process_term(void);
++UINT vkmt_jit_run_block( struct vkmt_x64_context *ctx );
++void vkmt_jit_invalidate( void *addr, SIZE_T size );
 +
 +/* interp.c — full guest dump (giveup report); used by the exception path too */
 +void vkmt_dump_guest( struct vkmt_x64_context *ctx, UINT opcode, const char *why );

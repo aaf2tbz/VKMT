@@ -709,3 +709,25 @@ creation, and headless GPU submission are all verified.  The remaining
 M4 acceptance blocker; retain it as a pre-JIT regression item.  M5 starts
 with a block translator consuming the existing `vkmt_insn` metadata.  SSE4
 can be re-enabled only alongside the 0F 38 / 0F 3A opcode maps and tests.
+
+### M5: ARM64EC tier-0 block cache
+
+`vkmt/jit.c` adds a tier-0 block translator over the interpreter decoder's
+`vkmt_insn` metadata.  It caches straight-line, register-only x64 blocks
+(currently integer ALU/move/shift forms), emits ARM64EC-marked W^X code, and
+uses the shared decoded executor for exact x86 flag and edge-case semantics.
+The generated stub observes AAPCS64 stack alignment and preserves x29/x30;
+the EC-code allocation attribute is essential so Wine executes the generated
+ARM64 instructions rather than re-entering x64 emulation.
+
+Blocks fall through through a bounded cache chain before returning to decode.
+Unsupported operations, memory-addressed instructions, and control flow
+remain in the interpreter. `BTCpu64FlushInstructionCache`, its heavy form,
+memory-dirty notification, and successful protection changes retire the
+current cache generation. Retired blocks are not freed while a guest thread
+may still execute them; process termination releases the code cache.
+
+`smc_x64.exe` proves coherency: it executes a dynamically allocated
+`mov eax,1; ret`, patches it to return 2, calls `FlushInstructionCache`, and
+returns `smc_x64: OK (1 -> 2)`. `math_x64.exe` and `mem_x64.exe` remain green
+with native generated blocks enabled.

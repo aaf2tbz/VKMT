@@ -10,7 +10,9 @@ export WINESERVER="$MS_ROOT/bin/wineserver"
 export WINELOADER="$MS_ROOT/bin/wine"
 export WINEDLLPATH="$MS_ROOT/lib/wine/x86_64-windows:$MS_ROOT/lib/wine/i386-windows"
 export WINEDATADIR="$MS_ROOT/share"
-export DYLD_FALLBACK_LIBRARY_PATH="$MS_ROOT/lib:$MS_ROOT/lib/wine/x86_64-unix${DYLD_FALLBACK_LIBRARY_PATH:+:$DYLD_FALLBACK_LIBRARY_PATH}"
+# Wine loads optional Unix libraries by soname.  Homebrew's dylib directory
+# must be on the fallback path at runtime even though configure found it.
+export DYLD_FALLBACK_LIBRARY_PATH="$MS_ROOT/lib:$MS_ROOT/lib/wine/x86_64-unix:/opt/homebrew/lib${DYLD_FALLBACK_LIBRARY_PATH:+:$DYLD_FALLBACK_LIBRARY_PATH}"
 export VK_ICD_FILENAMES="$VKMT/test/vkmt_icd.json"
 export WINEDEBUG="${WINEDEBUG:--all}"
 # vkd3d-proton DLLs staged into the prefix as native
