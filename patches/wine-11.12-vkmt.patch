@@ -795,8 +795,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c wine/wine-11.12/dlls/xtajit64/vkmt/context.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 15:07:59
-@@ -0,0 +1,188 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 18:09:43
+@@ -0,0 +1,191 @@
 +/*
 + * VKMT x86-64 emulator skeleton — process/thread lifecycle and guest context
 + *
@@ -942,7 +942,10 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +    TRACE( "thread term handle %p exit_code %lx\n", handle, exit_code );
 +    if (cpu_area && cpu_area->EmulatorData[0])
 +    {
-+        RtlFreeHeap( GetProcessHeap(), 0, cpu_area->EmulatorData[0] );
++        struct vkmt_x64_context *ctx = cpu_area->EmulatorData[0];
++
++        TRACE( "thread interpreted %I64u guest instructions total\n", ctx->insn_total );
++        RtlFreeHeap( GetProcessHeap(), 0, ctx );
 +        cpu_area->EmulatorData[0] = NULL;
 +    }
 +}
@@ -987,8 +990,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 17:11:28
-@@ -0,0 +1,413 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 18:05:57
+@@ -0,0 +1,450 @@
 +/*
 + * VKMT x86-64 emulator skeleton — simulation entry/exit and dispatch
 + *
@@ -1131,9 +1134,19 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +         * entry; guest RAX is already in X8 where the thunk expects it, and
 +         * the thunk epilogue needs its own entry SP/FP back (the guest's
 +         * stack usage is discarded with the call frame). */
-+        ec->Pc = ctx->native_ret ? ctx->native_ret : ec->Lr;
-+        ec->Sp = (ULONG64)cpu_area->EmulatorData[2];
-+        ec->Fp = (ULONG64)cpu_area->EmulatorData[3];
++        if (ctx->exit_depth)
++        {
++            ctx->exit_depth--;
++            ec->Pc = ctx->exit_lr[ctx->exit_depth];
++            ec->Sp = ctx->exit_sp[ctx->exit_depth];
++            ec->Fp = ctx->exit_fp[ctx->exit_depth];
++        }
++        else  /* top-level entry (e.g. exe entry thunk): no saved frame */
++        {
++            ec->Pc = ctx->native_ret ? ctx->native_ret : ec->Lr;
++            ec->Sp = (ULONG64)cpu_area->EmulatorData[2];
++            ec->Fp = (ULONG64)cpu_area->EmulatorData[3];
++        }
 +        cpu_area->InSimulation = 0;
 +        TRACE( "guest returned to EC caller at %p (rax %p)\n",
 +               (void *)ec->Pc, (void *)ec->X8 );
@@ -1215,7 +1228,18 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +         * the exact SP/FP it had when it called us */
 +        cpu_area->EmulatorData[2] = (void *)(ULONG_PTR)thunk_sp;
 +        cpu_area->EmulatorData[3] = (void *)(ULONG_PTR)ec->Fp;
-+        if (ctx) ctx->native_ret = ec->Lr;
++        if (ctx)
++        {
++            ctx->native_ret = ec->Lr;
++            if (ctx->exit_depth < 64)
++            {
++                ctx->exit_sp[ctx->exit_depth] = thunk_sp;
++                ctx->exit_fp[ctx->exit_depth] = ec->Fp;
++                ctx->exit_lr[ctx->exit_depth] = ec->Lr;
++                ctx->exit_depth++;
++            }
++            else ERR( "exit frame stack overflow\n" );
++        }
 +    }
 +    else if (plant_marker == 2)  /* EcCallRet: EC callee returned from a direct x64->EC call */
 +    {
@@ -1377,35 +1401,51 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +/**********************************************************************
 + *           vkmt_reset_to_consistent_state
 + *
-+ * Called by ntdll's exception path with the guest context before
-+ * dispatching to x64/EC handlers.  M2: nothing to reconcile yet.
++ * Called by ntdll's exception path (prepare_exception_arm64ec) after the
++ * host fault context has been converted to the x64 view, before
++ * dispatching to x64/EC handlers.  When the fault happened inside the
++ * interpreter (InSimulation), the converted context describes the *host*
++ * state (pc inside our code); rewrite it from the live guest context so
++ * the exception is presented to the guest exactly as if the faulting
++ * guest instruction had executed natively, and leave simulation.
 + */
 +void vkmt_reset_to_consistent_state( EXCEPTION_RECORD *rec, CONTEXT *context, ARM64_NT_CONTEXT *arm_ctx )
 +{
 +    ARM64EC_NT_CONTEXT *ec = (ARM64EC_NT_CONTEXT *)context;
 +    CHPE_V2_CPU_AREA_INFO *cpu_area = vkmt_cpu_area();
++    struct vkmt_x64_context *ctx;
 +
 +    TRACE( "rec %p (code %lx) context %p arm_ctx %p\n",
 +           rec, rec ? rec->ExceptionCode : 0, context, arm_ctx );
-+    if (rec)
-+    {
-+        ERR( "exception %lx at pc %p: addr %p info %Ix %Ix; guest rip %p rsp %p rax %p\n",
-+             rec->ExceptionCode, rec->ExceptionAddress,
-+             (void *)(rec->NumberParameters > 1 ? rec->ExceptionInformation[1] : 0),
-+             rec->NumberParameters > 0 ? rec->ExceptionInformation[0] : 0,
-+             rec->NumberParameters > 1 ? rec->ExceptionInformation[1] : 0,
-+             (void *)ec->Pc, (void *)ec->Sp, (void *)ec->X8 );
-+        /* if the fault happened inside the interpreter, the live guest
-+         * context still points at the faulting instruction */
-+        if (cpu_area && cpu_area->InSimulation && cpu_area->EmulatorData[0])
-+            vkmt_dump_guest( cpu_area->EmulatorData[0], 0xbad,
-+                             "host fault during simulation (guest AV inside the interpreter?)" );
-+    }
++
++    if (!cpu_area || !cpu_area->InSimulation || !cpu_area->EmulatorData[0])
++        return;  /* fault in native EC code: nothing to reconcile */
++
++    ctx = cpu_area->EmulatorData[0];
++    TRACE( "reconciling exception %lx to guest rip %p (host pc was %p)\n",
++           rec ? rec->ExceptionCode : 0, (void *)ctx->rip, (void *)ec->Pc );
++
++    if (rec) rec->ExceptionAddress = (void *)ctx->rip;
++    vkmt_context_to_ec( ec, ctx );
++    ec->ContextFlags = CONTEXT_AMD64_ALL;
++    cpu_area->InSimulation = 0;
++    /* the abandoned interpreter run was on the emulator stack, which the
++     * exception frame has replaced; per-run state (ec_ret LIFO, branch
++     * ring) simply carries on. */
++
++    /* NOTE (M3 SEH): RtlUnwindEx's walk of EC frames dies inside
++     * KiUserExceptionDispatcher's frame ("invalid frame" from
++     * is_valid_arm64ec_frame) — the MSFT_OP_EC_CONTEXT restore does not
++     * yield the guest's x64 frames on this stack configuration, so unwind
++     * passses (__try/__finally, RtlUnwindEx past the boundary) are broken.
++     * See docs/EMULATION.md M3e for the full analysis.  The reconcile
++     * above is still required and sufficient for pass-1 dispatch (filter
++     * call + except block execution). */
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c wine/wine-11.12/dlls/xtajit64/vkmt/interp.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 17:29:59
-@@ -0,0 +1,2413 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 18:11:18
+@@ -0,0 +1,2404 @@
 +/*
 + * VKMT x86-64 emulator — interpreter core (M3)
 + *
@@ -3157,16 +3197,18 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +    case 0x5d: sse_arith( ctx, insn, 5 ); break;   /* min */
 +    case 0x5e: sse_arith( ctx, insn, 6 ); break;   /* div */
 +    case 0x5f: sse_arith( ctx, insn, 7 ); break;   /* max */
-+    case 0x60: case 0x61:  /* punpcklbw/punpcklwd (SSE2) */
++    case 0x60: case 0x61: case 0x62:  /* punpcklbw/punpcklwd/punpckldq (SSE2) */
++    case 0x68: case 0x69: case 0x6a:  /* punpckhbw/punpckhwd/punpckhdq */
 +    {
 +        BYTE dst[16], src[16], out[16];
-+        UINT i, esz = (op == 0x60) ? 1 : 2;
++        UINT esz = (op & 3) == 0 ? 1 : ((op & 3) == 1 ? 2 : 4), i;
++        UINT off = (op & 8) ? 8 : 0, n = 8 / esz;
 +        xmm_get( ctx, insn->reg, dst );
 +        get_rm128( ctx, insn, src );
-+        for (i = 0; i < 8 / esz; i++)
++        for (i = 0; i < n; i++)
 +        {
-+            memcpy( out + 2 * i * esz, dst + i * esz, esz );
-+            memcpy( out + (2 * i + 1) * esz, src + i * esz, esz );
++            memcpy( out + 2 * i * esz, dst + off + i * esz, esz );
++            memcpy( out + (2 * i + 1) * esz, src + off + i * esz, esz );
 +        }
 +        xmm_put( ctx, insn->reg, out );
 +        break;
@@ -3799,17 +3841,6 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +        ctx->exec_ring[ctx->exec_pos & 8191][2] = ctx->gpr[VKMT_RAX];
 +        ctx->exec_ring[ctx->exec_pos & 8191][3] = ctx->gpr[VKMT_RCX];
 +        ctx->exec_pos++;
-+        /* lea and hint-nops/prefetch compute but never dereference the operand */
-+        if (insn.bad_ea && insn.opcode != 0x8d && insn.opcode != 0x10d &&
-+            !(insn.opcode >= 0x118 && insn.opcode <= 0x11f))
-+        {
-+            giveup_dump( ctx, insn.opcode, "guest memory operand in the null page" );
-+            ERR( "  offending effective address: %p\n", (void *)insn.ea );
-+            out->result = VKMT_INTERP_GIVEUP;
-+            out->opcode = insn.opcode;
-+            ctx->insn_total += count;
-+            return;
-+        }
 +        if (!vkmt_execute( ctx, &insn ))
 +        {
 +            out->result = VKMT_INTERP_GIVEUP;
@@ -3821,8 +3852,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 16:12:43
-@@ -0,0 +1,114 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 17:36:32
+@@ -0,0 +1,121 @@
 +/*
 + * VKMT x86-64 emulator skeleton — private shared header
 + *
@@ -3890,6 +3921,13 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 +     * this because the RetToEntryThunk capture overwrites it with the
 +     * planted marker on EC-callee returns */
 +    ULONGLONG native_ret;
++    /* ExitToX64 thunk-entry frame stack (thunk sp, fp, native lr): nested
++     * EC->guest calls (exception dispatch calls several guest handlers)
++     * must each restore their own frame on EXIT_RETURN */
++    ULONGLONG exit_sp[64];
++    ULONGLONG exit_fp[64];
++    ULONGLONG exit_lr[64];
++    UINT      exit_depth;
 +    /* x64->EC call return LIFO: EXIT_NATIVE (guest call into EC code) has no
 +     * thunk to convert the ABI, so the emulator repacks stack args itself
 +     * (arm64 callee reads them at [sp], x64 caller put them at [rsp+0x20])

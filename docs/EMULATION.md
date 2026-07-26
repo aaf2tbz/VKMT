@@ -582,3 +582,106 @@ simulation through the M2 BeginSimulation path (NtContinue-to-x64 from
 the unix side), per-thread cpu area/context init from M1/M2 just works,
 and locked-RMW atomics (`InterlockedIncrement/Add`) hold up under real
 contention.
+
+### M3e: SEH — partial: AV delivery + pass-1 dispatch work, unwind bridge missing
+
+Probe 5 (`test/x64emu/seh_x64.c`, -O2 -fms-extensions): __try/__except
+catching a deliberate AV (behind a noinline call — see note), plus
+__try/__finally around the same AV.
+
+**Works (verified):**
+- `vkmt_reset_to_consistent_state` is now real: when a host fault happens
+  mid-simulation it rewrites the exception context from the live guest
+  context (rip = faulting guest instruction), sets
+  `rec->ExceptionAddress` to the guest rip, and clears InSimulation.
+  The old decode-time null-page giveup was removed so guest AVs fault
+  naturally into this path.
+- Pass-1 dispatch: wine's arm64ec KiUserExceptionDispatcher →
+  RtlDispatchException over the amd64 context finds main's
+  RUNTIME_FUNCTION, calls `__C_specific_handler` (EC msvcrt), which
+  matches the scope and calls the guest filter via ExitToX64 →
+  `filter saw exception c0000005` printed, filter returns
+  EXECUTE_HANDLER, `RtlUnwindEx` targets the except funclet and
+  execution resumes at `$ehgcr_0_2` ("AV caught and handled" path
+  reaches `$ehgcr_0_2` per the vkmtx64 trace).
+- Probe gotcha worth recording: LLVM's WinEH only assigns scope coverage
+  to *calls* (synchronous exceptions); a plain store inside __try is not
+  guarded, and LLVM will even fold/hoist a provably-null store out of
+  the scope entirely. The probe therefore faults inside a noinline
+  `do_av()` call — the realistic cross-frame case anyway.
+- Also fixed en route: the ExitToX64 thunk-frame save is now a
+  per-thread LIFO (`exit_sp/fp/lr[64]`) — nested EC→guest calls during
+  exception dispatch (filter, then handler) used to clobber the single
+  EmulatorData[2..3] slot, giving an infinite marker ping-pong.
+
+**Broken (documented, not faked): unwind across the EC/x64 boundary.**
+`RtlUnwindEx` (called by `__C_specific_handler` after the filter
+accepts) walks EC frames from itself down: __C_specific_handler →
+call_seh_handler (its `nested_exception_handler` runs) →
+call_seh_handlers → dispatch_exception → KiUserExceptionDispatcher.
+The next `virtual_unwind` must cross the dispatcher boundary via the
+MSFT_OP_EC_CONTEXT opcode in KUED's frame. On this stack configuration
+that restore yields the *arm64 host* context (the interpreter's own
+frames on the emulator stack), not the amd64 guest context: the very
+next EstablisherFrame is on the emulator stack, fails
+`is_valid_arm64ec_frame` (guest stack range only), and the walk aborts
+with `err:seh:RtlUnwindEx invalid frame`. Consequences:
+- The unwind never enters the guest's x64 frames, so `RtlRestoreContext`
+  resumes the except funclet with the *dispatcher-level* stack, not
+  main's establisher frame.
+- The __try/__finally test then faults again in `do_av`, and the second
+  dispatch inherits the broken chain — the process loops/unwinds to
+  unhandled. `finally` handlers in guest frames never run.
+What is precisely missing: a working transition from the EC dispatcher
+frames to the *amd64* exception context at the KUED boundary. The amd64
+context is present in KUED's frame (at its sp+0, where
+prepare_exception_arm64ec's `mov x1, sp` points, and where our
+reconcile writes); the observed walk instead follows the arm64 host
+context (stacked by `call_user_exception_dispatcher` at the dispatcher's
+entry sp, which is what the EC_CONTEXT opcode reads). Fixing it needs
+either (a) the EC_CONTEXT op to restore from the amd64 context (op
+ordering vs the `.seh_stackalloc 0x4d0` in
+`dlls/ntdll/signal_arm64ec.c:1311-1337` KiUserExceptionDispatcher), or
+(b) an explicit bridge in `virtual_unwind`/RtlVirtualUnwind2_arm64
+(signal_arm64ec.c:1028) that switches to the amd64 context when the walk
+reaches the dispatcher frame. Overwriting the stacked arm64 context from
+vkmt_reset_to_consistent_state was tried (with rec-overlap repair at
++0x3b0): no effect — the failing frame predates that restore, and the
+change was reverted.
+
+### M3f: performance + wrap-up
+
+Perf probe (`test/x64emu/perf_x64.c`, -O2, tight 4×-unrolled integer
+dependency loop, ~9.25 insns/iter measured from the disassembly):
+`perf_x64: 30000000 iters in 3018 ms (201.20 ns/iter)` → **~92 million
+guest instructions/sec** (2.78e8 insns / 3.018 s) on this host, CRT
+startup excluded as noise. No profiling-driven tuning was done; obvious
+fast paths present: rep movsb/stosb → memcpy/memset, locked RMW → host
+single atomics, everything else is a plain threaded decode/execute
+switch. The 5e8 runaway guard is the only known long-run limit (hit
+naturally by a 1e8-iteration probe and reported correctly).
+
+SSE2 gap found by the perf probe: punpckldq/hdq + punpckhbw/hwd/hdq were
+missing (only the byte/word forms existed) — added the full
+punpckl/h b/w/d/q family.
+
+### M3 final ladder status
+
+| probe | status |
+|-------|--------|
+| entry_x64.exe  | PASS — prints, exit code 7 |
+| math_x64.exe   | PASS — `math_x64: OK (0 failures)`, exit 0 |
+| mem_x64.exe    | PASS — `mem_x64: OK (0 failures)`, exit 0 |
+| thread_x64.exe | PASS — `thread_x64: OK (0 failures)`, exit 0 |
+| seh_x64.exe    | PARTIAL — AV delivered, filter called and accepted, except block executed; unwind across the EC/x64 boundary missing (M3e), __finally unverified |
+| perf_x64.exe   | ~92M insns/sec |
+
+M4 candidates, in rough priority: (1) the KUED-boundary unwind bridge
+(M3e analysis); (2) JIT backend consuming vkmt_insn metadata (the
+decode/execute split was kept clean for this); (3) 0F 38/0F 3A three-byte
+maps (currently loud giveup), more SSE4.1/4.2 (we claim them in CPUID —
+blend*/pblend*/round*/insert/extract will giveup if hit); (4) x87 if any
+real binary touches it (loud giveup in place); (5) ientry-thunk x4
+descriptor layout (M2 note — not needed so far; our own
+ExitToX64/EcCallRet paths handle all observed cases); (6)
+DispatchJump's exit-frame LIFO slot leak on tail-jump returns.
