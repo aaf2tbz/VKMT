@@ -3934,20 +3934,22 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c wine/wine-11.12/dlls/xtajit64/vkmt/jit.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/jit.c	2026-07-25 23:15:29
-@@ -0,0 +1,223 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/jit.c	2026-07-25 23:48:01
+@@ -0,0 +1,269 @@
 +/*
 + * VKMT x86-64 emulator — M5 tier-0 ARM64 block cache
 + *
 + * A block is a small straight-line sequence of register-only guest
 + * instructions.  The generated ARM64 body follows AAPCS64, preserves x29/x30
-+ * and directly implements a deliberately small set of guest operations.
++ * and directly lowers architectural NOPs; operations with observable state
++ * continue through the shared executor.
 + * Unsupported instructions remain in the interpreter.  This establishes a
 + * W^X code cache, block lookup, and safe SMC retirement without crossing an
 + * ARM64EC ABI boundary from generated code.
 + */
 +
 +#include <stdarg.h>
++#include <stddef.h>
 +
 +#include "vkmt.h"
 +
@@ -3958,6 +3960,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +struct vkmt_jit_block
 +{
 +    struct vkmt_jit_block *next;
++    struct vkmt_jit_block *fallthrough;
 +    ULONGLONG rip;
 +    ULONG epoch;
 +    UINT count;
@@ -3980,14 +3983,40 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +}
 +
 +/* movz/movk xd, #imm16, lsl #(16 * hw) */
-+static void emit_ptr( BYTE **p, UINT reg, const void *ptr )
++static void emit_imm64( BYTE **p, UINT reg, ULONGLONG value )
 +{
-+    ULONGLONG value = (ULONG_PTR)ptr;
 +    UINT hw;
 +
 +    emit32( p, 0xd2800000 | ((value & 0xffff) << 5) | reg );
 +    for (hw = 1; hw != 4; hw++)
 +        emit32( p, 0xf2800000 | (hw << 21) | (((value >> (16 * hw)) & 0xffff) << 5) | reg );
++}
++
++static void emit_ptr( BYTE **p, UINT reg, const void *ptr )
++{
++    emit_imm64( p, reg, (ULONG_PTR)ptr );
++}
++
++static void emit_store_rip( BYTE **p, ULONGLONG rip )
++{
++    UINT offset = offsetof(struct vkmt_x64_context, rip);
++
++    emit_imm64( p, 16, rip );
++    emit32( p, 0xf9000000 | ((offset / 8) << 10) | 16 );  /* str x16, [x0, #rip] */
++}
++
++/* Emit operations whose x86 effects have no dependency on EFLAGS.  x0 is the
++ * context base and x16 is the only scratch register. */
++static BOOL jit_emit_direct( BYTE **p, const struct vkmt_insn *insn )
++{
++    UINT op = insn->opcode;
++
++    if (op == 0x90 && !insn->rex)
++    {
++        emit_store_rip( p, (ULONG_PTR)(insn->start + insn->len) );
++        return TRUE;
++    }
++    return FALSE;
 +}
 +
 +static BOOL jit_eligible( const struct vkmt_insn *insn )
@@ -4001,6 +4030,15 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +     * The shared executor retains the exact x86 flags and corner semantics. */
 +    return (op <= 0x3b && (op & 7) <= 3) || (op >= 0x80 && op <= 0x8b) ||
 +           op == 0x8d || (op >= 0xc0 && op <= 0xc1);
++}
++
++static struct vkmt_jit_block *jit_find_block( ULONGLONG rip )
++{
++    struct vkmt_jit_block *block;
++
++    for (block = jit_blocks; block; block = block->next)
++        if (block->epoch == jit_epoch && block->rip == rip) return block;
++    return NULL;
 +}
 +
 +static struct vkmt_jit_block *jit_compile( struct vkmt_x64_context *ctx )
@@ -4028,7 +4066,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +    }
 +    if (!block->count) goto fail;
 +
-+    block->code_size = 16 + block->count * 40 + 8;
++    block->code_size = 16 + block->count * 64 + 8;
 +    size = (block->code_size + 0xfff) & ~0xfffull;
 +    base = NULL;
 +    /* Mark this as EC code.  On an ARM64EC process, the ntdll signal layer
@@ -4047,7 +4085,10 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +    emit32( &p, 0xf9000be0 );             /* str x0, [sp, #16] */
 +    for (i = 0; i < block->count; i++)
 +    {
++        /* C fallback calls may clobber x0, so every lowered instruction
++         * reloads the context from our ABI-owned stack slot. */
 +        emit32( &p, 0xf9400be0 );         /* ldr x0, [sp, #16] */
++        if (jit_emit_direct( &p, &block->insn[i] )) continue;
 +        emit_ptr( &p, 1, &block->insn[i] );
 +        emit_ptr( &p, 16, vkmt_execute_decoded );
 +        emit32( &p, 0xd63f0200 );         /* blr x16 */
@@ -4121,7 +4162,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +
 +UINT vkmt_jit_run_block( struct vkmt_x64_context *ctx )
 +{
-+    struct vkmt_jit_block *block;
++    struct vkmt_jit_block *block, *linked = NULL;
 +    void (WINAPI *run)(struct vkmt_x64_context *);
 +    UINT total = 0;
 +
@@ -4129,32 +4170,37 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/jit.c 
 +    for (;;)
 +    {
 +        RtlEnterCriticalSection( &jit_cs );
-+        for (block = jit_blocks; block; block = block->next)
-+            if (block->epoch == jit_epoch && block->rip == ctx->rip) break;
-+        if (block)
++        if (linked && linked->epoch == jit_epoch && linked->rip == ctx->rip)
++            block = linked;
++        else block = jit_find_block( ctx->rip );
++        if (!block)
 +        {
-+            RtlLeaveCriticalSection( &jit_cs );
-+            run = (void *)block->code;
-+            run( ctx );
-+            total += block->count;
-+            /* A block contains only linear instructions.  Follow its
-+             * fall-through through the cache rather than returning to the
-+             * decoder between linked blocks; bound a chain for fairness. */
-+            if (total >= VKMT_JIT_MAX_INSNS * 4) break;
-+            continue;
-+        }
-+        block = jit_compile( ctx );
-+        if (block)
-+        {
-+            block->epoch = jit_epoch;
-+            block->next = jit_blocks;
-+            jit_blocks = block;
++            block = jit_compile( ctx );
++            if (block)
++            {
++                block->epoch = jit_epoch;
++                block->next = jit_blocks;
++                jit_blocks = block;
++            }
 +        }
 +        RtlLeaveCriticalSection( &jit_cs );
 +        if (!block) break;
 +        run = (void *)block->code;
 +        run( ctx );
 +        total += block->count;
++        RtlEnterCriticalSection( &jit_cs );
++        if (block->epoch == jit_epoch)
++        {
++            if (!block->fallthrough || block->fallthrough->epoch != jit_epoch ||
++                block->fallthrough->rip != ctx->rip)
++                block->fallthrough = jit_find_block( ctx->rip );
++            linked = block->fallthrough;
++        }
++        else linked = NULL;
++        RtlLeaveCriticalSection( &jit_cs );
++        /* A block contains only linear instructions.  Follow its cached
++         * fall-through rather than returning to decode between blocks; bound
++         * a chain for fairness. */
 +        if (total >= VKMT_JIT_MAX_INSNS * 4) break;
 +    }
 +    return total;

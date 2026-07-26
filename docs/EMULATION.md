@@ -716,11 +716,15 @@ can be re-enabled only alongside the 0F 38 / 0F 3A opcode maps and tests.
 `vkmt_insn` metadata.  It caches straight-line, register-only x64 blocks
 (currently integer ALU/move/shift forms), emits ARM64EC-marked W^X code, and
 uses the shared decoded executor for exact x86 flag and edge-case semantics.
+Architectural `nop` is directly lowered to ARM64; state-changing lowering is
+deliberately held behind the shared executor until its ARM64EC context ABI is
+fully audited.
 The generated stub observes AAPCS64 stack alignment and preserves x29/x30;
 the EC-code allocation attribute is essential so Wine executes the generated
 ARM64 instructions rather than re-entering x64 emulation.
 
-Blocks fall through through a bounded cache chain before returning to decode.
+Blocks retain verified fall-through links through a bounded cache chain before
+returning to decode.
 Unsupported operations, memory-addressed instructions, and control flow
 remain in the interpreter. `BTCpu64FlushInstructionCache`, its heavy form,
 memory-dirty notification, and successful protection changes retire the
