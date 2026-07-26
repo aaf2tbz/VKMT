@@ -713,12 +713,13 @@ can be re-enabled only alongside the 0F 38 / 0F 3A opcode maps and tests.
 ### M5: ARM64EC tier-0 block cache
 
 `vkmt/jit.c` adds a tier-0 block translator over the interpreter decoder's
-`vkmt_insn` metadata.  It caches straight-line, register-only x64 blocks
-(currently integer ALU/move/shift forms), emits ARM64EC-marked W^X code, and
-uses the shared decoded executor for exact x86 flag and edge-case semantics.
-Architectural `nop` is directly lowered to ARM64; state-changing lowering is
-deliberately held behind the shared executor until its ARM64EC context ABI is
-fully audited.
+`vkmt_insn` metadata.  It caches straight-line x64 blocks and emits
+ARM64EC-marked W^X code. Native lowering covers NOP, immediate and
+register-to-register moves, simple base+displacement loads, stack stores,
+and flag-dead XOR/add/shift operations.  A 32-bit guest write is stored back
+to the full 64-bit context slot after ARM64 zero-extension, preserving x86-64
+register semantics. Instructions with live or complex flag effects use the
+shared decoded executor, retaining exact architectural behavior as fallback.
 The generated stub observes AAPCS64 stack alignment and preserves x29/x30;
 the EC-code allocation attribute is essential so Wine executes the generated
 ARM64 instructions rather than re-entering x64 emulation.
