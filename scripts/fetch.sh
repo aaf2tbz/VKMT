@@ -59,5 +59,8 @@ fi
 git -C "$TP/FEX-2607" fetch --quiet origin --tags
 git -C "$TP/FEX-2607" checkout --quiet --detach "$FEX_REV"
 git -C "$TP/FEX-2607" submodule update --init --recursive
+git -C "$TP/FEX-2607" apply --check ../../patches/fex-2607-vkmt.patch 2>/dev/null \
+  && git -C "$TP/FEX-2607" apply ../../patches/fex-2607-vkmt.patch \
+  || echo "FEX patch already applied or conflicts; check git -C $TP/FEX-2607 status"
 
 echo "Fetch complete. Build with scripts/build-moltenvk.sh, scripts/build-vkd3d-proton.sh, and scripts/build-fex-wow64.sh"

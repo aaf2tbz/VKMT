@@ -20,17 +20,21 @@ test "$machine" = "IMAGE_FILE_MACHINE_I386" || {
   exit 1
 }
 
-prefix="$(mktemp -d /tmp/vkmt-i386-prefix.XXXXXX)"
+RUNS_DIR="$VKMT/build/probe-runs"
+mkdir -p "$RUNS_DIR"
+run_root="$(mktemp -d "$RUNS_DIR/i386-wow64.XXXXXX")"
+prefix="$run_root/prefix"
+log="$run_root/probe.log"
 cleanup() {
   pkill -9 wineserver 2>/dev/null || true
-  rm -rf "$prefix"
+  # This is an exact mktemp-created child of the external-SSD run directory.
+  # Move it to Trash instead of recursively deleting a Wine prefix.
+  case "$run_root" in "$RUNS_DIR"/*) /usr/bin/trash "$run_root" 2>/dev/null || true ;; esac
 }
 trap cleanup EXIT
 
 echo "i386 probe: $PROBE"
 echo "xtajit: $XTAJIT"
-log="$(mktemp /tmp/vkmt-i386-probe.XXXXXX)"
-trap 'rm -f "$log"; cleanup' EXIT
 WINEPREFIX="$prefix" DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib \
   WINEDEBUG=+loaddll "$WINE_BUILD/wine" "$PROBE" >"$log" 2>&1 || {
     echo "Wine rejected the i386 process before guest execution" >&2
