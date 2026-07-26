@@ -116,7 +116,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64.c
                     "bl DbgBreakPoint\n"
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64ec.c wine/wine-11.12/dlls/ntdll/signal_arm64ec.c
 --- /tmp/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-07-25 13:07:05
++++ wine/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-07-25 22:42:55
 @@ -1372,7 +1372,7 @@
                     ".seh_handler user_callback_handler, @except\n\t"
                     "ldr x0, [sp]\n\t"             /* args */
@@ -795,8 +795,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/cpu.c wine/
  
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c wine/wine-11.12/dlls/xtajit64/vkmt/context.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/context.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 18:09:43
-@@ -0,0 +1,191 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/context.c	2026-07-25 22:39:36
+@@ -0,0 +1,189 @@
 +/*
 + * VKMT x86-64 emulator skeleton — process/thread lifecycle and guest context
 + *
@@ -953,8 +953,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +/**********************************************************************
 + *           vkmt_is_processor_feature_present
 + *
-+ * Baseline for a modern x64 CPU, matching what Windows' xtajit reports
-+ * (through SSE4.2; no AVX until the interpreter supports it).
++ * Baseline implemented by the interpreter.  In particular, keep SSE4.x
++ * clear until its three-byte opcode maps are implemented.
 + */
 +BOOLEAN vkmt_is_processor_feature_present( UINT feature )
 +{
@@ -969,9 +969,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +        (1ull << PF_COMPARE_EXCHANGE128) |
 +        (1ull << PF_FASTFAIL_AVAILABLE) |
 +        (1ull << PF_RDTSCP_INSTRUCTION_AVAILABLE) |
-+        (1ull << PF_SSSE3_INSTRUCTIONS_AVAILABLE) |
-+        (1ull << PF_SSE4_1_INSTRUCTIONS_AVAILABLE) |
-+        (1ull << PF_SSE4_2_INSTRUCTIONS_AVAILABLE);
++        (1ull << PF_SSSE3_INSTRUCTIONS_AVAILABLE);
 +
 +    return feature < 64 && (x86_features & (1ull << feature));
 +}
@@ -1444,8 +1442,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispat
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c wine/wine-11.12/dlls/xtajit64/vkmt/interp.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/interp.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 18:11:18
-@@ -0,0 +1,2404 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/interp.c	2026-07-25 22:39:36
+@@ -0,0 +1,2407 @@
 +/*
 + * VKMT x86-64 emulator — interpreter core (M3)
 + *
@@ -2069,8 +2067,11 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +    case 1:
 +        a = 0x000806e9;  /* family 6 model 142 */
 +        b = ((GetCurrentThreadId() & 0xff) << 24) | (8 << 8);
++        /* Do not advertise SSE4.x until the 0f 38 / 0f 3a maps are
++         * implemented.  Feature probing must never select instructions the
++         * interpreter cannot execute. */
 +        c = (1 << 0)  /* SSE3 */    | (1 << 9)  /* SSSE3 */  | (1 << 13) /* CMPXCHG16B */
-+          | (1 << 19) /* SSE4.1 */  | (1 << 20) /* SSE4.2 */ | (1 << 23) /* POPCNT */;
++          | (1 << 23) /* POPCNT */;
 +        d = (1 << 0)  /* FPU */     | (1 << 4)  /* TSC */    | (1 << 5)  /* MSR */
 +          | (1 << 8)  /* CX8 */     | (1 << 15) /* CMOV */   | (1 << 19) /* CLFLUSH */
 +          | (1 << 23) /* MMX */     | (1 << 24) /* FXSR */   | (1 << 25) /* SSE */

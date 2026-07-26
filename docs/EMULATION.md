@@ -676,6 +676,25 @@ punpckl/h b/w/d/q family.
 | seh_x64.exe    | PARTIAL — AV delivered, filter called and accepted, except block executed; unwind across the EC/x64 boundary missing (M3e), __finally unverified |
 | perf_x64.exe   | ~92M insns/sec |
 
+### M4a: x64 D3D12 device creation + feature-contract hardening
+
+The x86-64 `test/d3d12_probe.c` was built with
+`x86_64-w64-mingw32-clang -O1` and run in `prefix-x64` with native
+`d3d12`, `d3d12core`, and DXVK `dxgi` overrides plus the VKMT MoltenVK
+ICD.  It creates a Vulkan device on the Apple M4 through the emulated x64
+guest, then prints `PROBE OK` and exits 0.  This is the first verified
+x86-64 guest path through DXGI -> vkd3d-proton -> VKMT MoltenVK.
+
+SSE4.1/4.2 have deliberately been removed from CPUID leaf 1 and the
+processor-feature mask.  The interpreter has no 0f 38 / 0f 3a opcode maps,
+so reporting those bits was an invalid feature contract.  `cpuid_x64.exe`
+checks that both bits stay clear.  SSE4 support can be restored only with
+the corresponding opcode implementation and tests.
+
+The KUED unwind bridge remains open: an attempted dispatcher-frame bridge
+was rejected because it stalled `RtlUnwindEx`; the M3 partial-SEH behavior
+is retained without regression.
+
 M4 candidates, in rough priority: (1) the KUED-boundary unwind bridge
 (M3e analysis); (2) JIT backend consuming vkmt_insn metadata (the
 decode/execute split was kept clean for this); (3) 0F 38/0F 3A three-byte
