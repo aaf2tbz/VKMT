@@ -75,5 +75,7 @@ int main( void )
     }
 
     printf( "seh_x64: %s (%d failures)\n", failures ? "FAIL" : "OK", failures ); fflush(stdout);
-    return failures;
+    /* Keep the probe focused on exception unwinding; ExitProcess avoids
+     * adding CRT teardown frames to this boundary test. */
+    ExitProcess( failures );
 }

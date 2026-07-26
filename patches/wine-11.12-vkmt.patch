@@ -116,8 +116,65 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64.c
                     "bl DbgBreakPoint\n"
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64ec.c wine/wine-11.12/dlls/ntdll/signal_arm64ec.c
 --- /tmp/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-06-29 13:32:59
-+++ wine/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-07-25 22:42:55
-@@ -1372,7 +1372,7 @@
++++ wine/wine-11.12/dlls/ntdll/signal_arm64ec.c	2026-07-25 22:51:39
+@@ -60,6 +60,13 @@
+ static BOOLEAN emulated_processor_features[PROCESSOR_FEATURE_MAX];
+ static BYTE KiUserExceptionDispatcher_orig[16]; /* to detect patching */
+ extern void KiUserExceptionDispatcher_thunk(void) asm("EXP+#KiUserExceptionDispatcher");
++/* Prefix of xtajit64's private per-thread context.  Its first member is
++ * intentionally stable so ntdll can retain the KUED bridge context without
++ * using PE TLS or CPU-area scratch slots. */
++struct vkmt_x64_context_prefix
++{
++    ARM64EC_NT_CONTEXT *exception_dispatch_context;
++};
+ 
+ static inline CHPE_V2_CPU_AREA_INFO *get_arm64ec_cpu_area(void)
+ {
+@@ -1028,6 +1035,10 @@
+ static NTSTATUS virtual_unwind( ULONG type, DISPATCHER_CONTEXT_ARM64EC *dispatch,
+                                 ARM64EC_NT_CONTEXT *context )
+ {
++    struct vkmt_x64_context_prefix *vkmt_ctx = get_arm64ec_cpu_area()->EmulatorData[0];
++    ARM64EC_NT_CONTEXT *exception_dispatch_context = vkmt_ctx ? vkmt_ctx->exception_dispatch_context : NULL;
++    ULONG_PTR exception_dispatch_base;
++    RUNTIME_FUNCTION *exception_dispatch_function;
+     DISPATCHER_CONTEXT_NONVOLREG_ARM64 *nonvol_regs;
+     DWORD64 pc = context->Pc;
+     int i;
+@@ -1052,7 +1063,23 @@
+     for (i = 0; i < 8; i++) nonvol_regs->FpNvRegs[i] = context->V[i + 8].D[0];
+ 
+     dispatch->FunctionEntry = RtlLookupFunctionEntry( pc, &dispatch->ImageBase, dispatch->HistoryTable );
++    exception_dispatch_function = RtlLookupFunctionEntry( (ULONG_PTR)KiUserExceptionDispatcher,
++                                                           &exception_dispatch_base, NULL );
+ 
++    if (exception_dispatch_context && dispatch->FunctionEntry == exception_dispatch_function &&
++        dispatch->ImageBase == exception_dispatch_base)
++    {
++        /* KUED's normal EC_CONTEXT unwind restores the host signal frame.
++         * For an emulated fault its caller is the saved amd64 guest frame. */
++        *context = *exception_dispatch_context;
++        pc = context->Pc;
++        dispatch->ControlPc = pc;
++        dispatch->ControlPcIsUnwound = FALSE;
++        dispatch->FunctionEntry = RtlLookupFunctionEntry( pc, &dispatch->ImageBase,
++                                                           dispatch->HistoryTable );
++        TRACE( "bridged KUED unwind to guest pc %p sp %p\n", (void *)pc, (void *)context->Sp );
++    }
++
+     if (RtlVirtualUnwind2( type, dispatch->ImageBase, pc, dispatch->FunctionEntry, &context->AMD64_Context,
+                            NULL, &dispatch->HandlerData, &dispatch->EstablisherFrame,
+                            NULL, NULL, NULL, &dispatch->LanguageHandler, 0 ))
+@@ -1298,6 +1325,7 @@
+     if (rec->ExceptionCode == STATUS_EMULATION_SYSCALL) dispatch_syscall( arm_ctx );
+     context_arm_to_x64( context, arm_ctx );
+     if (pResetToConsistentState) pResetToConsistentState( rec, &context->AMD64_Context, arm_ctx );
++    ((struct vkmt_x64_context_prefix *)get_arm64ec_cpu_area()->EmulatorData[0])->exception_dispatch_context = context;
+     /* call x64 dispatcher if the thunk or the function pointer was modified */
+     if (pWow64PrepareForException || memcmp( KiUserExceptionDispatcher_thunk, KiUserExceptionDispatcher_orig,
+                                              sizeof(KiUserExceptionDispatcher_orig) ))
+@@ -1372,7 +1400,7 @@
                     ".seh_handler user_callback_handler, @except\n\t"
                     "ldr x0, [sp]\n\t"             /* args */
                     "ldp w1, w2, [sp, #0x08]\n\t"  /* len, id */
@@ -126,7 +183,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64ec
                     "ldr x3, [x3, 0x58]\n\t"       /* peb->KernelCallbackTable */
                     "ldr x15, [x3, x2, lsl #3]\n\t"
                     "blr x15\n\t"
-@@ -1896,7 +1896,7 @@
+@@ -1896,7 +1924,7 @@
      asm( ".seh_proc \"#arm64x_check_call\"\n\t"
           ".seh_endprologue\n\t"
           /* check for EC code */
@@ -135,7 +192,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64ec
           "lsr x17, x11, #18\n\t"            /* dest / page_size / 64 */
           "ldr x16, [x16, #0x368]\n\t"       /* peb->EcCodeBitMap */
           "lsr x9, x11, #12\n\t"             /* dest / page_size */
-@@ -2052,7 +2052,7 @@
+@@ -2052,7 +2080,7 @@
           "ldr w2, [x1, #0x30]\n\t"     /* context->ContextFlags */
           "orr w2, w2, #0x20000000\n\t" /* CONTEXT_UNWOUND_TO_CALL */
           "str w2, [x1, #0x30]\n\t"
@@ -144,7 +201,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/ntdll/signal_arm64ec
           "ldrb w2, [x3, #2]\n\t"       /* peb->BeingDebugged */
           "cbnz w2, 1f\n\t"
           "bl \"#dispatch_exception\"\n"
-@@ -2156,7 +2156,7 @@
+@@ -2156,7 +2184,7 @@
           ".seh_save_fplr_x 16\n\t"
           ".seh_endprologue\n\t"
           ".seh_handler DbgUiRemoteBreakin_handler, @except\n\t"
@@ -988,7 +1045,7 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/contex
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 18:05:57
++++ wine/wine-11.12/dlls/xtajit64/vkmt/dispatch.c	2026-07-25 22:51:39
 @@ -0,0 +1,450 @@
 +/*
 + * VKMT x86-64 emulator skeleton — simulation entry/exit and dispatch
@@ -3853,8 +3910,8 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/interp
 +}
 diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 --- /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	1969-12-31 17:00:00
-+++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 17:36:32
-@@ -0,0 +1,121 @@
++++ wine/wine-11.12/dlls/xtajit64/vkmt/vkmt.h	2026-07-25 22:51:39
+@@ -0,0 +1,124 @@
 +/*
 + * VKMT x86-64 emulator skeleton — private shared header
 + *
@@ -3902,6 +3959,9 @@ diff -ruN --exclude=*.o --exclude=.git /tmp/wine-11.12/dlls/xtajit64/vkmt/vkmt.h
 +
 +struct vkmt_x64_context
 +{
++    /* Kept first so ntdll can access the KUED bridge without depending on
++     * the interpreter's private register-file layout. */
++    ARM64EC_NT_CONTEXT *exception_dispatch_context;
 +    ULONGLONG gpr[16];      /* x86 encoding order: rax rcx rdx rbx rsp rbp rsi rdi r8-r15 */
 +    ULONGLONG rip;
 +    ULONG     eflags;

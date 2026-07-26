@@ -673,7 +673,7 @@ punpckl/h b/w/d/q family.
 | math_x64.exe   | PASS — `math_x64: OK (0 failures)`, exit 0 |
 | mem_x64.exe    | PASS — `mem_x64: OK (0 failures)`, exit 0 |
 | thread_x64.exe | PASS — `thread_x64: OK (0 failures)`, exit 0 |
-| seh_x64.exe    | PARTIAL — AV delivered, filter called and accepted, except block executed; unwind across the EC/x64 boundary missing (M3e), __finally unverified |
+| seh_x64.exe    | PASS — AV filter/except and nested __finally both execute; clean ExitProcess(0) |
 | perf_x64.exe   | ~92M insns/sec |
 
 ### M4a: x64 D3D12 device creation + feature-contract hardening
@@ -691,9 +691,15 @@ so reporting those bits was an invalid feature contract.  `cpuid_x64.exe`
 checks that both bits stay clear.  SSE4 support can be restored only with
 the corresponding opcode implementation and tests.
 
-The KUED unwind bridge remains open: an attempted dispatcher-frame bridge
-was rejected because it stalled `RtlUnwindEx`; the M3 partial-SEH behavior
-is retained without regression.
+The KUED-boundary unwind bridge is complete.  `virtual_unwind()` recognizes
+the dispatcher by its `RUNTIME_FUNCTION` entry (not a single ARM64X PC,
+which differs between entry paths) and restores the original guest context
+saved in the per-thread VKMT context.  This bypasses KUED's normal
+`MSFT_OP_EC_CONTEXT` restore, which belongs to the host signal frame.  The
+bridge state intentionally does not use PE TLS or an `EmulatorData` scratch
+slot: nested EC exits would corrupt either; it lives at the stable prefix of
+VKMT's per-thread context instead.  The SEH probe verifies both a filter /
+except transfer and `__finally` execution during unwind, then exits cleanly.
 
 M4 candidates, in rough priority: (1) the KUED-boundary unwind bridge
 (M3e analysis); (2) JIT backend consuming vkmt_insn metadata (the
