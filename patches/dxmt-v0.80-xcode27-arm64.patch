@@ -1,0 +1,25 @@
+diff --git a/src/airconv/darwin/meson.build b/src/airconv/darwin/meson.build
+index f3e39ec..9ac3e5c 100644
+--- a/src/airconv/darwin/meson.build
++++ b/src/airconv/darwin/meson.build
+@@ -19,4 +19,9 @@ if native_llvm_path.startswith('/usr/local/opt')
+     llvm_ld_flags_darwin,
+     '/usr/local/opt/zstd/lib/libzstd.a', '/usr/local/opt/llvm@15/lib/libunwind.a'
+   ]
++elif native_llvm_path.startswith('/opt/homebrew/opt')
++  llvm_ld_flags_darwin = [
++    llvm_ld_flags_darwin,
++    '/opt/homebrew/opt/zstd/lib/libzstd.a'
++  ]
+ endif
+diff --git a/src/airconv/shaders/air_tessellation.metal b/src/airconv/shaders/air_tessellation.metal
+index 56ba86e..078304f 100644
+--- a/src/airconv/shaders/air_tessellation.metal
++++ b/src/airconv/shaders/air_tessellation.metal
+@@ -151,4 +151,4 @@ struct TessMeshWorkload {
+ int
+ get_next_index(threadgroup int *out_count) {
+-  return __metal_atomic_fetch_add_explicit(out_count, 1, int(memory_order_relaxed), __METAL_MEMORY_SCOPE_THREADGROUP__);
++  return __metal_atomic_fetch_add_explicit(out_count, 1, int(memory_order_relaxed), __METAL_MEMORY_SCOPE_THREADGROUP__, __METAL_MEMORY_FLAGS_NONE__);
+ }
+ template <partitioning partition>

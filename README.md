@@ -32,7 +32,15 @@ for the stream-output emulation design.
 scripts/fetch.sh                # clone + patch MoltenVK, vkd3d-proton, DXVK(ref)
 scripts/build-moltenvk.sh       # needs Xcode (DEVELOPER_DIR override supported)
 scripts/build-vkd3d-proton.sh   # needs mingw-w64, meson, ninja, glslang
+scripts/build-dxmt-arm64ec.sh   # DXMT 0.80: ARM64EC PE DLLs + arm64 winemetal.so
+scripts/probe-dxmt-arm64ec.sh   # proves the x64-on-ARM64 Wine loader uses that pair
 ```
+
+DXMT v0.80 is pinned and fetched with its submodules. The DXMT build uses the
+native arm64 Unix driver with ARM64EC PE thunks; it does not install any i386
+DXMT artifacts. It requires Homebrew LLVM 15 and zstd, plus Xcode's Metal
+Toolchain component (`xcodebuild -downloadComponent MetalToolchain` on Xcode
+27 when requested by `xcrun`).
 
 ## Roadmap
 
