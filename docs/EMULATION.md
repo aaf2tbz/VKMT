@@ -703,12 +703,9 @@ slot: nested EC exits would corrupt either; it lives at the stable prefix of
 VKMT's per-thread context instead.  The SEH probe verifies both a filter /
 except transfer and `__finally` execution during unwind, then exits cleanly.
 
-M4 candidates, in rough priority: (1) the KUED-boundary unwind bridge
-(M3e analysis); (2) JIT backend consuming vkmt_insn metadata (the
-decode/execute split was kept clean for this); (3) 0F 38/0F 3A three-byte
-maps (currently loud giveup), more SSE4.1/4.2 (we claim them in CPUID —
-blend*/pblend*/round*/insert/extract will giveup if hit); (4) x87 if any
-real binary touches it (loud giveup in place); (5) ientry-thunk x4
-descriptor layout (M2 note — not needed so far; our own
-ExitToX64/EcCallRet paths handle all observed cases); (6)
-DispatchJump's exit-frame LIFO slot leak on tail-jump returns.
+M4 closure: KUED unwind, honest SSE feature reporting, x64 D3D12 device
+creation, and headless GPU submission are all verified.  The remaining
+`DispatchJump` tail-jump LIFO audit is a contained cleanup rather than an
+M4 acceptance blocker; retain it as a pre-JIT regression item.  M5 starts
+with a block translator consuming the existing `vkmt_insn` metadata.  SSE4
+can be re-enabled only alongside the 0F 38 / 0F 3A opcode maps and tests.
