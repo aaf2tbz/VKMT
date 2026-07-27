@@ -1,0 +1,29 @@
+365:002c:err:wgl:egl_init Failed to load libEGL.1.dylib: dlopen(libEGL.1.dylib, 0x000A): tried: '/Volumes/AverySSD/VKMT/wine/build-ec/dlls/ntdll/libEGL.1.dylib' (no such file), '/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libEGL.1.dylib' (no such file), 'libEGL.1.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibEGL.1.dylib' (no such file), '/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libEGL.1.dylib' (no such file), '/usr/lib/libEGL.1.dylib' (no such file, not in dyld cache), 'libEGL.1.dylib' (no such file)
+366:0044:err:wgl:egl_init Failed to load libEGL.1.dylib: dlopen(libEGL.1.dylib, 0x000A): tried: '/Volumes/AverySSD/VKMT/wine/build-ec/dlls/ntdll/libEGL.1.dylib' (no such file), '/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libEGL.1.dylib' (no such file), 'libEGL.1.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibEGL.1.dylib' (no such file), '/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libEGL.1.dylib' (no such file), '/usr/lib/libEGL.1.dylib' (no such file, not in dyld cache), 'libEGL.1.dylib' (no such file)
+367:002c:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+368:0044:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+369:0078:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+370:0078:err:setupapi:SetupDefaultQueueCallbackW copy error 1812 L"@C:\\windows\\system32\\drivers\\wineusb.sys,-1" -> L"C:\\windows\\inf\\wineusb.inf"
+371:0078:err:winediag:process_attach failed to load libgnutls, no support for pfx import/export
+372:00c4:trace:wow:process_init fex-boundary: entering BTCpuProcessInit 00006FFFFBB530D0
+373:fex-boundary: BTCpuProcessInit entry
+374:fex-boundary: process CRT/Unixlib initialized
+375:fex-boundary: creating FEX context
+376:fex-boundary: FEX context created
+377:fex-boundary: initializing FEX core
+378:fex-boundary: allocating dispatcher code
+379:fex-boundary: dispatcher code allocated
+380:fex-boundary: emitting dispatcher
+381:fex-boundary: dispatcher emitted
+382:fex-boundary: dispatcher initialization complete
+383:fex-boundary: FEX core initialized
+386:fex-boundary: initial images registered
+387:fex-boundary: bridge allocated
+388:fex-boundary: BTCpuProcessInit complete
+389:00c4:trace:wow:process_init fex-boundary: BTCpuProcessInit returned
+390:00c4:trace:wow:thread_init fex-boundary: entering BTCpuThreadInit 00006FFFFBB53B4C
+391:fex-boundary: BTCpuThreadInit entry
+392:fex-boundary: BTCpuThreadInit complete
+393:00c4:trace:wow:thread_init fex-boundary: BTCpuThreadInit returned
+394:00c4:trace:wow:Wow64LdrpInitialize fex-boundary: entering BTCpuSimulate 00006FFFFBB54570
+395:fex-boundary: BTCpuSimulate entered

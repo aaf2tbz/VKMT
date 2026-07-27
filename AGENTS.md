@@ -57,6 +57,13 @@ surface resolves only to an unimplemented stub. Treat it as an import-contract
 gate to close before diagnosing deeper FEX execution. The associated prefix
 was stopped through its exact wineserver and removed; no Wine process remains.
 
+### 2026-07-27 — FEX WoW64 Phase 1 complete
+
+- Rebuilt the ARM64 FEX provider from the in-tree LLVM-MinGW toolchain and post-linked its two x18 TLS references to Wine's x28 TLS base.
+- Added the missing ARM64X `RtlWow64SuspendThread` ntdll export used by FEX.
+- Corrected early Unix-call ordering and high-arena guest-pointer translation in Wine's ARM64 WoW64 wrapper.
+- Gate evidence: `docs/validation/fex-phase1-20260727T093140/RESULTS.md`. A fresh prefix reached `BTCpuSimulate`; its disposable run root was removed.
+
 ## Current verification command
 
 Run `scripts/verify-preservation.sh` before cleanup or release staging.  It is
