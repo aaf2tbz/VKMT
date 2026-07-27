@@ -205,6 +205,17 @@ copies. This is now proof of DXGI/DXVK D3D11 device and resource translation
 to Metal, but not presentation/swapchain coverage or the separate DXMT D3D11
 rendering gate.
 
+### 2026-07-27 DXMT widened D3D11 gate status
+
+`scripts/probe-dxmt-arm64ec.sh` was rerun and still passes the focused
+ARM64EC `winemetal.dll`/native-ARM64 `winemetal.so` bridge gate, including
+fresh wineboot and exact cleanup. The widened DXMT D3D11-device run is not
+yet an acceptance result: after staging `xtajit64.dll`, DXMT `dxgi.dll`,
+`d3d11.dll`, and `winemetal.dll` in a new prefix, it exits 137 during
+desktop/server initialization before `D3D11CreateDevice` returns. The run
+root had no live holders and was removed. Isolate the desktop initialization
+dependency before changing DXMT graphics code or claiming D3D11 support.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
