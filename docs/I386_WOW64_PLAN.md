@@ -129,6 +129,31 @@ manager owns reserve/commit, images, protection, unmap, PEB32/TEB32, stacks,
 and KUSER mappings. A high contiguous arena may be used as a fast path but
 cannot be a correctness requirement.
 
+#### 2026-07-27 implementation checkpoint
+
+`dlls/wow64/memory.c` is the sole i386 guest-address conversion layer. It
+uses checked, registered guest-range to host-range mappings and gives explicit
+non-contiguous mappings precedence over the existing Darwin high-arena
+compatibility aperture. The syscall, VM, process, security, synchronization,
+and system wrappers now use named conversions rather than truncating host
+pointers.
+
+The manager registers the bootstrap TEB32, PEB32, process parameters, guest
+stack, and KUSER data, and the VM wrappers register allocation and section-map
+results, retain mappings across protect/commit, and remove them only after
+successful release/unmap. With `WINEDEBUG=+wow`, its in-process fixture uses
+independent guest ranges for native host mappings above 4 GiB and validates
+allocate, guest-to-host and host-to-guest conversion, protect, free, map, and
+unmap. The trace on 2026-07-27 reached:
+
+```
+i386 guest memory selftest passed: allocate/map/protect/unmap above 4GiB
+```
+
+This proves the Wine-side VM contract. The subsequent FEX page-map/TLB work
+remains Phase 3: it must consume these registered mappings rather than assume
+a linear aperture for generated guest memory accesses.
+
 ### 1.5. Close the CPU-provider import contract
 
 Before invoking guest execution, enumerate `xtajit.dll` imports against Wine's

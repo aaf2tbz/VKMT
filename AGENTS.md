@@ -64,11 +64,27 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 - Corrected early Unix-call ordering and high-arena guest-pointer translation in Wine's ARM64 WoW64 wrapper.
 - Gate evidence: `docs/validation/fex-phase1-20260727T093140/RESULTS.md`. A fresh prefix reached `BTCpuSimulate`; its disposable run root was removed.
 
-### 2026-07-27 — Phase 2 x86_64 execution re-proved
+### 2026-07-27 — x86_64 execution re-proved
 
 - The fresh x64 harness now uses an in-tree Wineboot test mode that defers only unfinished i386 WoW64 installation and device services.
 - After bounded bootstrap and exact wineserver restart, `entry_x64.exe` executed through `xtajit64.dll`, printed its guest message, and returned 7 on the native ARM64 host.
 - Evidence: `docs/validation/p2-x64-execution-20260727T094000/RESULTS.md`.
+
+### 2026-07-27 — i386 guest-memory manager checkpoint
+
+- `dlls/wow64/memory.c` now owns checked i386 guest-VA ↔ host-pointer
+  mappings. Explicit mappings support non-contiguous ARM64 host ranges; the
+  Darwin high aperture is only a compatibility bootstrap record.
+- VM reserve/commit/map/protect/free/unmap paths, plus PEB32/TEB32, process
+  parameters, stacks, and KUSER registration, flow through named conversion
+  helpers. Do not reintroduce `PtrToUlong(host_pointer)` on an i386 path.
+- Targeted build: `make -C wine/build-ec
+  dlls/wow64/aarch64-windows/wow64.dll` with the in-tree LLVM-MinGW `bin` on
+  `PATH`.
+- Runtime evidence: a fresh disposable i386 initialization with
+  `WINEDEBUG=+wow` passed the manager's high-host-address
+  allocate/map/protect/free/unmap fixture and reached `BTCpuSimulate`. The
+  disposable prefix was stopped using its exact wineserver and removed.
 
 ## Current verification command
 
