@@ -55,8 +55,8 @@ WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=
     "$WINE" "$WINEBOOT" --init >"$RUN_ROOT/wineboot.log" 2>&1
 WINEPREFIX="$PREFIX" "$WINESERVER" -k
 WINEPREFIX="$PREFIX" "$WINESERVER" -w
-ln -s "$STAGE/aarch64-windows/winemetal.dll" "$PREFIX/drive_c/windows/system32/winemetal.dll"
-ln -s "$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll" "$PREFIX/drive_c/windows/system32/xtajit64.dll"
+ln -sfn "$STAGE/aarch64-windows/winemetal.dll" "$PREFIX/drive_c/windows/system32/winemetal.dll"
+ln -sfn "$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll" "$PREFIX/drive_c/windows/system32/xtajit64.dll"
 
 WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINEDLLPATH="$STAGE" \
 WINEDLLOVERRIDES='winemetal=b' VKMT_DXMT_WMT_ONLY=1 WINEDEBUG=-all DYLD_PRINT_LIBRARIES=1 \

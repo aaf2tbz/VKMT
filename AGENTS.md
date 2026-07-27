@@ -251,6 +251,28 @@ same-thread re-entry is guarded on macOS. In `WINE_NO_EXPLORER=1` probe mode,
 the Wine null driver is selected so headless tests do not instantiate a macOS
 desktop driver. The normal interactive driver path is otherwise unchanged.
 
+### 2026-07-27 native ARM64 font and D3D12 loader recovery
+
+`scripts/probe-p1-aarch64-prefix.sh` again passes from a fresh disposable
+prefix after targeted `win32u` rebuilds. The native ARM64 D3D12 loader probe
+also passes for both Wine's builtin `d3d12.dll` and the pure-AArch64
+vkd3d-proton `install-arm64/bin/{d3d12,d3d12core}.dll` pair.
+
+The repaired `win32u` behavior is intentionally small: direct GDI callers
+lazily initialize the shared GDI table after the Wine process exists; and the
+fontconfig fallback checks `fontconfig_enabled` before calling any dynamically
+resolved fontconfig entry points. This matters on macOS when FreeType loads
+successfully but `libfontconfig.1.dylib` is outside dyld's default search
+path. FreeType 2.14.3 itself initializes and Wine's builtin font fallback is
+used safely. The verified focused source commit records these two changes.
+
+Native vkd3d-proton subsequently reaches the pinned MoltenVK ICD on Apple M4,
+but `CreateDXGIFactory1` from Wine's builtin pure-AArch64 DXGI still returns
+`DXGI_ERROR_UNSUPPORTED`. Do not claim native AArch64 D3D12 device/readback
+until the pure-AArch64 DXGI route is completed. The existing ARM64EC DXMT
+Winemetal factory/bridge gate still passes; its probe now uses idempotent
+symlink replacement in its disposable prefix.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
