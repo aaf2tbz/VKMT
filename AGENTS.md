@@ -184,6 +184,27 @@ unconditional TLS access faulted before `vkCreateBuffer`; after the repair,
 the resource, queue, fence, and readback path succeeds. This does not yet
 prove DXGI/DXVK routing, D3D11, rendering/shader output, or presentation.
 
+### 2026-07-27 x86_64 DXVK/D3D11 deterministic Metal gate
+
+The x86_64 DXVK route is now a passing fresh-prefix acceptance. A COFF-AMD64
+probe runs through ARM64EC `xtajit64.dll`, stages ARM64EC DXVK 3.0.2
+`dxgi.dll` and `d3d11.dll`, creates a D3D11 hardware device on Apple M4 via
+Wine Vulkan and the pinned MoltenVK ICD, clears a 16x16 RGBA render target,
+copies it to staging memory, and validates the CPU-readback pixel values. It
+prints `VKMT_D3D11_PROBE_OK`; the fresh in-tree ARM64 wineboot run and exact
+per-prefix wineserver teardown both completed successfully.
+
+DXVK's ARM64EC source/cross-file is preserved in nested commit `f0e22fc`.
+That change makes MoltenVK's absent geometry-shader, cull-distance, and
+depth-clip-enable feature bits optional for device admission while keeping
+those features disabled. It does not claim applications using those features
+are supported. Runtime staging must copy the finished DLLs from
+`runtime/dxvk-vkmt-1a5919b/build.arm64ec/src/{dxgi,d3d11}/` into its
+`arm64ec/` stage: `meson install --no-rebuild` may retain older existing
+copies. This is now proof of DXGI/DXVK D3D11 device and resource translation
+to Metal, but not presentation/swapchain coverage or the separate DXMT D3D11
+rendering gate.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
