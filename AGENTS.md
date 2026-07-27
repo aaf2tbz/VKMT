@@ -207,27 +207,30 @@ rendering gate.
 
 ### 2026-07-27 DXMT widened D3D11 gate status
 
-`scripts/probe-dxmt-arm64ec.sh` was rerun and still passes the focused
-ARM64EC `winemetal.dll`/native-ARM64 `winemetal.so` bridge gate, including
-fresh wineboot and exact cleanup. The widened DXMT D3D11-device run is not
-yet an acceptance result: after staging `xtajit64.dll`, DXMT `dxgi.dll`,
-`d3d11.dll`, and `winemetal.dll` in a new prefix, it exits 137 during
-desktop/server initialization before `D3D11CreateDevice` returns. The run
-root had no live holders and was removed. Isolate the desktop initialization
-dependency before changing DXMT graphics code or claiming D3D11 support.
+DXMT is integrated into the active Wine build without a full Wine rebuild:
+`scripts/integrate-dxmt-arm64ec-builtins.sh` replaces only the generated
+`dxgi.dll`/`d3d11.dll` build-path artifacts with symlinks to the paired DXMT
+ARM64EC stage and pairs the native ARM64 `winemetal.so` plus
+`libunwind.1.dylib`. It first retains SHA-256-verified stock Wine DLL backups;
+`--restore` restores those exact files.
 
-The dependency isolation then established that direct `LoadLibrary` of the
-ARM64EC `winemetal.dll` succeeds, whereas native DXMT `dxgi.dll` fails with
-`ERROR_MOD_NOT_FOUND`, and `d3d11.dll` fails through that DXGI dependency.
-Wine's ARM64 API-set schema maps all of DXMT's imported UCRT API-set DLLs to
-`ucrtbase.dll`; this is not an absent CRT mapping. Preloading the already
-working Winemetal builtin pair before loading DXGI does not change the error.
-The pending repair is therefore the imported DXGI→Winemetal resolution path,
-not a Metal device, D3D11, desktop, or simple module-load-order failure.
-All ten UCRT API-set imports used by DXGI load successfully under ARM64EC, and
-each Winemetal symbol imported by DXGI is exported by the staged ARM64EC PE.
-Do not paper over this with copied UCRT DLLs or missing-export stubs: the
-remaining defect is Wine's imported ARM64EC builtin binding.
+The focused bridge and an executable DXGI import gate now pass in one fresh,
+cleaned prefix: `scripts/probe-dxmt-arm64ec.sh` runs ARM64 wineboot,
+`WMTCopyAllDevices`, then an ARM64EC client import of
+`CreateDXGIFactory1` and `IDXGIFactory1::Release`. The latter fixed a real
+Wine loader defect: ARM64EC import tables were bound to `.hexpthk` x64 export
+thunks, which caused native ARM64 to execute x64 bytes. The ARM64EC NTDLL
+loader now redirects imports made by an ARM64EC caller through the imported
+module's CHPE redirection metadata to its paired ARM64 implementation. True
+x64 callers are deliberately unchanged and still use xtajit64. The focused
+Wine source repair is nested commit `3abfdc0`.
+
+`IDXGIFactory1::EnumAdapters1` and DXMT `D3D11CreateDevice` are the next
+separate gates. They are not yet acceptance results. The factory vtable is
+native ARM64EC, and the remaining fault occurs after the successful factory
+call while enumerating Metal devices; do not regress the completed import
+binding repair or claim DXMT D3D11 rendering until adapter enumeration,
+device creation, and readback each pass.
 
 ## Historical archive salvage
 
