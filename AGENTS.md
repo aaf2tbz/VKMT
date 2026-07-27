@@ -232,6 +232,25 @@ call while enumerating Metal devices; do not regress the completed import
 binding repair or claim DXMT D3D11 rendering until adapter enumeration,
 device creation, and readback each pass.
 
+### 2026-07-27 restored x86_64 DXVK/D3D11 acceptance
+
+The current clean acceptance is `scripts/probe-p2-x64-dxvk.sh`. It creates a
+fresh disposable prefix with in-tree ARM64 `wineboot.exe`, proves the x86_64
+guest entry fixture through ARM64EC `xtajit64.dll`, then routes compatible
+ARM64EC DXVK `dxgi.dll` and `d3d11.dll` through the pinned MoltenVK ICD. The
+D3D11 fixture creates the Apple M4 device and verifies deterministic
+clear/copy/readback (`P2_X64_DXVK_D3D11_READBACK_OK`). Its trap stops only the
+prefix's wineserver and removes only that disposable run root.
+
+The Wine-side fix is deliberately narrow and rebuilt only as
+`dlls/win32u/win32u.so`. Direct win32u clients such as DXVK can bypass the
+normal user32 callback bootstrap; at first desktop use, win32u now attaches
+the window station/desktop and registers the two server prerequisite classes.
+Full builtin class registration waits for a valid user32 callback table, and
+same-thread re-entry is guarded on macOS. In `WINE_NO_EXPLORER=1` probe mode,
+the Wine null driver is selected so headless tests do not instantiate a macOS
+desktop driver. The normal interactive driver path is otherwise unchanged.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
