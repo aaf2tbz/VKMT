@@ -181,6 +181,30 @@ syscall return, TLS, exceptions, APCs, and a second thread. Every fixture must
 assert that guest pointers remain 32-bit and no raw host-pointer truncation is
 used.
 
+#### 2026-07-27 completion result
+
+Phase 4.1 through 4.8 are complete. The unified fixture and runner are
+`test/i386/phase4_contract.c`, `test/i386/phase4_helper.c`, and
+`scripts/probe-i386-wow64-phase4.sh`. One fresh prefix passed DLL loading,
+syscall return/output pointers, executable/DLL/dynamic TLS, suspended i386
+context get/set, software and hardware SEH with resume, two ordered APCs,
+second-thread state isolation, a real headless Wine user callback, eight
+thread-lifecycle cycles, and the Phase 3 guest-memory regression.
+
+The callback gate uses `WH_MSGFILTER` plus `CallMsgFilter`: ARM64 `win32u`
+enters `KeUserModeCallback`, ARM64 `wow64win` marshals the hook frame, i386
+`user32` calls the application hook, and `NtCallbackReturn` restores the
+native frame. It does not create a window or initialize a display driver.
+
+The same acceptance session re-proved the unified ARM64/AArch64/ARM64EC gate
+and the separate x86_64 DXVK deterministic readback gate. Evidence is in
+`docs/validation/phase4-wow64-system-contract-20260727/RESULTS.md`; the focused
+Wine change is commit `d43a990`.
+
+This closes the non-graphics system contract only. Remaining i386 GDI/D3DKMT
+data-pointer marshalling is owned by the following graphics phase and must not
+be inferred from these results.
+
 ### 5. Graphics gates after substrate success
 
 Validate VKMT and DXMT separately. VKMT is i386 PE DXVK/vkd3d-proton through

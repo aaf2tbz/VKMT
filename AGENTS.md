@@ -64,6 +64,28 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 - Corrected early Unix-call ordering and high-arena guest-pointer translation in Wine's ARM64 WoW64 wrapper.
 - Gate evidence: `docs/validation/fex-phase1-20260727T093140/RESULTS.md`. A fresh prefix reached `BTCpuSimulate`; its disposable run root was removed.
 
+### 2026-07-27 — Phase 4 i386/WoW64 system contract complete
+
+- `scripts/probe-i386-wow64-phase4.sh` is the canonical non-graphics gate. It
+  compiles one i386 executable/helper DLL, stages the source-built i386 Wine
+  DLL closure, and runs every gate plus the Phase 3 regression in one fresh
+  prefix.
+- Current markers pass for LoadLibrary, syscall return/output pointers, TLS,
+  context get/set, software/hardware SEH, ordered APCs, a second thread, a
+  headless real Wine user callback, repeated thread lifecycle, and the complete
+  system contract.
+- The callback gate is a thread-local `WH_MSGFILTER` hook driven through
+  `CallMsgFilter`; do not replace it with a window/display-dependent probe.
+- Wine commit `d43a990` fixes the `NtContinueEx` scalar/pointer distinction and
+  makes generic `wow64win` data pointers use the canonical guest-memory
+  manager. Evidence and exact commands are in
+  `docs/validation/phase4-wow64-system-contract-20260727/RESULTS.md`.
+- The same regression session passed
+  `P1_UNIFIED_ARM64_AARCH64_ARM64EC_OK`, `P2_X64_ENTRY_OK`, and
+  `P2_X64_DXVK_D3D11_READBACK_OK`. No retained Phase 4 prefix remains.
+- This is not an i386 graphics claim. Raw data-pointer conversions in
+  GDI/D3DKMT marshalling remain explicit work for the i386 VKMT/DXMT phase.
+
 ### 2026-07-27 — x86_64 execution re-proved
 
 - The fresh x64 harness now uses an in-tree Wineboot test mode that defers only unfinished i386 WoW64 installation and device services.
