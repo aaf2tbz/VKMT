@@ -148,6 +148,24 @@ resolver now maps `IMAGE_FILE_MACHINE_ARM64EC` builtins to the shared
 `aarch64-windows` PE stage; this is required for the DXMT ARM64EC PE/ARM64
 Unix pair and is rebuilt with the targeted `dlls/ntdll/ntdll.so` rule.
 
+### 2026-07-26 x86_64 native-ARM64 D3D12 device gate
+
+The focused x86_64 no-DXGI D3D12 probe is now a passing fresh-prefix gate.
+It loads ARM64EC `xtajit64.dll`, ARM64EC vkd3d-proton `d3d12.dll` and
+`d3d12core.dll`, and successfully executes `D3D12CreateDevice` through the
+pinned MoltenVK ICD on Apple M4. Its log records native `VkInstance` and
+`VkDevice` creation plus Metal argument-buffer and MTLEvent use, then reports
+`PROBE OK`; its disposable prefix was stopped with its exact wineserver and
+removed. The vkd3d-proton source repair is commit `6b69581e`: NV-only
+DirectStorage meta shaders are now compiled only when
+`VK_NV_memory_decompression` is actually enabled. This prevents MoltenVK from
+rejecting an irrelevant NV shader during device initialization.
+
+This is a device-creation acceptance, not the full x64 graphics acceptance.
+The next gate is command queue/resource clear/fence/readback; DXGI/DXVK
+routing remains separately unproven. A full DXGI probe was stopped and
+removed after it failed to complete, so it is not evidence of success.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
