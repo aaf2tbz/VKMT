@@ -5,7 +5,20 @@
 int main(int argc, char **argv)
 {
     const char *name = argc > 1 ? argv[1] : "d3d11.dll";
-    HMODULE module = LoadLibraryA(name);
+    HMODULE winemetal;
+    HMODULE module;
+
+    if (GetEnvironmentVariableA("DXMT_PRELOAD_WINEMETAL", NULL, 0))
+    {
+        winemetal = LoadLibraryA("winemetal.dll");
+        if (!winemetal)
+        {
+            printf("DXMT preload winemetal.dll failed: %lu\n", GetLastError());
+            return 3;
+        }
+    }
+
+    module = LoadLibraryA(name);
 
     if (!module)
     {

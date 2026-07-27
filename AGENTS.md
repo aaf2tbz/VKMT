@@ -216,6 +216,15 @@ desktop/server initialization before `D3D11CreateDevice` returns. The run
 root had no live holders and was removed. Isolate the desktop initialization
 dependency before changing DXMT graphics code or claiming D3D11 support.
 
+The dependency isolation then established that direct `LoadLibrary` of the
+ARM64EC `winemetal.dll` succeeds, whereas native DXMT `dxgi.dll` fails with
+`ERROR_MOD_NOT_FOUND`, and `d3d11.dll` fails through that DXGI dependency.
+Wine's ARM64 API-set schema maps all of DXMT's imported UCRT API-set DLLs to
+`ucrtbase.dll`; this is not an absent CRT mapping. Preloading the already
+working Winemetal builtin pair before loading DXGI does not change the error.
+The pending repair is therefore the imported DXGI→Winemetal resolution path,
+not a Metal device, D3D11, desktop, or simple module-load-order failure.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
