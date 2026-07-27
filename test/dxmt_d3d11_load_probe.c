@@ -2,23 +2,24 @@
 #include <windows.h>
 #include <stdio.h>
 
-int main(void)
+int main(int argc, char **argv)
 {
-    HMODULE module = LoadLibraryA("d3d11.dll");
+    const char *name = argc > 1 ? argv[1] : "d3d11.dll";
+    HMODULE module = LoadLibraryA(name);
 
     if (!module)
     {
-        printf("DXMT LoadLibrary(d3d11.dll) failed: %lu\n", GetLastError());
+        printf("DXMT LoadLibrary(%s) failed: %lu\n", name, GetLastError());
         return 1;
     }
 
-    if (!GetProcAddress(module, "D3D11CreateDevice"))
+    if (!lstrcmpiA(name, "d3d11.dll") && !GetProcAddress(module, "D3D11CreateDevice"))
     {
         printf("DXMT d3d11.dll lacks D3D11CreateDevice\n");
         return 2;
     }
 
-    printf("DXMT_ARM64EC_D3D11_LOAD_OK\n");
+    printf("DXMT_ARM64EC_%s_LOAD_OK\n", name);
     FreeLibrary(module);
     return 0;
 }
