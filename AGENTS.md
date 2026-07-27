@@ -186,13 +186,13 @@ prove DXGI/DXVK routing, D3D11, rendering/shader output, or presentation.
 
 ### 2026-07-27 x86_64 DXVK/D3D11 deterministic Metal gate
 
-The x86_64 DXVK route is now a passing fresh-prefix acceptance. A COFF-AMD64
-probe runs through ARM64EC `xtajit64.dll`, stages ARM64EC DXVK 3.0.2
-`dxgi.dll` and `d3d11.dll`, creates a D3D11 hardware device on Apple M4 via
-Wine Vulkan and the pinned MoltenVK ICD, clears a 16x16 RGBA render target,
-copies it to staging memory, and validates the CPU-readback pixel values. It
-prints `VKMT_D3D11_PROBE_OK`; the fresh in-tree ARM64 wineboot run and exact
-per-prefix wineserver teardown both completed successfully.
+The historical x86_64 DXVK route reached a fresh-prefix D3D11 readback on
+Apple M4. It must not currently be treated as an acceptance: the 2026-07-27
+recheck with the active build reaches DXVK 3.0.2/OpenXR initialization and
+then exits with `STATUS_ILLEGAL_INSTRUCTION` before device creation. The base
+x86_64 gate still passes independently (`entry_x64.exe` prints its message
+and exits 7 after fresh in-tree wineboot and exact cleanup). Diagnose this
+remaining x64 graphics transition before reasserting the D3D11 readback claim.
 
 DXVK's ARM64EC source/cross-file is preserved in nested commit `f0e22fc`.
 That change makes MoltenVK's absent geometry-shader, cull-distance, and
@@ -223,7 +223,7 @@ thunks, which caused native ARM64 to execute x64 bytes. The ARM64EC NTDLL
 loader now redirects imports made by an ARM64EC caller through the imported
 module's CHPE redirection metadata to its paired ARM64 implementation. True
 x64 callers are deliberately unchanged and still use xtajit64. The focused
-Wine source repair is nested commit `3abfdc0`.
+Wine source repairs are nested commits `3abfdc0` and `e342ff5`.
 
 `IDXGIFactory1::EnumAdapters1` and DXMT `D3D11CreateDevice` are the next
 separate gates. They are not yet acceptance results. The factory vtable is
