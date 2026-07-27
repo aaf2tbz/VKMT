@@ -31,7 +31,8 @@ P2_X64_DXVK_D3D11_READBACK_OK
 ```
 
 The Phase 4 runner compiled an i386 executable and helper DLL, staged 642
-source-built i386 Wine DLLs, initialized a new prefix, and ran every Phase 4
+source-built i386 Wine DLLs, explicitly passed native ARM64 `wineboot --init`
+in a new prefix, and ran every Phase 4
 gate plus the Phase 3 guest-memory regression in that one prefix. It also
 verified that `wine`, `wineserver`, and `ntdll.so` are ARM64-only Mach-O and
 that `xtajit.dll`, `wow64.dll`, and `wow64win.dll` are ARM64 PE images. No

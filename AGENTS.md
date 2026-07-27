@@ -68,8 +68,8 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 
 - `scripts/probe-i386-wow64-phase4.sh` is the canonical non-graphics gate. It
   compiles one i386 executable/helper DLL, stages the source-built i386 Wine
-  DLL closure, and runs every gate plus the Phase 3 regression in one fresh
-  prefix.
+  DLL closure, explicitly runs native ARM64 `wineboot --init`, and runs every
+  gate plus the Phase 3 regression in that one fresh prefix.
 - Current markers pass for LoadLibrary, syscall return/output pointers, TLS,
   context get/set, software/hardware SEH, ordered APCs, a second thread, a
   headless real Wine user callback, repeated thread lifecycle, and the complete

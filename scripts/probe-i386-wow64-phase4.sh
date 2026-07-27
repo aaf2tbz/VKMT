@@ -13,11 +13,13 @@ XTAJIT="$WINE_BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
 WOW64="$WINE_BUILD/dlls/wow64/aarch64-windows/wow64.dll"
 WOW64WIN="$WINE_BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"
 NTDLL_SO="$WINE_BUILD/dlls/ntdll/ntdll.so"
+WINEBOOT="$WINE_BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
 
 test -x "$WINE_BUILD/wine" || { echo "Missing native Wine build" >&2; exit 1; }
 test -f "$XTAJIT" || { echo "Missing FEX xtajit.dll" >&2; exit 1; }
 test -f "$WOW64" || { echo "Missing ARM64 wow64.dll" >&2; exit 1; }
 test -f "$WOW64WIN" || { echo "Missing ARM64 wow64win.dll" >&2; exit 1; }
+test -f "$WINEBOOT" || { echo "Missing native ARM64 wineboot.exe" >&2; exit 1; }
 export PATH="$LLVM_MINGW/bin:$PATH"
 
 # Host executables and Unix bridges must be native ARM64-only. Guest execution
@@ -95,7 +97,8 @@ install -m 0644 "$PHASE4_DLL" "$syswow64/phase4_helper.dll"
 run_wine() {
   local output=$1
   shift
-  "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEDEBUG="${VKMT_I386_WINEDEBUG:--all}" WINE_NO_EXPLORER=1 \
+  "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$WINE_BUILD" WINEBOOTSTRAPMODE=1 \
+    WINEDEBUG="${VKMT_I386_WINEDEBUG:--all}" WINE_NO_EXPLORER=1 \
     "$WINE_BUILD/wine" "$@" >"$output" 2>&1 &
   wine_pid=$!
   if wait "$wine_pid"; then run_code=0; else run_code=$?; fi
@@ -104,10 +107,13 @@ run_wine() {
 }
 
 echo "Phase 4 i386 DLLs staged: ${#i386_dlls[@]}"
-# Fresh-prefix initialization can consume the first launch without starting
-# the requested image. Use the minimal Phase 3 smoke as the disposable
-# bootstrap, so a Phase 4 failure is exercised only once per fresh prefix.
-run_wine "$bootstrap_log" "$PHASE3_EXE" "Z:$run_root/bootstrap-marker" || true
+# Prove the named bootstrap boundary explicitly. Build-tree mode lets the
+# native ARM64 wineboot resolve in-tree builtins before prefix links exist.
+if ! run_wine "$bootstrap_log" "$WINEBOOT" --init; then
+  echo "Phase 4 native ARM64 wineboot failed" >&2
+  tail -n 120 "$bootstrap_log" >&2
+  exit 1
+fi
 
 if run_wine "$log" "$PHASE4_EXE" "Z:$phase4_marker"; then code=0; else code=$?; fi
 for _ in $(seq 1 "${VKMT_I386_PHASE4_MARKER_WAIT:-60}"); do

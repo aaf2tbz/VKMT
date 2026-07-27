@@ -185,7 +185,8 @@ used.
 
 Phase 4.1 through 4.8 are complete. The unified fixture and runner are
 `test/i386/phase4_contract.c`, `test/i386/phase4_helper.c`, and
-`scripts/probe-i386-wow64-phase4.sh`. One fresh prefix passed DLL loading,
+`scripts/probe-i386-wow64-phase4.sh`. One fresh prefix passed native ARM64
+`wineboot --init`, DLL loading,
 syscall return/output pointers, executable/DLL/dynamic TLS, suspended i386
 context get/set, software and hardware SEH with resume, two ordered APCs,
 second-thread state isolation, a real headless Wine user callback, eight
