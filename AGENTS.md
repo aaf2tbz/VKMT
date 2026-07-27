@@ -70,21 +70,39 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 - After bounded bootstrap and exact wineserver restart, `entry_x64.exe` executed through `xtajit64.dll`, printed its guest message, and returned 7 on the native ARM64 host.
 - Evidence: `docs/validation/p2-x64-execution-20260727T094000/RESULTS.md`.
 
-### 2026-07-27 — i386 guest-memory manager checkpoint
+### 2026-07-27 — i386 guest-memory manager checkpoint (NOT Phase 2 complete)
 
-- `dlls/wow64/memory.c` now owns checked i386 guest-VA ↔ host-pointer
-  mappings. Explicit mappings support non-contiguous ARM64 host ranges; the
-  Darwin high aperture is only a compatibility bootstrap record.
-- VM reserve/commit/map/protect/free/unmap paths, plus PEB32/TEB32, process
-  parameters, stacks, and KUSER registration, flow through named conversion
-  helpers. Do not reintroduce `PtrToUlong(host_pointer)` on an i386 path.
-- Targeted build: `make -C wine/build-ec
-  dlls/wow64/aarch64-windows/wow64.dll` with the in-tree LLVM-MinGW `bin` on
-  `PATH`.
-- Runtime evidence: a fresh disposable i386 initialization with
-  `WINEDEBUG=+wow` passed the manager's high-host-address
-  allocate/map/protect/free/unmap fixture and reached `BTCpuSimulate`. The
-  disposable prefix was stopped using its exact wineserver and removed.
+- Current code is a scaffold, not the canonical manager required for Phase 2.
+  It has explicit guest/host map records and a synthetic high-host allocation /
+  map / protect / unmap self-test, but it still installs a 4-GiB biased
+  compatibility aperture at initialization.
+- Several real VM map paths call `wow64_host_to_guest_ptr()` before registering
+  the newly returned host mapping. That cannot support an arbitrary host
+  address, so it does not meet the no-low-4-GiB Phase 2 contract.
+- The i386 exception, callback, and startup paths inspected use named
+  conversion helpers. The `PtrToUlong()` occurrences currently found in
+  `syscall.c` are ARMNT branches, not i386 branches. Phase 2 nevertheless
+  remains incomplete until every specified i386 lifecycle mapping is
+  manager-owned and covered by a real (not manually registered) fixture.
+- Do not claim Phase 2 complete based on the previous self-test evidence.
+
+### 2026-07-27 — FEX Phase 3 execution checkpoint (NOT complete)
+
+- FEX's i386 generated memory paths use the Wine-published guest-page table,
+  and the first i386 guest path now reaches a generated block.  Guest EIP,
+  ESP, and the FEX page-table register are still guest-addressed at that
+  boundary.
+- The current runtime failure is a host execute fault on FEX's generated
+  code-cache page.  Wine then enters `KiUserExceptionDispatcher`, producing
+  a secondary recursive exception loop; that dispatcher loop is not the
+  primary fault.
+- Focused native ARM64 Wine probes prove ordinary and direct-ntdll RW-to-RX
+  execution, including at FEX's exact high virtual address
+  `0x7fffb37f0000`.  The remaining repair is therefore FEX code-cache /
+  control-transfer specific, not a generic Darwin executable-memory or
+  Wine `NtProtectVirtualMemory` failure.
+- Failed i386 diagnostics are disposable external-SSD run roots only. Stop
+  their exact prefix server and move the exact run root to Trash immediately.
 
 ## Current verification command
 
@@ -358,3 +376,30 @@ their own active VKMT inventory entry.
 The archive's audited `.issue25` duplicate runtime subtree was removed after
 that condition was met.  Do not infer that its sibling worktrees are safe to
 remove; audit each one independently.
+
+### 2026-07-27 Phase 3 i386/WoW64 execution contract
+
+`scripts/probe-i386-wow64.sh` now passes from a fresh disposable prefix using
+the source-built i386 fixture and 642 source-built PE32 Wine DLLs staged before
+the first launch.  The verified marker is
+`VKMT i386 WoW64 execution contract passed`; it covers arithmetic, branches,
+stack operations, `RtlEnterCriticalSection`, locked atomics, executable-memory
+allocation, and self-modifying-code invalidation.
+
+The host remains ARM64-only: `wine`, `wineserver`, the FEX `xtajit.dll`
+provider, and ARM64 `wow64.dll` are native AArch64/ARM64 artifacts, while only
+the guest fixture and `syswow64` modules are i386 PE files.  No Rosetta or x86
+Mach-O component participates.  Wine owns explicit 32-bit guest-address to
+ARM64 host-pointer mappings; FEX keeps EIP, ESP, registers, segment bases,
+callbacks, and return addresses guest-addressed and resolves instruction/data
+access through the published page table.  Wine memory flush, dirty,
+allocation/protection, free/unmap, section-unmap, and tracked-write
+notifications explicitly evict FEX's guest-keyed JIT cache.
+
+Keep mapping publication separate from notification locking: Wine can call
+`BTCpuMapGuestMemory` while an allocation notification already holds FEX's
+thread-creation mutex.  Reacquiring that mutex in the map/unmap callbacks
+deadlocks prefix bootstrap.  Code eviction belongs in the serialized memory
+notification paths; map/unmap callbacks publish or clear page-table entries.
+The gate stops only its exact prefix wineserver and trashes only its generated
+`build/probe-runs/i386-wow64.*` run root on both success and failure.
