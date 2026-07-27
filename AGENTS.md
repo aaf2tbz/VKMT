@@ -224,6 +224,10 @@ Wine's ARM64 API-set schema maps all of DXMT's imported UCRT API-set DLLs to
 working Winemetal builtin pair before loading DXGI does not change the error.
 The pending repair is therefore the imported DXGI→Winemetal resolution path,
 not a Metal device, D3D11, desktop, or simple module-load-order failure.
+All ten UCRT API-set imports used by DXGI load successfully under ARM64EC, and
+each Winemetal symbol imported by DXGI is exported by the staged ARM64EC PE.
+Do not paper over this with copied UCRT DLLs or missing-export stubs: the
+remaining defect is Wine's imported ARM64EC builtin binding.
 
 ## Historical archive salvage
 
