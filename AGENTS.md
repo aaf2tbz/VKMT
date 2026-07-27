@@ -273,6 +273,38 @@ until the pure-AArch64 DXGI route is completed. The existing ARM64EC DXMT
 Winemetal factory/bridge gate still passes; its probe now uses idempotent
 symlink replacement in its disposable prefix.
 
+### 2026-07-27 unified ARM64/AArch64/ARM64EC acceptance
+
+The preceding builtin-DXGI limitation is superseded by the pure-AArch64 DXVK
+route. `third_party/dxvk/build-vkmt-aarch64.txt` is the committed MinGW ARM64
+cross file; it reserves `x18` and `x28` for Wine and includes the pinned Vulkan
+and SPIR-V headers. `scripts/build-dxvk-aarch64.sh` rebuilds only DXVK,
+applies the in-tree `fix-x18-tls.py` post-link check, and stages
+`runtime/dxvk-vkmt-1a5919b/aarch64/{dxgi,d3d11}.dll`. Do not replace this with
+the ARM64EC pair: a pure AArch64 guest must load the pure AArch64 PE modules.
+
+`scripts/probe-p1-unified-arm64.sh` is the release-quality Phase 1 gate. It
+uses one fresh disposable prefix and one Wine server lifetime, boots with the
+in-tree ARM64 wineboot, proves the ARM64 host closure, then sequentially
+proves both provider pairs without mixing them in a process:
+
+- pure-AArch64 VKMT smoke, DXVK D3D11 clear/copy/readback, and
+  DXVK + vkd3d-proton D3D12 queue/copy/fence/readback through the pinned
+  MoltenVK ICD on Apple M4;
+- ARM64EC DXMT's `winemetal.dll` to native ARM64 `winemetal.so` bridge and its
+  DXGI import/factory-release path.
+
+Its successful marker is `P1_UNIFIED_ARM64_AARCH64_ARM64EC_OK`. It validates
+the guest PE machines and ARM64 Mach-O Wine host closure, cleans only its own
+`build/probe-runs/p1-unified-arm64.*` root after stopping that prefix's server,
+and leaves source, staged dependencies, and unrelated prefixes untouched.
+
+`scripts/probe-p2-x64-dxvk.sh` remains the separate x86_64 regression gate;
+its current successful markers are `P2_X64_ENTRY_OK` and
+`P2_X64_DXVK_D3D11_READBACK_OK`. Its `xtajit64.dll` link is deliberately
+idempotent so a partially initialized disposable prefix cannot turn a valid
+runtime regression into setup failure.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified

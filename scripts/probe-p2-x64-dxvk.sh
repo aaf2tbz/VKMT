@@ -44,7 +44,7 @@ file "$WINESERVER" | grep -q 'Mach-O.*arm64'
 
 WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG=-all \
     "$WINE" "$WINEBOOT" --init >"$RUN_ROOT/wineboot.log" 2>&1
-ln -s "$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll" "$PREFIX/drive_c/windows/system32/xtajit64.dll"
+ln -sfn "$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll" "$PREFIX/drive_c/windows/system32/xtajit64.dll"
 cp "$DXVK/dxgi.dll" "$DXVK/d3d11.dll" "$PREFIX/drive_c/windows/system32/"
 
 set +e
