@@ -45,6 +45,18 @@ contains:
 4. Plan clean i386/WoW64/FEX integration with the staged i386 graphics DLLs.
 5. Validate ARM64, ARM64EC, AArch64, x86_64, and i386/WoW64 end to end.
 
+### 2026-07-27 FEX/WoW64 boundary observation
+
+The saved implementation plan is `docs/I386_WOW64_PLAN.md`. The first clean
+FEX boundary observation is retained in
+`docs/validation/fex-boundary-20260727T090801/`: native ARM64 `wineboot --init`
+passed, then an i386 smoke PE mapped in the high guest arena and loaded the
+ARM64 FEX `xtajit.dll`, but exited before `BTCpuSimulate` or guest output.
+FEX imports `ntdll.RtlWow64SuspendThread`, which the current Wine PE export
+surface resolves only to an unimplemented stub. Treat it as an import-contract
+gate to close before diagnosing deeper FEX execution. The associated prefix
+was stopped through its exact wineserver and removed; no Wine process remains.
+
 ## Current verification command
 
 Run `scripts/verify-preservation.sh` before cleanup or release staging.  It is

@@ -103,3 +103,71 @@ hand-copied DLL directory, `WINEDLLPATH`, or prebuilt runtime archive.
 
 The release gate is a clean checkout, fetch, and rebuild followed by native
 ARM64, x64-on-ARM64, and i386 probe runs using only the produced installation.
+
+## Guest-managed boundary implementation plan (2026-07-27)
+
+This plan supersedes any assumption that a 32-bit guest pointer can be used as
+an ARM64 Darwin host pointer. FEX remains a native ARM64 Windows CPU provider
+(`xtajit.dll`), Wine retains syscall and Unix-call ownership, and all Unix,
+Vulkan, MoltenVK, and Metal modules remain native ARM64. QEMU, i386 Mach-O,
+and Rosetta are not part of this design.
+
+### 1. Freeze and characterize the existing boundary
+
+Preserve the current FEX and Wine worktree state without reset, cleanup, or
+rebuild. Capture one fresh i386 launch with loader resolution, selected host
+arena, guest-to-host conversions, `BTCpu*` entry/return, and first failure.
+Record exact revisions, staged PE/Mach-O architectures, prefix lifecycle, and
+the first failing boundary. This phase does not change runtime behavior.
+
+### 2. Canonical guest-address manager
+
+Introduce one Wine-owned conversion layer for i386 guest virtual addresses.
+Guest addresses are always `uint32_t`; host mappings may be arbitrary native
+ARM64 addresses. Only named checked helpers may convert between them. The
+manager owns reserve/commit, images, protection, unmap, PEB32/TEB32, stacks,
+and KUSER mappings. A high contiguous arena may be used as a fast path but
+cannot be a correctness requirement.
+
+### 1.5. Close the CPU-provider import contract
+
+Before invoking guest execution, enumerate `xtajit.dll` imports against Wine's
+native ARM64 PE exports and implement or deliberately remove every unresolved
+provider import. The first recorded gap is `ntdll.RtlWow64SuspendThread`, used
+by FEX for non-self thread suspension. This is an ABI gate, not a reason to
+weaken address conversion or bypass thread safety. Re-run the Phase 1 launch
+with an explicit `BTCpuSimulate` entry/return record after the import surface
+is closed.
+
+### 3. FEX provider contract
+
+Make FEX retain EIP, ESP, GPRs, contexts, callbacks, and return addresses as
+guest values. Instruction fetch and generated memory accesses resolve through
+the manager's page map/TLB. Wire every Wine memory notification to FEX cache
+invalidation and mapping state. Complete context, syscall/Unix-call, TLS,
+exception, APC, and thread-lifecycle behavior; first focused regression is
+`RtlEnterCriticalSection` plus subsequent locked operations.
+
+### 4. Non-graphics i386 substrate gate
+
+In a fresh disposable prefix, prove wineboot and clean server exit, then
+process start/exit, arithmetic/control flow, memory lifecycle, imports,
+syscall return, TLS, exceptions, APCs, and a second thread. Every fixture must
+assert that guest pointers remain 32-bit and no raw host-pointer truncation is
+used.
+
+### 5. Graphics gates after substrate success
+
+Validate VKMT and DXMT separately. VKMT is i386 PE DXVK/vkd3d-proton through
+native ARM64 Wine Unix libraries and MoltenVK; DXMT is i386 PE frontends and
+`winemetal.dll` through the paired ARM64 `winemetal.so`. For each route use
+load/export, factory/adapter, device, queue/resource, and deterministic
+readback gates. Never mix the DXVK and DXMT D3D11/DXGI pairs.
+
+### 6. Product integration
+
+Put every proven source change behind targeted build/stage rules, preserve
+architecture/routing checks and exact-prefix cleanup in probes, update this
+document and `AGENTS.md`, and commit only validated focused changes. Do not
+perform a full Wine rebuild unless generated configuration genuinely requires
+it.
