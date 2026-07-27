@@ -166,6 +166,24 @@ The next gate is command queue/resource clear/fence/readback; DXGI/DXVK
 routing remains separately unproven. A full DXGI probe was stopped and
 removed after it failed to complete, so it is not evidence of success.
 
+### 2026-07-27 x86_64/ARM64EC D3D12 deterministic resource gate
+
+`test/d3d12_probe_nodxgi.c` now performs a deterministic upload → default
+buffer → readback copy. It checks resource creation, an explicit COPY_DEST to
+COPY_SOURCE transition, command-list closure, direct-queue submission, a
+fence, and the exact `0x4b4d5456` result read back on the CPU. The fixture
+passes as both an ARM64EC guest and an x86_64 guest running through
+`xtajit64.dll`, using ARM64EC vkd3d-proton PEs and the pinned MoltenVK ICD.
+Each successful run created a new prefix with in-tree ARM64 wineboot and then
+stopped its exact wineserver before its run root was removed.
+
+The required vkd3d-proton source repair is commit `3300fe64`: address-binding
+tracker TLS is accessed only when its optional Vulkan reporting extension is
+actually active. MoltenVK does not expose that extension. Previously the
+unconditional TLS access faulted before `vkCreateBuffer`; after the repair,
+the resource, queue, fence, and readback path succeeds. This does not yet
+prove DXGI/DXVK routing, D3D11, rendering/shader output, or presentation.
+
 ## Historical archive salvage
 
 `archive-salvage/Arm64WINE-archive-2026-07-13/` preserves the five modified
