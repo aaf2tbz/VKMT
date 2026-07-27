@@ -64,6 +64,12 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 - Corrected early Unix-call ordering and high-arena guest-pointer translation in Wine's ARM64 WoW64 wrapper.
 - Gate evidence: `docs/validation/fex-phase1-20260727T093140/RESULTS.md`. A fresh prefix reached `BTCpuSimulate`; its disposable run root was removed.
 
+### 2026-07-27 — Phase 2 x86_64 execution re-proved
+
+- The fresh x64 harness now uses an in-tree Wineboot test mode that defers only unfinished i386 WoW64 installation and device services.
+- After bounded bootstrap and exact wineserver restart, `entry_x64.exe` executed through `xtajit64.dll`, printed its guest message, and returned 7 on the native ARM64 host.
+- Evidence: `docs/validation/p2-x64-execution-20260727T094000/RESULTS.md`.
+
 ## Current verification command
 
 Run `scripts/verify-preservation.sh` before cleanup or release staging.  It is

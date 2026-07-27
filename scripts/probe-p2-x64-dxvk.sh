@@ -42,7 +42,8 @@ file "$WINESERVER" | grep -q 'Mach-O.*arm64'
 "$LLVM_MINGW/bin/x86_64-w64-mingw32-gcc" -O2 -o "$RUN_ROOT/d3d11_probe.exe" \
     "$VKMT/test/d3d11_probe.c" -ld3d11 -ldxgi
 
-WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG=-all \
+WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 \
+WINE_SKIP_I386_WOW64_INSTALL=1 WINE_BOOTSTRAP_MINIMAL=1 WINEDEBUG=-all \
     "$WINE" "$WINEBOOT" --init >"$RUN_ROOT/wineboot.log" 2>&1
 ln -sfn "$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll" "$PREFIX/drive_c/windows/system32/xtajit64.dll"
 cp "$DXVK/dxgi.dll" "$DXVK/d3d11.dll" "$PREFIX/drive_c/windows/system32/"
