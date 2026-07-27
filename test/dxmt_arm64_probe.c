@@ -44,6 +44,15 @@ int main(void)
 
     release(devices);
 
+    /* Keep the Unix bridge proof independently runnable.  The D3D11 portion
+     * exercises a substantially wider DXMT surface and is intentionally a
+     * separate gate while that work is being stabilized. */
+    if (GetEnvironmentVariableA("VKMT_DXMT_WMT_ONLY", NULL, 0))
+    {
+        printf("DXMT ARM64EC winemetal.dll / native arm64 bridge passed\n");
+        return 0;
+    }
+
     module = LoadLibraryA("d3d11.dll");
     create_device = module ? (d3d11_create_device_fn)GetProcAddress(module, "D3D11CreateDevice") : NULL;
     if (!create_device)

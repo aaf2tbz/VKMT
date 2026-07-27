@@ -1,0 +1,8 @@
+P1.0 native AArch64 prefix acceptance
+result=PASS
+/Volumes/AverySSD/VKMT/wine/build-ec/wine:                Mach-O 64-bit executable arm64
+/Volumes/AverySSD/VKMT/wine/build-ec/server/wineserver:   Mach-O 64-bit executable arm64
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/ntdll/ntdll.so: Mach-O 64-bit dynamically linked shared library arm64
+  Machine: IMAGE_FILE_MACHINE_ARM64 (0xAA64)
+VKMT native AArch64 smoke passed
+P1_AARCH64_PREFIX_OK
