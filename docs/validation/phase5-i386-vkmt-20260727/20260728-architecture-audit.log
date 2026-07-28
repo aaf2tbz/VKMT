@@ -1,0 +1,47 @@
+COMMITS
+97ff7730c9397b6a5d612d638ada7085770b1dad
+baaca85657574a429368e368e99045f2fab04af4
+ab0f99aca78c1aec72a97f8334ac704f4c9b19f5
+3300fe64cc1ecf53ccf06db67f4888b3d84b4a86
+MACHO
+wine/build-ec/wine arm64
+wine/build-ec/server/wineserver arm64
+wine/build-ec/dlls/ntdll/ntdll.so arm64
+wine/build-ec/dlls/win32u/win32u.so arm64
+wine/build-ec/dlls/winevulkan/winevulkan.so arm64
+wine/build-ec/dlls/win32u/libfreetype.6.dylib arm64
+wine/build-ec/dlls/win32u/libpng16.16.dylib arm64
+ARM64_PE
+wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll IMAGE_FILE_MACHINE_ARM64
+wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll IMAGE_FILE_MACHINE_ARM64
+wine/build-ec/dlls/wow64win/aarch64-windows/wow64win.dll IMAGE_FILE_MACHINE_ARM64
+I386_PE
+third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32/dxgi.dll IMAGE_FILE_MACHINE_I386
+third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32/d3d11.dll IMAGE_FILE_MACHINE_I386
+third_party/vkd3d-proton/install-win32/bin/d3d12.dll IMAGE_FILE_MACHINE_I386
+third_party/vkd3d-proton/install-win32/bin/d3d12core.dll IMAGE_FILE_MACHINE_I386
+DEPENDENCIES
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libfreetype.6.dylib:
+	@loader_path/libfreetype.6.dylib (compatibility version 27.0.0, current version 27.6.0)
+	/usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.12)
+	/usr/lib/libbz2.1.0.dylib (compatibility version 1.0.0, current version 1.0.8)
+	@loader_path/libpng16.16.dylib (compatibility version 72.0.0, current version 72.0.0)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libpng16.16.dylib:
+	@loader_path/libpng16.16.dylib (compatibility version 75.0.0, current version 75.0.0)
+	/usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.12)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)
+CODESIGN
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libfreetype.6.dylib: valid on disk
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libfreetype.6.dylib: satisfies its Designated Requirement
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libpng16.16.dylib: valid on disk
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/win32u/libpng16.16.dylib: satisfies its Designated Requirement
+ROSETTA
+0
+PROCESSES
+none
+HASHES
+405fe99f8a31738b3d0dd40f00d423b05f42fdff6bdfd3a4a7f4d6baba9801a7  /Volumes/AverySSD/VKMT/third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32/dxgi.dll
+cfd118e0796815cfe93ec8e9d7541fc2c8faf06e12bab9611f05948d06abcb29  /Volumes/AverySSD/VKMT/third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32/d3d11.dll
+52cfe58b301771dc163fd45a5c0689bf22d1bc2396133456e7f2bd94cc3b87f1  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-win32/bin/d3d12.dll
+f2031c4e375774028b87828691b19ef183af5cb9afbb87c78406ac6b0e64f1a0  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-win32/bin/d3d12core.dll

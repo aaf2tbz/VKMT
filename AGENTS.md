@@ -425,3 +425,36 @@ deadlocks prefix bootstrap.  Code eviction belongs in the serialized memory
 notification paths; map/unmap callbacks publish or clear page-table entries.
 The gate stops only its exact prefix wineserver and trashes only its generated
 `build/probe-runs/i386-wow64.*` run root on both success and failure.
+
+### 2026-07-28 Phase 5 i386 VKMT complete
+
+`scripts/probe-p5-i386-vkmt.sh` is the authoritative i386 VKMT gate. It uses
+one fresh external-SSD prefix and proves i386 DLL/export loading, DXGI factory
+and Apple M4 adapter enumeration, D3D12 device/direct queue/fence/copy/readback,
+and D3D11 offscreen clear/copy/readback through native ARM64 Wine Unix
+libraries and the pinned ARM64 MoltenVK ICD. The required final markers are:
+
+- `P5_I386_DLL_LOAD_OK`
+- `P5_I386_DXGI_FACTORY_ADAPTER_OK`
+- `P5_I386_D3D12_DEVICE_QUEUE_FENCE_COPY_READBACK_OK`
+- `P5_I386_D3D11_DEVICE_CLEAR_COPY_READBACK_OK`
+- `P5_I386_VKMT_OK`
+
+Accepted nested revisions are Wine `97ff7730`, FEX `baaca8565`, DXVK
+`ab0f99ac`, and vkd3d-proton `3300fe64`. Rebuild the i386 graphics PEs with
+`scripts/build-dxvk-vkmt.sh 32` and
+`scripts/build-vkd3d-proton-i386.sh`; both use the preserved in-tree
+LLVM-MinGW and in-tree Vulkan/SPIR-V headers. Never mix DXVK's
+`dxgi.dll`/`d3d11.dll` with the separate DXMT pair.
+
+The native dependency closure is ARM64-only. Run
+`scripts/stage-wine-host-libs.sh wine/build-ec` to stage signed FreeType and
+libpng dylibs beside `win32u.so`; FreeType must reference
+`@loader_path/libpng16.16.dylib`, and neither staged dylib may retain an
+absolute Homebrew runtime path. The Phase 5 runner enforces ARM64 host Mach-O,
+ARM64 provider PEs, i386 graphics PEs, the no-Rosetta flag, exact wineserver
+shutdown, and disposable-prefix cleanup.
+
+Final evidence is
+`docs/validation/phase5-i386-vkmt-20260727/RESULTS.md`. The former 2.6-GiB
+retained diagnostic prefix has been disposed; no Phase 5 prefix is retained.

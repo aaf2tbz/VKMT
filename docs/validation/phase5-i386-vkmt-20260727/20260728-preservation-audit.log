@@ -1,0 +1,35 @@
+VKMT preservation inventory
+present  wine/build-ec/wine
+present  wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll
+present  wine/build-ec/dlls/win32u/libfreetype.6.dylib
+present  wine/build-ec/dlls/win32u/libpng16.16.dylib
+present  toolchains/llvm-mingw-20260616-ucrt-macos-universal/bin/aarch64-w64-mingw32-clang
+present  third_party/FEX-2607
+present  third_party/dxvk
+present  third_party/vkd3d-proton
+present  third_party/MoltenVK/Package/Release/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib
+present  third_party/DXMT-v0.80
+present  third_party/dxmt-src-v0.80
+present  build/fex-wow64/Bin/libwow64fex.dll
+present  wine/build-ec/dlls/win32u/libfreetype.6.dylib is ARM64-only
+present  wine/build-ec/dlls/win32u/libpng16.16.dylib is ARM64-only
+present  FreeType resolves staged libpng without Homebrew runtime paths
+present  wine/build-ec/dlls/dxgi/aarch64-windows/dxgi.dll
+present  wine/build-ec/dlls/d3d12/aarch64-windows/d3d12.dll
+present  wine/build-ec/dlls/d3d12core/aarch64-windows/d3d12core.dll
+present  wine/build-ec/dlls/dxgi/x86_64-windows/dxgi.dll
+present  wine/build-ec/dlls/d3d12/x86_64-windows/d3d12.dll
+present  wine/build-ec/dlls/d3d12core/x86_64-windows/d3d12core.dll
+present  wine/build-ec/dlls/dxgi/i386-windows/dxgi.dll
+present  wine/build-ec/dlls/d3d12/i386-windows/d3d12.dll
+present  wine/build-ec/dlls/d3d12core/i386-windows/d3d12core.dll
+DXMT stage (must be present before DXMT is claimed as runnable):
+present  wine/build-ec/dxmt-v0.80/aarch64-windows/winemetal.dll
+present  wine/build-ec/dxmt-v0.80/aarch64-unix/winemetal.so
+present  wine/build-ec/dxmt-v0.80/aarch64-unix/libunwind.1.dylib
+present  DXMT winemetal.so resolves staged libunwind relatively
+Additional requested runtime stages:
+present  third_party/vkd3d-proton external d3d12 runtime stage
+present  third_party/dxvk external runtime stage
+present  i386 winemetal.dll paired with native ARM64 winemetal.so
+Inventory complete.

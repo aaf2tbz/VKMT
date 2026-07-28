@@ -1,4 +1,39 @@
-# Phase 5 i386 VKMT checkpoint — 2026-07-27
+# Phase 5 i386 VKMT — COMPLETE, 2026-07-28
+
+## Final acceptance
+
+This section supersedes every incomplete checkpoint preserved below. The
+source-built i386 VKMT route passes from one fresh disposable prefix:
+
+```text
+P5_I386_DLL_LOAD_OK
+P5_I386_DXGI_FACTORY_ADAPTER_OK
+P5_I386_D3D12_DEVICE_QUEUE_FENCE_COPY_READBACK_OK
+P5_I386_D3D11_DEVICE_CLEAR_COPY_READBACK_OK
+P5_I386_VKMT_OK
+```
+
+The final enforced run is
+`20260728-final-enforced-runner.log`. The detailed final run logs are
+`20260728-final-clang-{wineboot,substrate,load,dxgi,d3d12,d3d11}.log`;
+`20260728-architecture-audit.log` records the exact architectures, dependency
+closure, revisions, hashes, Rosetta flag, and clean process state.
+
+The accepted source revisions are Wine `97ff7730`, FEX `baaca8565`, DXVK
+`ab0f99ac`, and vkd3d-proton `3300fe64`. The final DXVK and vkd3d-proton i386
+DLLs were rebuilt with the in-tree LLVM-MinGW 22.1.8 toolchain before the
+accepted run. FreeType and libpng are staged as signed ARM64 dylibs beside
+`win32u.so`; FreeType resolves libpng through `@loader_path` and neither
+contains a Homebrew runtime load path.
+
+The old 2.6-GiB retained diagnostic root and every final disposable run root
+were stopped through their exact wineserver and moved out of the active run
+area. No Wine process or Phase 5 prefix remains.
+
+## Historical diagnosis
+
+The remainder of this file preserves the investigation that led to the final
+result. Its “remaining” statements are historical and are not current status.
 
 ## Fixed execution environment
 

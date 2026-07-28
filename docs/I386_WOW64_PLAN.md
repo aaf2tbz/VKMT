@@ -214,6 +214,123 @@ native ARM64 Wine Unix libraries and MoltenVK; DXMT is i386 PE frontends and
 load/export, factory/adapter, device, queue/resource, and deterministic
 readback gates. Never mix the DXVK and DXMT D3D11/DXGI pairs.
 
+#### Phase 5 execution plan — i386 VKMT (complete 2026-07-28)
+
+Phase 5 is accepted. The final fresh-prefix runner produced all five required
+markers after rebuilding the selected i386 DXVK and vkd3d-proton DLLs with
+the in-tree LLVM-MinGW 22.1.8 toolchain. Wine `97ff7730`, FEX `baaca8565`,
+DXVK `ab0f99ac`, and vkd3d-proton `3300fe64` are the accepted revisions.
+Detailed evidence and architecture hashes are in
+`docs/validation/phase5-i386-vkmt-20260727/RESULTS.md`.
+
+The retained `p5-i386-vkmt.NDwg2k` diagnostic root was disposed after final
+acceptance. `scripts/probe-p5-i386-vkmt.sh` now always creates one fresh
+external-SSD prefix, stops its exact wineserver, and removes that run root
+unless explicit diagnostic retention is requested.
+
+**Accepted scope and fixed inputs.** The Windows front ends are i386 PEs;
+every Unix library and every host executable is ARM64 Mach-O. On any future
+failure, stop that prefix with its exact `wineserver -k` then `-w`, dispose
+that exact run root, and only then start a fresh run.
+
+```
+i386 dxgi.dll / d3d11.dll (DXVK)       i386 d3d12.dll / d3d12core.dll (vkd3d-proton)
+                  |                                      |
+                  +----------- i386 winevulkan.dll -------+
+                                      |
+                        ARM64 winevulkan.so / ntdll.so
+                                      |
+                       pinned ARM64 MoltenVK → Apple Metal
+```
+
+The authoritative inputs are `third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32`,
+`third_party/vkd3d-proton/install-win32/bin`, `wine/build-ec`, and the pinned
+MoltenVK dynamic library.  Before any runtime gate, record `llvm-readobj`
+machine type `IMAGE_FILE_MACHINE_I386` for every PE and `lipo -archs` value
+`arm64` for `wine`, `wineserver`, `ntdll.so`, `winevulkan.so`, and MoltenVK.
+
+**5.1 — close the i386 Winevulkan ABI boundary.** The current first failure
+was a raw i386 guest pointer passed to the ARM64 `winevulkan.so` in
+`wow64_init_vulkan`.  The generated `vulkan_thunks.c` must use the named
+guest-to-host and host-to-guest conversion helpers for data pointers; the only
+remaining direct 32-bit casts may be documented `PFN_*` guest callback
+pointers.  Build only `ntdll.so`, `wow64.dll`, `winevulkan.so`, and the i386
+`winevulkan.dll`; stage only those two PEs into the retained prefix.  The
+focused `i386_vkmt_dxgi_probe.exe` must create a Vulkan instance and enumerate
+the Apple M4 in the DXVK log without a guest-address fault.  This gate does
+not require a DXGI factory yet.  On a pointer fault, stop here and repair the
+Winevulkan/NTDLL conversion owner; do not change DXVK features or FEX.
+
+**5.2 — accept DXGI factory and adapter enumeration.** Rebuild the x32 DXVK
+PEs from the pinned source, stage only `dxgi.dll` and `d3d11.dll`, and run
+`test/i386_vkmt_dxgi_probe.c` in the retained prefix.  Its required output is
+`P5_I386_DXGI_FACTORY_OK`, followed by `P5_I386_DXGI_ADAPTER_OK`; the log must
+identify the Apple M4 adapter.  The present failure after Vulkan enumeration
+is DXVK's x32 `geometryShader` eligibility check, so the immediate work item
+is to validate the freshly built x32 DLLs containing the MoltenVK portability
+feature policy.  If factory creation fails before the DXVK device list, own it
+in Winevulkan/ABI; if DXVK sees the device but rejects a required feature, own
+it in DXVK; if it lists no Vulkan device, own it in ICD/MoltenVK setup.  Do
+not advance to D3D12 until both markers are produced by one run.
+
+**5.3 — accept the i386 D3D12 device boundary.** With 5.2 still staged,
+stage only vkd3d-proton's pinned i386 `d3d12.dll` and `d3d12core.dll` and run
+the i386 build of `test/d3d12_probe_nodxgi.c`.  Require a successful
+`D3D12CreateDevice`, a vkd3d-proton log naming the native Vulkan device, and
+MoltenVK evidence of `VkDevice` creation.  Keep DXVK out of this probe: it is
+not a DXGI acceptance test.  A failure before the PE exports is routing; from
+PE entry through Unix call is a WoW64 ABI failure; after Vulkan feature query
+is a vkd3d-proton/MoltenVK capability failure.
+
+**5.4 — accept deterministic i386 D3D12 execution.** Reuse exactly the
+5.3 route and fixture, which performs upload → default buffer → explicit
+COPY_DEST-to-COPY_SOURCE barrier → direct-queue execute → fence wait →
+readback.  Require the fixture's `PROBE OK` and the exact CPU value
+`0x4b4d5456`; record command submission and `VkDevice` evidence.  The result
+must be deterministic on two consecutive invocations in the same prefix.
+If it fails, classify the first missing step as command marshalling, resource
+state/barrier, queue/fence synchronization, or readback mapping before making
+another source change.
+
+**5.5 — accept i386 D3D11/DXVK execution.** Use only the matching x32 DXVK
+`dxgi.dll` and `d3d11.dll` from 5.2, never a DXMT DLL.  Run the i386 build of
+`test/d3d11_probe.c`; require `VKMT_D3D11_PROBE_OK`, DXVK's adapter/device
+record, and MoltenVK `VkDevice` evidence.  The fixture must cover device
+creation plus clear/copy/readback.  If it fails after D3D12 passed, treat it
+as a DXVK D3D11 path issue, not evidence to reopen vkd3d-proton or FEX.
+
+**5.6 — reproduce, package, and preserve.** Dispose the retained diagnostic
+prefix only after its focused boundary has either passed or been fully
+captured.  Then run `scripts/probe-p5-i386-vkmt.sh` once from a new disposable
+root with the exact same staged inputs; it must print all five final markers:
+`P5_I386_DLL_LOAD_OK`, `P5_I386_DXGI_FACTORY_ADAPTER_OK`,
+`P5_I386_D3D12_DEVICE_QUEUE_FENCE_COPY_READBACK_OK`,
+`P5_I386_D3D11_DEVICE_CLEAR_COPY_READBACK_OK`, and `P5_I386_VKMT_OK`.
+Archive concise logs and architecture evidence under `docs/validation/`,
+make source-controlled targeted build/stage rules reproduce the selected
+artifacts, update `AGENTS.md`, and commit only after that clean run.  A
+passing retained diagnostic run alone is not a Phase 5 acceptance result.
+
+#### Phase 6 — i386 DXMT (begins only after Phase 5.6)
+
+Stage the pinned DXMT 0.80 i386 `dxgi.dll`, `d3d11.dll`, and
+`winemetal.dll` with the already-native ARM64 `winemetal.so` and its relative
+`libunwind.1.dylib`.  First prove DLL routing and `WMTCopyAllDevices`, then
+`D3D11CreateDevice`, then a separate minimal clear/copy/readback probe.  The
+DXMT D3D11/DXGI pair never shares a prefix-stage test with DXVK's pair.  The
+host must load the ARM64 `winemetal.so`; an i386 Mach-O bridge is invalid and
+is a hard failure.
+
+#### Phase 7 — final multi-architecture acceptance and release integration
+
+Run the maintained fresh-prefix probes in this order: pure ARM64/AArch64,
+ARM64EC, x86_64 through `xtajit64`, i386/WoW64 non-graphics contract, i386
+VKMT, then i386 DXMT.  Each run must use only source-built/staged artifacts,
+native ARM64 host binaries, the pinned MoltenVK ICD, an exact wineserver
+shutdown, and disposable external-SSD storage.  The final audit records
+`lipo`/`llvm-readobj` output, loaded Unix bridge paths, no Rosetta process,
+and no hand-copied dependency outside the staged tree.
+
 ### 6. Product integration
 
 Put every proven source change behind targeted build/stage rules, preserve

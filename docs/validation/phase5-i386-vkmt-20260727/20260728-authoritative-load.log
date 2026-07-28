@@ -1,0 +1,4 @@
+P5 loading d3d12.dll!D3D12CreateDevice
+P5 loading d3d12core.dll!D3D12GetInterface
+P5 loading dxgi.dll!CreateDXGIFactory1
+P5 loading d3d11.dll!D3D11CreateDevice

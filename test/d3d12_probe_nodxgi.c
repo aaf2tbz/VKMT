@@ -5,21 +5,51 @@
 #include <dxgi1_4.h>
 #include <stdio.h>
 
+static LONG exception_recorded;
+
+static LONG CALLBACK record_first_exception(EXCEPTION_POINTERS *pointers)
+{
+    EXCEPTION_RECORD *record = pointers->ExceptionRecord;
+
+    if (!InterlockedCompareExchange(&exception_recorded, 1, 0))
+    {
+#if defined(__i386__)
+        fprintf(stderr, "VKMT_D3D12_EXCEPTION code=%08lx eip=%08lx esp=%08lx count=%lu\n",
+                record->ExceptionCode, pointers->ContextRecord->Eip,
+                pointers->ContextRecord->Esp, record->NumberParameters);
+#else
+        fprintf(stderr, "VKMT_D3D12_EXCEPTION code=%08lx count=%lu\n",
+                record->ExceptionCode, record->NumberParameters);
+#endif
+        fflush(stderr);
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 int main(void) {
     HRESULT hr;
     IDXGIAdapter1 *adapter = NULL;  /* NULL: vkd3d-proton picks the default Vulkan adapter */
 
     ID3D12Device *device = NULL;
+    AddVectoredExceptionHandler(1, record_first_exception);
+    fprintf(stderr, "VKMT_D3D12: creating device\n");
+    fflush(stderr);
     hr = D3D12CreateDevice((IUnknown *)adapter, D3D_FEATURE_LEVEL_11_0, &IID_ID3D12Device, (void **)&device);
     printf("D3D12CreateDevice(FL_11_0): 0x%08lx\n", (unsigned long)hr);
+    fflush(stdout);
     if (FAILED(hr)) return 1;
+    fputs("P5_I386_D3D12_DEVICE_OK\n", stdout);
+    fflush(stdout);
 
     D3D12_FEATURE_DATA_FEATURE_LEVELS fl = {0};
     D3D_FEATURE_LEVEL levels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_11_1,
                                    D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_2 };
     fl.NumFeatureLevels = 5; fl.pFeatureLevelsRequested = levels;
+    fprintf(stderr, "VKMT_D3D12: CheckFeatureSupport FEATURE_LEVELS\n");
+    fflush(stderr);
     device->lpVtbl->CheckFeatureSupport(device, D3D12_FEATURE_FEATURE_LEVELS, &fl, sizeof(fl));
     printf("max feature level: 0x%04x\n", fl.MaxSupportedFeatureLevel);
+    fflush(stdout);
 
     D3D12_FEATURE_DATA_D3D12_OPTIONS opts = {0};
     device->lpVtbl->CheckFeatureSupport(device, D3D12_FEATURE_D3D12_OPTIONS, &opts, sizeof(opts));
@@ -77,6 +107,17 @@ int main(void) {
     if (SUCCEEDED(hr)) hr = device->lpVtbl->CreateCommittedResource(device, &heap, D3D12_HEAP_FLAG_NONE,
             &buffer, D3D12_RESOURCE_STATE_COPY_DEST, NULL, &IID_ID3D12Resource, (void **)&readback);
     fprintf(stderr, "VKMT_COPY: CreateReadback hr=%#lx\n", (unsigned long)hr);
+    if (SUCCEEDED(hr)) {
+        D3D12_RANGE read_range = {0, sizeof(expected)};
+        void *pre_mapped = NULL;
+        HRESULT premap_hr = readback->lpVtbl->Map(readback, 0, &read_range, &pre_mapped);
+        fprintf(stderr, "VKMT_COPY: MapReadbackPreSubmit hr=%#lx ptr=%p\n",
+                (unsigned long)premap_hr, pre_mapped);
+        if (SUCCEEDED(premap_hr)) {
+            fprintf(stderr, "VKMT_COPY: ReadbackPreSubmit value=%#x\n", *(UINT32 *)pre_mapped);
+            readback->lpVtbl->Unmap(readback, 0, NULL);
+        }
+    }
     if (SUCCEEDED(hr)) hr = upload->lpVtbl->Map(upload, 0, NULL, &mapped);
     fprintf(stderr, "VKMT_COPY: MapUpload hr=%#lx\n", (unsigned long)hr);
     if (SUCCEEDED(hr)) {
@@ -107,16 +148,31 @@ int main(void) {
     }
     if (SUCCEEDED(hr)) hr = queue->lpVtbl->Signal(queue, fence, 1);
     fprintf(stderr, "VKMT_COPY: Signal hr=%#lx\n", (unsigned long)hr);
-    if (SUCCEEDED(hr) && fence->lpVtbl->GetCompletedValue(fence) < 1) {
+    if (SUCCEEDED(hr)) {
+        UINT64 completed = fence->lpVtbl->GetCompletedValue(fence);
+        fprintf(stderr, "VKMT_COPY: GetCompletedValue=%llu\n", (unsigned long long)completed);
+        if (completed < 1) {
+            DWORD wait_result;
+            HRESULT event_hr;
         event = CreateEventW(NULL, FALSE, FALSE, NULL);
-        if (!event || FAILED(hr = fence->lpVtbl->SetEventOnCompletion(fence, 1, event)) ||
-                WaitForSingleObject(event, 10000) != WAIT_OBJECT_0)
-            hr = E_FAIL;
+            event_hr = event ? fence->lpVtbl->SetEventOnCompletion(fence, 1, event) : E_FAIL;
+            fprintf(stderr, "VKMT_COPY: SetEventOnCompletion hr=%#lx event=%p\n",
+                    (unsigned long)event_hr, event);
+            wait_result = SUCCEEDED(event_hr) ? WaitForSingleObject(event, 10000) : WAIT_FAILED;
+            fprintf(stderr, "VKMT_COPY: WaitForFence result=%#lx\n", (unsigned long)wait_result);
+            if (!event || FAILED(event_hr) || wait_result != WAIT_OBJECT_0)
+                hr = E_FAIL;
+        }
     }
-    if (SUCCEEDED(hr)) hr = readback->lpVtbl->Map(readback, 0, NULL, &mapped);
+    if (SUCCEEDED(hr)) {
+        D3D12_RANGE read_range = {0, sizeof(expected)};
+        hr = readback->lpVtbl->Map(readback, 0, &read_range, &mapped);
+    }
     fprintf(stderr, "VKMT_COPY: MapReadback hr=%#lx\n", (unsigned long)hr);
     if (SUCCEEDED(hr)) {
-        if (*(UINT32 *)mapped != expected) hr = E_FAIL;
+        UINT32 actual = *(UINT32 *)mapped;
+        fprintf(stderr, "VKMT_COPY: Readback expected=%#x actual=%#x\n", expected, actual);
+        if (actual != expected) hr = E_FAIL;
         readback->lpVtbl->Unmap(readback, 0, NULL);
     }
     printf("queue/copy/fence/readback: 0x%08lx\n", (unsigned long)hr);

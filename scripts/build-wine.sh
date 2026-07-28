@@ -6,7 +6,7 @@
 # Deps: brew install bison flex freetype fontconfig pkg-config
 set -euo pipefail
 VKMT="$(cd "$(dirname "$0")/.." && pwd)"
-LLVM_MINGW="${LLVM_MINGW:-/Volumes/AverySSD/toolchains/llvm-mingw-20260616-ucrt-macos-universal}"
+LLVM_MINGW="${LLVM_MINGW:-$VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal}"
 SRC="$VKMT/wine/wine-11.12"
 BLD="$VKMT/wine/build-full"
 
@@ -33,4 +33,6 @@ if [ ! -f Makefile ]; then
     --without-pcap --without-sane --without-udev --without-wayland --without-x
 fi
 make -j"$(sysctl -n hw.perflevel0.physicalcpu)"
+
+"$VKMT/scripts/stage-wine-host-libs.sh" "$BLD"
 echo "Built: $BLD/wine"
