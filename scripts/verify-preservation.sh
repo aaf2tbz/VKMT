@@ -29,6 +29,8 @@ present "$VKMT/third_party/vkd3d-proton"
 present "$VKMT/third_party/MoltenVK/Package/Release/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib"
 present "$VKMT/third_party/DXMT-v0.80"
 present "$VKMT/third_party/dxmt-src-v0.80"
+present "$VKMT/third_party/SDL2-2.32.10"
+present "$VKMT/third_party/SDL3-3.4.10"
 present "$VKMT/build/fex-wow64/Bin/libwow64fex.dll"
 
 for dylib in "$WINE_BUILD/dlls/win32u/libfreetype.6.dylib" \
@@ -56,6 +58,31 @@ for arch in aarch64 x86_64 i386; do
     present "$WINE_BUILD/dlls/${dll%/*}/$arch-windows/${dll##*/}"
   done
 done
+
+printf '%s\n' 'SDL2/SDL3 multi-architecture runtime stage:'
+for spec in \
+    "aarch64:IMAGE_FILE_MACHINE_ARM64" \
+    "arm64ec:IMAGE_FILE_MACHINE_ARM64EC" \
+    "x86_64:IMAGE_FILE_MACHINE_AMD64" \
+    "i386:IMAGE_FILE_MACHINE_I386"; do
+  IFS=: read -r arch expected <<<"$spec"
+  for family in SDL2 SDL3; do
+    dll="$WINE_BUILD/sdl-runtime/$arch/$family.dll"
+    present "$dll"
+    if [ -e "$dll" ]; then
+      machine="$("$TOOLCHAIN/bin/llvm-readobj" --file-headers "$dll" |
+        awk '/Machine:/ {print $2; exit}')"
+      if [ "$machine" = "$expected" ]; then
+        printf 'present  %s has %s\n' "${dll#$VKMT/}" "$expected"
+      else
+        printf 'MISSING  %s has %s, expected %s\n' \
+          "${dll#$VKMT/}" "$machine" "$expected" >&2
+        missing=1
+      fi
+    fi
+  done
+done
+present "$WINE_BUILD/sdl-runtime/manifest.txt"
 
 printf '%s\n' 'DXMT stage (must be present before DXMT is claimed as runnable):'
 for runtime in aarch64-windows/winemetal.dll aarch64-unix/winemetal.so aarch64-unix/libunwind.1.dylib; do

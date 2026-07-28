@@ -511,3 +511,25 @@ root. Evidence is in
 
 This is a baseline CPU-loader gate, not a graphics claim. Keep the separate
 VKMT and DXMT acceptance runners authoritative for their translation routes.
+
+### 2026-07-28 SDL2/SDL3 multi-architecture runtime
+
+`scripts/build-sdl-runtime.sh` builds and stages SDL2 2.32.10 and SDL3 3.4.10
+for AArch64, native ARM64EC, x86_64, and i386. The source trees are pinned at
+VKMT commits `8f57bf76` and `1f46ec8b`, directly based on upstream release
+commits `5d249570` and `8e37db5e`. The i386 build explicitly disables SIMD
+and compiler vectorization so FEX never receives non-temporal vector stores
+from these runtime DLLs.
+
+`scripts/probe-sdl-runtime.sh` is the acceptance runner. It creates one fresh
+prefix, performs native ARM64 wineboot, and proves SDL2 and SDL3 version,
+dummy audio/video initialization, hidden-window creation, software-surface
+clear/readback, event delivery, a second thread, dynamic DLL loading, and
+clean subsystem shutdown on all four guest architectures. It also runs the
+x86_64 MOVNT/PEXTRW emulator regression. The required final marker is
+`VKMT_SDL2_SDL3_ALL_ARCHITECTURES_OK`.
+
+The runner validates PE machine types, ARM64-only host Wine artifacts, and
+the no-Rosetta process flag. It stops only the exact disposable prefix's
+wineserver and trashes only its own run root on success or failure. Evidence
+is in `docs/validation/sdl-runtime-20260728/RESULTS.md`.
