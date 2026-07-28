@@ -22,6 +22,7 @@ present "$WINE_BUILD/wine"
 present "$WINE_BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
 present "$WINE_BUILD/dlls/win32u/libfreetype.6.dylib"
 present "$WINE_BUILD/dlls/win32u/libpng16.16.dylib"
+present "$WINE_BUILD/dlls/secur32/libgnutls.30.dylib"
 present "$TOOLCHAIN/bin/aarch64-w64-mingw32-clang"
 present "$VKMT/third_party/FEX-2607"
 present "$VKMT/third_party/dxvk"
@@ -50,6 +51,23 @@ if /usr/bin/otool -L "$WINE_BUILD/dlls/win32u/libfreetype.6.dylib" 2>/dev/null |
   printf '%s\n' 'present  FreeType resolves staged libpng without Homebrew runtime paths'
 else
   printf '%s\n' 'MISSING  relocatable staged FreeType/libpng closure' >&2
+  missing=1
+fi
+
+gnutls_missing=0
+while IFS= read -r dylib; do
+  if [ "$(/usr/bin/lipo -archs "$dylib")" != arm64 ] ||
+     /usr/bin/otool -L "$dylib" | grep -Fq /opt/homebrew/ ||
+     ! /usr/bin/codesign --verify "$dylib" 2>/dev/null; then
+    printf 'MISSING  invalid staged GnuTLS dependency: %s\n' \
+      "${dylib#$VKMT/}" >&2
+    gnutls_missing=1
+  fi
+done < <(find "$WINE_BUILD/dlls/secur32" -maxdepth 1 -type f -name '*.dylib' -print)
+if [ "$gnutls_missing" -eq 0 ] &&
+   [ -e "$WINE_BUILD/dlls/secur32/libgnutls.30.dylib" ]; then
+  printf '%s\n' 'present  GnuTLS closure is ARM64-only, signed, and relocatable'
+else
   missing=1
 fi
 

@@ -166,6 +166,17 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 Run `scripts/verify-preservation.sh` before cleanup or release staging.  It is
 read-only and fails honestly while any requested runtime stage is absent.
 
+## Compatibility expansion after the accepted runtime baseline
+
+The post-baseline plan is `docs/COMPATIBILITY_EXPANSION_PLAN.md`. Its first
+host task is a relocatable ARM64 GnuTLS closure: this Wine was configured with
+`--with-gnutls` and compiled against `libgnutls.30.dylib`, but GnuTLS and its
+nettle/GMP/p11-kit/gettext/IDN dependencies still resolve from Homebrew.
+Staging, `@loader_path` rewriting, signing, native ARM64
+Schannel/WinHTTP/WinINet TLS probes, and a no-Homebrew audit are required
+before GnuTLS is called shippable. Guest-architecture HTTPS repetitions are
+diagnostic only; Wine's server/Unix provider boundary is native ARM64.
+
 ### 2026-07-26 inventory result
 
 The active build has the ARM64, x86_64, and i386 Wine `dxgi`, `d3d12`, and
