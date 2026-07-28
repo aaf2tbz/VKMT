@@ -77,6 +77,21 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 - The retained successful prefix was stopped through its exact wineserver and
   removed. Only the 88-KiB evidence bundle remains.
 
+### 2026-07-28 — toggleable macOS MSync integrated
+
+- Wine includes the modern CodeWeavers Mach-semaphore MSync backend, adapted
+  from the CrossOver 26.3.0 FOSS Wine 11.0 source to this Wine 11.12 in-process
+  synchronization contract.
+- MSync is opt-in with `WINEMSYNC=1`. Unset and `WINEMSYNC=0` retain the
+  existing wineserver synchronization path. Changing modes requires an exact
+  wineserver shutdown for that prefix; mismatched clients are rejected.
+- `scripts/probe-msync.sh` passes unset, explicit-off, and enabled modes,
+  including event, semaphore, mutex, wait-all, signal-and-wait, APC,
+  second-thread, abandonment, and cross-process named-event gates.
+- `WINEMSYNC=1 scripts/probe-p6-single-prefix-architectures.sh` passes ARM64,
+  ARM64EC, x86_64, and i386/WoW64 in one fresh prefix. Implementation,
+  provenance, focused rebuild commands, and usage are in `docs/MSYNC.md`.
+
 ### 2026-07-27 — FEX WoW64 Phase 1 complete
 
 - Rebuilt the ARM64 FEX provider from the in-tree LLVM-MinGW toolchain and post-linked its two x18 TLS references to Wine's x28 TLS base.

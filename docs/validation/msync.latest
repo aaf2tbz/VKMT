@@ -1,0 +1,13 @@
+MSync toggle acceptance
+result=PASS
+default=PASS
+explicit_off=PASS
+enabled=PASS
+MSYNC_CHILD_OK
+MSYNC_SYNC_OK
+MSYNC_CHILD_OK
+MSYNC_SYNC_OK
+msync: bootstrapped mach port on <prefix>-msync.
+msync: up and running.
+MSYNC_CHILD_OK
+MSYNC_SYNC_OK
