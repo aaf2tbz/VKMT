@@ -556,4 +556,6 @@ MetalSharp's translated shaders are not yet connected to guest program
 objects and `GLMetalRenderer` draw/readback through Wine. The next acceptance
 gate is a GLSL 3.30 program link plus deterministic offscreen Metal
 draw/readback through `opengl32.dll`. Exact results and the remaining boundary
-are in `docs/validation/opengl-runtime-20260728/RESULTS.md`.
+are in `docs/validation/opengl-runtime-20260728/RESULTS.md`. Preserved
+revisions are VKMT `9954558`, Wine `aaf1da8`, local FEX `a745bebae`, and
+MetalSharp `89d67a2b`.

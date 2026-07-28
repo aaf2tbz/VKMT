@@ -88,3 +88,10 @@ readback/presentation through its Metal texture. Wine therefore keeps
 The next gate is a GLSL 3.30 program link and deterministic offscreen
 Metal-renderer draw/readback through `opengl32.dll`; presentation remains a
 later, separate gate.
+
+## Preserved revisions
+
+- VKMT integration and probes: `9954558`
+- Wine 11.12 OpenGL/WoW64 integration: `aaf1da8`
+- local FEX WoW64 callback contract: `a745bebae`
+- MetalSharp shader enum correction: `89d67a2b`
