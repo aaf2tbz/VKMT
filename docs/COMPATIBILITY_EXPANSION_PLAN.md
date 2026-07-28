@@ -43,10 +43,13 @@ wineserver shutdown, and disposable-prefix cleanup.
 
 ## Phase C — installers and package engines
 
-1. MSI: install, repair, upgrade, uninstall, rollback, cabinet extraction,
-   registry/environment actions, services, shortcuts, and custom actions.
-2. WiX: build pinned MSI fixtures covering both 32-bit and 64-bit packages;
-   validate with `msiexec` and `msidb`.
+1. MSI: **core lifecycle complete (2026-07-28)** for ARM64, ARM64EC, x86_64,
+   and i386/WoW64: install, deliberate file corruption, repair, registry and
+   embedded-cabinet payload validation, then uninstall. Upgrade, rollback,
+   environment actions, services, shortcuts, and custom actions remain.
+2. WiX: **fixture generation complete (2026-07-28)** for both 32-bit and
+   64-bit packages with native ARM64 `wixl`; the packages are validated through
+   Wine's MSI APIs. Direct `msiexec` and `msidb` CLI gates remain.
 3. NSIS: build silent and interactive fixtures and prove install/uninstall.
 4. Inno Setup: prove ordinary Wine execution plus the native ARM64
    `innoextract` fallback used by MetalSharp for incompatible bootstrappers.
