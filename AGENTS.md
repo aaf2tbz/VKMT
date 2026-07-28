@@ -177,6 +177,24 @@ Schannel/WinHTTP/WinINet TLS probes, and a no-Homebrew audit are required
 before GnuTLS is called shippable. Guest-architecture HTTPS repetitions are
 diagnostic only; Wine's server/Unix provider boundary is native ARM64.
 
+### 2026-07-28 — all-architecture input provider accepted
+
+- `scripts/probe-input-runtime.sh` proves all six XInput DLL families plus
+  DirectInput and DirectInput8 in one fresh prefix for ARM64, ARM64EC,
+  x86_64, and i386/WoW64.
+- The host provider is the source-built ARM64 `winebus.so` IOHID backend.
+  `winexinput.sys`, `hidclass.sys`, XInput, and DInput remain Wine's
+  architecture-appropriate PE modules; do not replace them with older
+  packaged MetalSharp DLLs.
+- The accepted no-hardware gate includes DLL/export loading, invalid XInput
+  indices, bounded state/capability calls, DirectInput enumeration, and
+  keyboard/mouse device creation. Physical button/axis, hotplug, vibration,
+  and force-feedback claims require a controller to be attached; the probe
+  emits either `INPUT_ATTACHED_CONTROLLER_BEHAVIOR_OK` or
+  `INPUT_NO_CONTROLLER_ATTACHED` and never conflates the two.
+- Evidence is in `docs/validation/input-runtime-20260728/RESULTS.md`. The
+  disposable prefix was stopped through its exact wineserver and removed.
+
 ### 2026-07-26 inventory result
 
 The active build has the ARM64, x86_64, and i386 Wine `dxgi`, `d3d12`, and

@@ -33,6 +33,12 @@ present "$VKMT/third_party/dxmt-src-v0.80"
 present "$VKMT/third_party/SDL2-2.32.10"
 present "$VKMT/third_party/SDL3-3.4.10"
 present "$VKMT/build/fex-wow64/Bin/libwow64fex.dll"
+present "$VKMT/scripts/probe-input-runtime.sh"
+present "$VKMT/test/input_runtime_probe.c"
+present "$WINE_BUILD/dlls/winebus.sys/winebus.so"
+present "$WINE_BUILD/dlls/winexinput.sys/aarch64-windows/winexinput.sys"
+present "$WINE_BUILD/dlls/winexinput.sys/x86_64-windows/winexinput.sys"
+present "$WINE_BUILD/dlls/winexinput.sys/i386-windows/winexinput.sys"
 
 for dylib in "$WINE_BUILD/dlls/win32u/libfreetype.6.dylib" \
     "$WINE_BUILD/dlls/win32u/libpng16.16.dylib"; do
