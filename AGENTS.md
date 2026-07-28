@@ -57,6 +57,26 @@ surface resolves only to an unimplemented stub. Treat it as an import-contract
 gate to close before diagnosing deeper FEX execution. The associated prefix
 was stopped through its exact wineserver and removed; no Wine process remains.
 
+### 2026-07-28 — Phase 7 VKMT D3D9 loading complete
+
+- `scripts/probe-p7-vkmt-d3d9.sh` proves DXVK 3.0.2 D3D9 loading in one
+  fresh prefix for ARM64, ARM64EC, x86_64, and i386/WoW64.
+- Every route passes `LoadLibrary`/`Direct3DCreate9`, adapter enumeration,
+  display-independent `GetDeviceCaps`, Apple M4 selection, and MoltenVK
+  routing. This is a D3D9 loading/caps result, not device/render/present.
+- The first ARM64EC run found a stale `d3d9.dll`. The focused source rebuild
+  now includes the MoltenVK feature-admission patch and the required x18-to-x28
+  TLS post-link repair. Rebuild scripts are
+  `scripts/build-dxvk-arm64ec-d3d9.sh` and
+  `scripts/build-dxvk-i386-d3d9.sh`; the AArch64 DXVK builder stages D3D9 too.
+- Accepted DXVK source revision:
+  `58f17bb4839631aae49bdf221d01cfb17ed79aa8`.
+- i386 `GetAdapterIdentifier` remains a headless monitor-name limitation, but
+  its live DXVK adapter and D3D9 caps succeed. Exact evidence and DLL hashes
+  are in `docs/validation/phase7-vkmt-d3d9-20260728/RESULTS.md`.
+- The retained successful prefix was stopped through its exact wineserver and
+  removed. Only the 88-KiB evidence bundle remains.
+
 ### 2026-07-27 — FEX WoW64 Phase 1 complete
 
 - Rebuilt the ARM64 FEX provider from the in-tree LLVM-MinGW toolchain and post-linked its two x18 TLS references to Wine's x28 TLS base.

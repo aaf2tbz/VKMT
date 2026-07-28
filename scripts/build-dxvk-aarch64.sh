@@ -24,11 +24,14 @@ fi
 
 meson compile -C "$BUILD"
 python3 "$VKMT/scripts/fix-x18-tls.py" \
-    "$BUILD/src/dxgi/dxgi.dll" "$BUILD/src/d3d11/d3d11.dll"
+    "$BUILD/src/dxgi/dxgi.dll" "$BUILD/src/d3d11/d3d11.dll" \
+    "$BUILD/src/d3d9/d3d9.dll"
 
 mkdir -p "$STAGE"
 cp "$BUILD/src/dxgi/dxgi.dll" "$STAGE/dxgi.dll"
 cp "$BUILD/src/d3d11/d3d11.dll" "$STAGE/d3d11.dll"
+cp "$BUILD/src/d3d9/d3d9.dll" "$STAGE/d3d9.dll"
 "$TOOL/llvm-readobj" --file-headers "$STAGE/dxgi.dll" | grep -q IMAGE_FILE_MACHINE_ARM64
 "$TOOL/llvm-readobj" --file-headers "$STAGE/d3d11.dll" | grep -q IMAGE_FILE_MACHINE_ARM64
+"$TOOL/llvm-readobj" --file-headers "$STAGE/d3d9.dll" | grep -q IMAGE_FILE_MACHINE_ARM64
 printf 'DXVK_AARCH64_STAGE_OK %s\n' "$STAGE"
