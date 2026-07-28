@@ -53,6 +53,21 @@ static int compile_one(GLuint shader, const char *source,
 
 int main(void)
 {
+#ifdef VKMT_OPENGL_GLSL450
+    static const char version_name[] = "GLSL450";
+    static const char success_marker[] = "OPENGL_GL450_METAL_DRAW_READBACK_OK";
+    static const char vertex_source[] =
+        "#version 450 core\n"
+        "const vec2 positions[3] = vec2[3](vec2(-1.0, -1.0),"
+        " vec2(3.0, -1.0), vec2(-1.0, 3.0));\n"
+        "void main() { gl_Position = vec4(positions[gl_VertexID], 0.0, 1.0); }\n";
+    static const char fragment_source[] =
+        "#version 450 core\n"
+        "layout(location = 0) out vec4 color;\n"
+        "void main() { color = vec4(0.2, 0.4, 0.6, 1.0); }\n";
+#else
+    static const char version_name[] = "GLSL330";
+    static const char success_marker[] = "OPENGL_GL330_METAL_DRAW_READBACK_OK";
     static const char vertex_source[] =
         "#version 330 core\n"
         "const vec2 positions[3] = vec2[3](vec2(-1.0, -1.0),"
@@ -62,6 +77,7 @@ int main(void)
         "#version 330 core\n"
         "out vec4 color;\n"
         "void main() { color = vec4(0.2, 0.4, 0.6, 1.0); }\n";
+#endif
     PIXELFORMATDESCRIPTOR pfd = {0};
     PFNGLCREATESHADERPROC create_shader;
     PFNGLSHADERSOURCEPROC shader_source;
@@ -131,7 +147,7 @@ int main(void)
         !compile_one(fragment, fragment_source, shader_source, compile_shader,
                      get_shader_iv, get_shader_log))
         return 15;
-    printf("OPENGL_GL330_COMPILE_OK\n");
+    printf("OPENGL_%s_COMPILE_OK\n", version_name);
 
     program = create_program();
     attach_shader(program, vertex);
@@ -144,19 +160,19 @@ int main(void)
         printf("FAIL GLSL330 link: %s\n", log);
         return 16;
     }
-    printf("OPENGL_GL330_LINK_OK\n");
+    printf("OPENGL_%s_LINK_OK\n", version_name);
 
     use_program(program);
     glViewport(0, 0, 64, 64);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glReadPixels(32, 32, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-    printf("GL330 Metal readback rgba=%u,%u,%u,%u error=0x%x\n",
-           pixel[0], pixel[1], pixel[2], pixel[3], (unsigned)glGetError());
+    printf("%s Metal readback rgba=%u,%u,%u,%u error=0x%x\n",
+           version_name, pixel[0], pixel[1], pixel[2], pixel[3], (unsigned)glGetError());
     if (pixel[0] < 47 || pixel[0] > 55 ||
         pixel[1] < 98 || pixel[1] > 106 ||
         pixel[2] < 149 || pixel[2] > 157 || pixel[3] < 250)
         return 17;
-    printf("OPENGL_GL330_METAL_DRAW_READBACK_OK\n");
+    printf("%s\n", success_marker);
 
     use_program(0);
     delete_program(program);

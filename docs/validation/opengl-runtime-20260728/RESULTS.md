@@ -21,6 +21,7 @@ Each architecture passes:
 - GLSL 1.20 vertex/fragment compile, program link, triangle draw, and readback
 - opt-in GLSL 3.30 translation to SPIR-V/MSL, Metal pipeline creation,
   fullscreen triangle submission, and deterministic readback
+- the same Wine-facing compile/link/Metal draw/readback path with GLSL 4.50
 
 The final marker is:
 
@@ -90,17 +91,20 @@ Wine routes experimental `glReadPixels` directly to MetalSharp. The normal
 macdrv wrapper reads Wine's legacy OpenGL drawable, which is a different
 framebuffer from the Metal render target.
 
-The required per-architecture marker is
-`OPENGL_<ARCH>_GLSL330_METAL_DRAW_OK`. ARM64, ARM64EC, x86_64, and i386 all
-pass sequentially in one fresh prefix. The default GL2 path remains unchanged
-when the experimental variable is absent.
+The required per-architecture markers are
+`OPENGL_<ARCH>_GLSL330_METAL_DRAW_OK` and
+`OPENGL_<ARCH>_GLSL450_METAL_DRAW_OK`. ARM64, ARM64EC, x86_64, and i386 all
+pass both sequentially in one fresh prefix. The default GL2 path remains
+unchanged when the experimental variable is absent.
 
 ## Honest remaining boundary
 
-This is a real OpenGL 3.3 rendering slice, not complete OpenGL 3.x/4.x
-compatibility. Indexed drawing, general vertex layouts and buffers, uniforms,
-textures/samplers, guest framebuffer integration, visible presentation, and
-the broader GL3/4 state/entrypoint surface remain separate gates.
+This proves real GLSL 3.30 and GLSL 4.50 rendering through the Windows/Wine
+path. It does not by itself prove every OpenGL 3.x/4.x API feature. Indexed
+drawing, general vertex layouts and buffers, uniforms, textures/samplers,
+guest framebuffer integration, visible presentation, and the broader GL3/4
+state/entrypoint surface need their own behavioral gates before making a
+complete-API claim.
 
 ## Preserved revisions
 

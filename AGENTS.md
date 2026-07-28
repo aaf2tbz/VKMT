@@ -554,13 +554,13 @@ SPIR-V -> MSL translation marker `METALSHARP_GLSL330_SPIRV_MSL_OK`.
 The opt-in `VKMT_OPENGL_METAL_EXPERIMENTAL=1` path now owns translated shader
 and program objects, creates a Metal render pipeline, submits `glDrawArrays`,
 and implements synchronous RGBA8 `glReadPixels` through an aligned Metal
-staging-buffer blit. The same deterministic GLSL 3.30 draw/readback passes for
-ARM64, ARM64EC, x86_64, and i386 in the single-prefix runner. Wine must route
+staging-buffer blit. Deterministic GLSL 3.30 and GLSL 4.50 draw/readback both
+pass for ARM64, ARM64EC, x86_64, and i386 in the single-prefix runner. Wine must route
 experimental `glReadPixels` to the sidecar because the normal macdrv wrapper
 reads the legacy OpenGL drawable rather than the Metal render target.
 
-Do not overstate this as complete OpenGL 3/4 compatibility. The accepted
-surface is the first GLSL 3.30 program/draw/readback slice; indexed drawing,
+Do not overstate this as complete OpenGL 3/4 API compatibility. Shader-version
+coverage reaches GLSL 4.50; indexed drawing,
 general vertex layouts, uniforms, textures, framebuffer integration, visible
 presentation, and the wider GL3/4 entrypoint/state surface remain separate
 gates. Exact results are in

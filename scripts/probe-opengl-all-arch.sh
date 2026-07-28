@@ -91,24 +91,32 @@ run_wine()
   "$SHADER_SOURCE" -o "$run_root/arm64_shader.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/aarch64-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$GL33_SOURCE" -o "$run_root/arm64_gl33.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/aarch64-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
+  -DVKMT_OPENGL_GLSL450 "$GL33_SOURCE" -o "$run_root/arm64_gl45.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$SOURCE" -o "$run_root/arm64ec.exe" -luser32 -lgdi32
 "$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$SHADER_SOURCE" -o "$run_root/arm64ec_shader.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$GL33_SOURCE" -o "$run_root/arm64ec_gl33.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
+  -DVKMT_OPENGL_GLSL450 "$GL33_SOURCE" -o "$run_root/arm64ec_gl45.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
   "$SOURCE" -o "$run_root/x86_64.exe" -luser32 -lgdi32
 "$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
   "$SHADER_SOURCE" -o "$run_root/x86_64_shader.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
   "$GL33_SOURCE" -o "$run_root/x86_64_gl33.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
+  -DVKMT_OPENGL_GLSL450 "$GL33_SOURCE" -o "$run_root/x86_64_gl45.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
   "$SOURCE" -o "$run_root/i386.exe" -luser32 -lgdi32
 "$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
   "$SHADER_SOURCE" -o "$run_root/i386_shader.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
   "$GL33_SOURCE" -o "$run_root/i386_gl33.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
+  -DVKMT_OPENGL_GLSL450 "$GL33_SOURCE" -o "$run_root/i386_gl45.exe" -lopengl32 -luser32 -lgdi32
 
 for spec in \
     "arm64.exe:IMAGE_FILE_MACHINE_ARM64" \
@@ -191,6 +199,21 @@ for arch in ${VKMT_OPENGL_ARCHES:-arm64 arm64ec x86_64 i386}; do
     exit 1
   }
   echo "OPENGL_${arch_upper}_GLSL330_METAL_DRAW_OK"
+  stop_server
+  if ! VKMT_OPENGL_METAL_EXPERIMENTAL=1 \
+      run_wine "$run_root/${arch}_gl45.log" 0 "$run_root/${arch}_gl45.exe"; then
+    install -m 0644 "$run_root/${arch}_gl45.log" "$VKMT/build/opengl-all-arch.latest.log"
+    echo "$arch GLSL450 Metal runtime failed" >&2
+    tail -n 160 "$run_root/${arch}_gl45.log" >&2
+    exit 1
+  fi
+  grep -q 'OPENGL_GL450_METAL_DRAW_READBACK_OK' "$run_root/${arch}_gl45.log" || {
+    install -m 0644 "$run_root/${arch}_gl45.log" "$VKMT/build/opengl-all-arch.latest.log"
+    echo "$arch GLSL450 Metal success marker missing" >&2
+    tail -n 160 "$run_root/${arch}_gl45.log" >&2
+    exit 1
+  }
+  echo "OPENGL_${arch_upper}_GLSL450_METAL_DRAW_OK"
   stop_server
 done
 
