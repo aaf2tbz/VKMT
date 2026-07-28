@@ -48,9 +48,11 @@ The detailed final logs are:
 
 The D3D12 fixture proves device creation, a direct command queue, upload to a
 default buffer, an explicit resource transition, copy to readback, fence
-completion, and exact CPU readback of `0x4b4d5456`. The D3D11 fixture proves
-device creation and deterministic offscreen clear/copy/readback, including
-clean object teardown.
+completion, and exact CPU readback of `0x4b4d5456`. The runner executes that
+complete D3D12 fixture twice consecutively in the same prefix; the second
+result is retained as `20260728-final-repeat-d3d12-repeat.log`. The D3D11
+fixture proves device creation and deterministic offscreen
+clear/copy/readback, including clean object teardown.
 
 ## Accepted source and reproducibility
 

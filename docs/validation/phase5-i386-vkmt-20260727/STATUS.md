@@ -19,6 +19,10 @@ The final enforced run is
 `20260728-architecture-audit.log` records the exact architectures, dependency
 closure, revisions, hashes, Rosetta flag, and clean process state.
 
+The exact Phase 5.4 repetition requirement is recorded by the later
+`20260728-final-repeat-{d3d12,d3d12-repeat}.log` pair: both complete
+queue/fence/copy/readback executions passed consecutively in one prefix.
+
 The accepted source revisions are Wine `97ff7730`, FEX `baaca8565`, DXVK
 `ab0f99ac`, and vkd3d-proton `3300fe64`. The final DXVK and vkd3d-proton i386
 DLLs were rebuilt with the in-tree LLVM-MinGW 22.1.8 toolchain before the

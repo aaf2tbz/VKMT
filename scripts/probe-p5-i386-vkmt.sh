@@ -169,6 +169,14 @@ run_wine "$run_root/d3d12.log" -all "$run_root/d3d12.exe" || {
 }
 grep -q 'PROBE OK' "$run_root/d3d12.log"
 grep -q '\[mvk-info\]' "$run_root/d3d12.log"
+run_wine "$run_root/d3d12-repeat.log" -all "$run_root/d3d12.exe" || {
+  echo "P5 repeated D3D12 gate failed" >&2
+  tail -n 200 "$run_root/d3d12-repeat.log" >&2
+  exit 1
+}
+grep -q 'PROBE OK' "$run_root/d3d12-repeat.log"
+grep -q 'Readback expected=0x4b4d5456 actual=0x4b4d5456' "$run_root/d3d12-repeat.log"
+grep -q '\[mvk-info\]' "$run_root/d3d12-repeat.log"
 
 run_wine "$run_root/d3d11.log" -all "$run_root/d3d11.exe" || {
   echo "P5 D3D11 gate failed" >&2; tail -n 200 "$run_root/d3d11.log" >&2; exit 1;
