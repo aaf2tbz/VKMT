@@ -533,3 +533,27 @@ The runner validates PE machine types, ARM64-only host Wine artifacts, and
 the no-Rosetta process flag. It stops only the exact disposable prefix's
 wineserver and trashes only its own run root on success or failure. Evidence
 is in `docs/validation/sdl-runtime-20260728/RESULTS.md`.
+
+### 2026-07-28 OpenGL multi-architecture checkpoint
+
+`scripts/probe-opengl-all-arch.sh` proves `opengl32.dll`, WGL context
+creation, Apple M4 / Metal renderer identity, an offscreen RGBA8 FBO,
+deterministic clear/readback, and a GLSL 1.20 shader draw for ARM64, ARM64EC,
+x86_64, and i386 in one fresh prefix. The required final marker is
+`OPENGL_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`. The complete Phase 4 WoW64
+system contract also passes after the OpenGL pointer/USER callback repairs.
+
+Wine's generated WoW64 OpenGL thunks now route i386 client pointers through
+the canonical guest-memory manager, and the OpenGL 2.x extension parser marks
+the parsed extension IDs correctly. `scripts/build-metalsharp-opengl.sh`
+target-builds and stages the native ARM64 MetalSharp sidecar with pinned,
+in-tree SPIRV-Cross and glslang dependencies.
+`scripts/probe-metalsharp-opengl.sh` passes the separate GLSL 3.30 ->
+SPIR-V -> MSL translation marker `METALSHARP_GLSL330_SPIRV_MSL_OK`.
+
+Do not overstate this checkpoint as complete OpenGL 3/4 rendering.
+MetalSharp's translated shaders are not yet connected to guest program
+objects and `GLMetalRenderer` draw/readback through Wine. The next acceptance
+gate is a GLSL 3.30 program link plus deterministic offscreen Metal
+draw/readback through `opengl32.dll`. Exact results and the remaining boundary
+are in `docs/validation/opengl-runtime-20260728/RESULTS.md`.
