@@ -1,0 +1,17 @@
+run_root=/Volumes/AverySSD/VKMT/build/probe-runs/p6-single-prefix.cSqcob
+host_macho:
+wine/build-ec/wine arm64
+wine/build-ec/server/wineserver arm64
+wine/build-ec/dlls/ntdll/ntdll.so arm64
+fixtures:
+arm64 IMAGE_FILE_MACHINE_ARM64
+arm64ec IMAGE_FILE_MACHINE_ARM64EC
+x86_64 IMAGE_FILE_MACHINE_AMD64
+i386 IMAGE_FILE_MACHINE_I386
+providers:
+wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll IMAGE_FILE_MACHINE_ARM64EC
+wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll IMAGE_FILE_MACHINE_ARM64
+wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll IMAGE_FILE_MACHINE_ARM64
+wine/build-ec/dlls/wow64win/aarch64-windows/wow64win.dll IMAGE_FILE_MACHINE_ARM64
+rosetta:
+0

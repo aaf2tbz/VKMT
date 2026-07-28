@@ -458,3 +458,21 @@ shutdown, and disposable-prefix cleanup.
 Final evidence is
 `docs/validation/phase5-i386-vkmt-20260727/RESULTS.md`. The former 2.6-GiB
 retained diagnostic prefix has been disposed; no Phase 5 prefix is retained.
+
+### 2026-07-28 Phase 6 single-prefix architecture baseline
+
+`scripts/probe-p6-single-prefix-architectures.sh` proves ARM64, ARM64EC,
+x86_64, and i386 execution sequentially in one fresh prefix and one wineserver
+lifetime. It stages `xtajit64.dll`, FEX `xtajit.dll`, `wow64.dll`,
+`wow64win.dll`, and the complete source-built i386 Wine DLL closure before
+running native ARM64 `wineboot --init`.
+
+The required final marker is `P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`, preceded
+by the four per-architecture markers. The runner validates PE machine types,
+ARM64-only host Mach-O artifacts, and the no-Rosetta process flag. It stops
+only that prefix's exact wineserver and trashes only its own external-SSD run
+root. Evidence is in
+`docs/validation/phase6-single-prefix-20260728/RESULTS.md`.
+
+This is a baseline CPU-loader gate, not a graphics claim. Keep the separate
+VKMT and DXMT acceptance runners authoritative for their translation routes.
