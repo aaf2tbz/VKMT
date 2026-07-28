@@ -8,6 +8,7 @@ TOOL="$VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal/bin"
 RUNS="$VKMT/build/probe-runs"
 SOURCE="$VKMT/test/opengl_runtime.c"
 SHADER_SOURCE="$VKMT/test/opengl_runtime_probe.c"
+GL33_SOURCE="$VKMT/test/opengl_gl33_metal.c"
 WINE="$BUILD/wine"
 WINESERVER="$BUILD/server/wineserver"
 WINEBOOT="$BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
@@ -18,7 +19,7 @@ WOW64WIN="$BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"
 WINEMAC32="$BUILD/dlls/winemac.drv/i386-windows/winemac.drv"
 
 for required in "$WINE" "$WINESERVER" "$WINEBOOT" "$XTAJIT64" "$XTAJIT" \
-    "$WOW64" "$WOW64WIN" "$WINEMAC32" "$SOURCE" "$SHADER_SOURCE"; do
+    "$WOW64" "$WOW64WIN" "$WINEMAC32" "$SOURCE" "$SHADER_SOURCE" "$GL33_SOURCE"; do
   test -e "$required" || { echo "Missing all-architecture OpenGL input: $required" >&2; exit 1; }
 done
 for macho in "$WINE" "$WINESERVER" "$BUILD/dlls/opengl32/opengl32.so"; do
@@ -75,6 +76,8 @@ run_wine()
   env_args=(WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1
             WINEDEBUG="${VKMT_OPENGL_WINEDEBUG:--all}")
   test "$no_explorer" != 1 || env_args+=(WINE_NO_EXPLORER=1)
+  test -z "${VKMT_OPENGL_METAL_EXPERIMENTAL:-}" ||
+    env_args+=(VKMT_OPENGL_METAL_EXPERIMENTAL="$VKMT_OPENGL_METAL_EXPERIMENTAL")
   "${timeout_cmd[@]}" env "${env_args[@]}" "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!
   if wait "$wine_pid"; then code=0; else code=$?; fi
@@ -86,18 +89,26 @@ run_wine()
   "$SOURCE" -o "$run_root/arm64.exe" -luser32 -lgdi32
 "$TOOL/aarch64-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$SHADER_SOURCE" -o "$run_root/arm64_shader.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/aarch64-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
+  "$GL33_SOURCE" -o "$run_root/arm64_gl33.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$SOURCE" -o "$run_root/arm64ec.exe" -luser32 -lgdi32
 "$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
   "$SHADER_SOURCE" -o "$run_root/arm64ec_shader.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/arm64ec-w64-mingw32-clang" -O2 -g -Wall -Wextra -ffixed-x18 -ffixed-x28 \
+  "$GL33_SOURCE" -o "$run_root/arm64ec_gl33.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
   "$SOURCE" -o "$run_root/x86_64.exe" -luser32 -lgdi32
 "$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
   "$SHADER_SOURCE" -o "$run_root/x86_64_shader.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/x86_64-w64-mingw32-clang" -O2 -g -Wall -Wextra -fno-vectorize -fno-slp-vectorize \
+  "$GL33_SOURCE" -o "$run_root/x86_64_gl33.exe" -lopengl32 -luser32 -lgdi32
 "$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
   "$SOURCE" -o "$run_root/i386.exe" -luser32 -lgdi32
 "$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
   "$SHADER_SOURCE" -o "$run_root/i386_shader.exe" -lopengl32 -luser32 -lgdi32
+"$TOOL/i686-w64-mingw32-clang" -O2 -g -Wall -Wextra \
+  "$GL33_SOURCE" -o "$run_root/i386_gl33.exe" -lopengl32 -luser32 -lgdi32
 
 for spec in \
     "arm64.exe:IMAGE_FILE_MACHINE_ARM64" \
@@ -165,6 +176,21 @@ for arch in ${VKMT_OPENGL_ARCHES:-arm64 arm64ec x86_64 i386}; do
     exit 1
   }
   echo "OPENGL_${arch_upper}_GLSL120_DRAW_OK"
+  stop_server
+  if ! VKMT_OPENGL_METAL_EXPERIMENTAL=1 \
+      run_wine "$run_root/${arch}_gl33.log" 0 "$run_root/${arch}_gl33.exe"; then
+    install -m 0644 "$run_root/${arch}_gl33.log" "$VKMT/build/opengl-all-arch.latest.log"
+    echo "$arch GLSL330 Metal runtime failed" >&2
+    tail -n 160 "$run_root/${arch}_gl33.log" >&2
+    exit 1
+  fi
+  grep -q 'OPENGL_GL330_METAL_DRAW_READBACK_OK' "$run_root/${arch}_gl33.log" || {
+    install -m 0644 "$run_root/${arch}_gl33.log" "$VKMT/build/opengl-all-arch.latest.log"
+    echo "$arch GLSL330 Metal success marker missing" >&2
+    tail -n 160 "$run_root/${arch}_gl33.log" >&2
+    exit 1
+  }
+  echo "OPENGL_${arch_upper}_GLSL330_METAL_DRAW_OK"
   stop_server
 done
 

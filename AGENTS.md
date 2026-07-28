@@ -551,11 +551,17 @@ in-tree SPIRV-Cross and glslang dependencies.
 `scripts/probe-metalsharp-opengl.sh` passes the separate GLSL 3.30 ->
 SPIR-V -> MSL translation marker `METALSHARP_GLSL330_SPIRV_MSL_OK`.
 
-Do not overstate this checkpoint as complete OpenGL 3/4 rendering.
-MetalSharp's translated shaders are not yet connected to guest program
-objects and `GLMetalRenderer` draw/readback through Wine. The next acceptance
-gate is a GLSL 3.30 program link plus deterministic offscreen Metal
-draw/readback through `opengl32.dll`. Exact results and the remaining boundary
-are in `docs/validation/opengl-runtime-20260728/RESULTS.md`. Preserved
-revisions are VKMT `9954558`, Wine `aaf1da8`, local FEX `a745bebae`, and
-MetalSharp `89d67a2b`.
+The opt-in `VKMT_OPENGL_METAL_EXPERIMENTAL=1` path now owns translated shader
+and program objects, creates a Metal render pipeline, submits `glDrawArrays`,
+and implements synchronous RGBA8 `glReadPixels` through an aligned Metal
+staging-buffer blit. The same deterministic GLSL 3.30 draw/readback passes for
+ARM64, ARM64EC, x86_64, and i386 in the single-prefix runner. Wine must route
+experimental `glReadPixels` to the sidecar because the normal macdrv wrapper
+reads the legacy OpenGL drawable rather than the Metal render target.
+
+Do not overstate this as complete OpenGL 3/4 compatibility. The accepted
+surface is the first GLSL 3.30 program/draw/readback slice; indexed drawing,
+general vertex layouts, uniforms, textures, framebuffer integration, visible
+presentation, and the wider GL3/4 entrypoint/state surface remain separate
+gates. Exact results are in
+`docs/validation/opengl-runtime-20260728/RESULTS.md`.

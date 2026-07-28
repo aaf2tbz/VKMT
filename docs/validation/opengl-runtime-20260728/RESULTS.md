@@ -19,6 +19,8 @@ Each architecture passes:
 - offscreen RGBA8 texture/FBO creation
 - deterministic clear/readback (`51,102,153,255`) with `GL_NO_ERROR`
 - GLSL 1.20 vertex/fragment compile, program link, triangle draw, and readback
+- opt-in GLSL 3.30 translation to SPIR-V/MSL, Metal pipeline creation,
+  fullscreen triangle submission, and deterministic readback
 
 The final marker is:
 
@@ -72,26 +74,39 @@ MSL. Its marker is:
 METALSHARP_GLSL330_SPIRV_MSL_OK
 ```
 
+The native `test_metal_renderer` regression passes 29/29, including translated
+MSL pipeline creation and command submission.
+
+## Accepted Wine-facing Metal draw boundary
+
+With `VKMT_OPENGL_METAL_EXPERIMENTAL=1`, MetalSharp owns GLSL 3.30 shader and
+program handles, preserves OpenGL glslang semantics, assigns omitted
+pre-4.30 SPIR-V locations, creates the MSL pipeline, submits `glDrawArrays`,
+and reads its offscreen render target through a synchronized, aligned Metal
+staging-buffer blit. The Windows fixture reaches this path through Wine's
+`opengl32.dll`, not through a native-only shortcut.
+
+Wine routes experimental `glReadPixels` directly to MetalSharp. The normal
+macdrv wrapper reads Wine's legacy OpenGL drawable, which is a different
+framebuffer from the Metal render target.
+
+The required per-architecture marker is
+`OPENGL_<ARCH>_GLSL330_METAL_DRAW_OK`. ARM64, ARM64EC, x86_64, and i386 all
+pass sequentially in one fresh prefix. The default GL2 path remains unchanged
+when the experimental variable is absent.
+
 ## Honest remaining boundary
 
-This checkpoint proves a working OpenGL 2.1/GLSL 1.20 rendering path on all
-four guest architectures and proves the separate GLSL 3.30-to-MSL translator.
-It does **not** yet claim complete OpenGL 3.x/4.x rendering through Metal.
-
-MetalSharp's `GLMetalRenderer` exists and can compile translated MSL, but the
-OpenGL entrypoint layer does not yet own program objects, connect translated
-vertex/fragment shader pairs to that renderer, or route guest framebuffer
-readback/presentation through its Metal texture. Wine therefore keeps
-`glCreateShader` on the working system OpenGL route unless
-`VKMT_OPENGL_METAL_EXPERIMENTAL=1` is explicitly selected.
-
-The next gate is a GLSL 3.30 program link and deterministic offscreen
-Metal-renderer draw/readback through `opengl32.dll`; presentation remains a
-later, separate gate.
+This is a real OpenGL 3.3 rendering slice, not complete OpenGL 3.x/4.x
+compatibility. Indexed drawing, general vertex layouts and buffers, uniforms,
+textures/samplers, guest framebuffer integration, visible presentation, and
+the broader GL3/4 state/entrypoint surface remain separate gates.
 
 ## Preserved revisions
 
-- VKMT integration and probes: `9954558`
-- Wine 11.12 OpenGL/WoW64 integration: `aaf1da8`
+- VKMT integration and probes: `9954558` plus the GL3.3 gate commit
+- Wine 11.12 OpenGL/WoW64 integration: `aaf1da8` plus the Metal readback
+  routing commit
 - local FEX WoW64 callback contract: `a745bebae`
-- MetalSharp shader enum correction: `89d67a2b`
+- MetalSharp shader enum correction: `89d67a2b` plus the program/pipeline/draw
+  integration commit
