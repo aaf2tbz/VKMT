@@ -870,6 +870,33 @@ ARM64, ARM64EC, x86_64, and i386. Evidence is in
 `docs/validation/wine-mono-11.2.0-20260729/RESULTS.md`. No diagnostic prefix is
 retained.
 
-Remaining Phase E scope: broaden native Java, add Windows Java i386/x86_64,
-then stage/gate .NET Framework and modern .NET/PowerShell, followed by opt-in
-Python and Node fixtures.
+### 2026-07-29 — Phase E native ARM64 Java checkpoint
+
+The private Oracle JRE 8u501 ARM64 lane is accepted. Its DMG remains pinned at
+SHA-256
+`3f488bb03113460719c4c16737c37e2ee22a85487b877b146bd33e4b4a00e7d1`
+and must not be redistributed outside this runtime.
+`scripts/stage-native-java-runtime.sh` verifies the staged `java` and
+`lib/server/libjvm.dylib` as signed ARM64 Mach-O binaries, rejects Homebrew
+dependencies, and proves that `-server` selects the 64-bit HotSpot Server VM.
+
+`scripts/stage-native-java-handoff.sh --prefix PREFIX` performs the reusable
+targeted build and prefix installation of
+`C:\vkmt\bin\vkmt-native-java-handoff.exe`. The ARM64 PE is compiled with
+`-ffixed-x18 -ffixed-x28`, audited for `x18`, and uses Wine's
+`__wine_unix_spawnvp` boundary. Its explicit environment contract is
+`VKMT_NATIVE_JAVA`, `VKMT_NATIVE_JAVA_JAR`, `VKMT_NATIVE_JAVA_JNI`, and
+`VKMT_NATIVE_JAVA_TLS_URL`.
+
+`scripts/probe-native-java-runtime.sh` passes native class-path and executable
+JAR execution, ARM64 JNI, deterministic TLS 1.2, and the fresh-prefix Wine
+handoff. The required terminal marker is `VKMT_NATIVE_JAVA_8U501_ALL_OK`.
+Evidence is in
+`docs/validation/native-java-8u501-20260729/RESULTS.md`. Eclipse ECJ 4.6.1 is
+pinned under `third_party/build-tools` only to compile the acceptance fixture;
+it is not shipped with the private JRE. No probe prefix or log root is
+retained.
+
+Remaining Phase E scope: add Windows Java i386/x86_64, then stage/gate .NET
+Framework and modern .NET/PowerShell, followed by opt-in Python and Node
+fixtures.

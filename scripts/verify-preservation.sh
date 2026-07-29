@@ -166,6 +166,28 @@ else
   missing=1
 fi
 
+printf '%s\n' 'Native ARM64 Java stage:'
+java_stage="$VKMT/third_party/private/oracle-jre-8u501-arm64/Home"
+for asset in \
+    "$java_stage/bin/java" \
+    "$java_stage/lib/server/libjvm.dylib" \
+    "$VKMT/build/native-java-stage/vkmt-native-java-handoff.exe" \
+    "$VKMT/third_party/build-tools/ecj-4.6.1.jar"; do
+  present "$asset"
+done
+if [ "$(/usr/bin/lipo -archs "$java_stage/bin/java")" = arm64 ] &&
+   [ "$(/usr/bin/lipo -archs "$java_stage/lib/server/libjvm.dylib")" = arm64 ] &&
+   /usr/bin/codesign --verify --strict "$java_stage/bin/java" 2>/dev/null &&
+   /usr/bin/codesign --verify --strict \
+     "$java_stage/lib/server/libjvm.dylib" 2>/dev/null &&
+   ! /usr/bin/otool -L "$java_stage/bin/java" \
+     "$java_stage/lib/server/libjvm.dylib" | grep -Fq /opt/homebrew/; then
+  printf '%s\n' 'present  Oracle Java Server VM is signed, ARM64-only, and relocatable'
+else
+  printf '%s\n' 'MISSING  Oracle Java Server VM validation failed' >&2
+  missing=1
+fi
+
 printf '%s\n' 'Additional requested runtime stages:'
 if find "$VKMT/third_party/vkd3d-proton" -xdev -type f -name d3d12.dll -print -quit 2>/dev/null | grep -q .; then
   printf '%s\n' 'present  third_party/vkd3d-proton external d3d12 runtime stage'

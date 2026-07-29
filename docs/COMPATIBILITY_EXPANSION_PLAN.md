@@ -95,16 +95,18 @@ Evidence: `docs/validation/installer-completion-20260728/RESULTS.md`.
 5. Add opt-in Python and Node.js Windows runtime fixtures for launchers that
    embed those engines.
 
-Status (2026-07-29): the private Oracle JRE 8u501 ARM64 payload is pinned and
-staged. Official Wine Mono 11.2.0 is pinned from GitHub, its x86 and x86_64
+Status (2026-07-29): the private Oracle JRE 8u501 ARM64 payload is pinned,
+staged, and accepted for the HotSpot Server VM, class/JAR execution, ARM64
+JNI, deterministic TLS 1.2, and Wine-prefix-to-native-process handoff.
+Official Wine Mono 11.2.0 is pinned from GitHub, its x86 and x86_64
 engines are preserved unchanged, and a source-built ARM64 engine is integrated
 with the VKMT ABI/W^X contract. Wine's process, Unix loader, Windows loader,
 and server image-view paths now agree that same-bitness PE32+ IL-only images
 use the native 64-bit CLR rather than starting `xtajit64`. One disposable
 prefix passes managed compile and direct execution gates for ARM64, x86_64,
 and i386, followed by the ordinary ARM64/ARM64EC/x86_64/i386 single-prefix
-regression. Native-Java breadth, Windows Java, .NET Framework/modern
-.NET/PowerShell, and opt-in Python/Node remain.
+regression. Windows Java, .NET Framework/modern .NET/PowerShell, and opt-in
+Python/Node remain.
 
 ## Phase F — common game/application redistributables
 
