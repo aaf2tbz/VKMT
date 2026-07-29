@@ -109,11 +109,13 @@ run_wine() {
 echo "Phase 4 i386 DLLs staged: ${#i386_dlls[@]}"
 # Prove the named bootstrap boundary explicitly. Build-tree mode lets the
 # native ARM64 wineboot resolve in-tree builtins before prefix links exist.
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 if ! run_wine "$bootstrap_log" "$WINEBOOT" --init; then
   echo "Phase 4 native ARM64 wineboot failed" >&2
   tail -n 120 "$bootstrap_log" >&2
   exit 1
 fi
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 if run_wine "$log" "$PHASE4_EXE" "Z:$phase4_marker"; then code=0; else code=$?; fi
 for _ in $(seq 1 "${VKMT_I386_PHASE4_MARKER_WAIT:-60}"); do

@@ -125,9 +125,11 @@ for pe in "$run_root"/*.exe; do
   "$TOOL/llvm-readobj" --file-headers "$pe" | grep -q 'IMAGE_FILE_MACHINE_I386'
 done
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 run_wine "$run_root/wineboot.log" -all "$WINEBOOT" --init || {
   echo "P5 native ARM64 wineboot failed" >&2; tail -n 100 "$run_root/wineboot.log" >&2; exit 1;
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 run_wine "$run_root/substrate.log" -all "$run_root/substrate.exe" "Z:$run_root/substrate.marker" || {
   echo "P5 i386 substrate regression failed" >&2; tail -n 120 "$run_root/substrate.log" >&2; exit 1;
 }

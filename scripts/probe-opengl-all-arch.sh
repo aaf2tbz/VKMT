@@ -145,11 +145,13 @@ while IFS= read -r dll; do
 done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 install -m 0644 "$WINEMAC32" "$syswow64/winemac.drv"
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 run_wine "$run_root/wineboot.log" 1 "$WINEBOOT" --init || {
   echo "All-architecture OpenGL wineboot failed" >&2
   tail -n 120 "$run_root/wineboot.log" >&2
   exit 1
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 stop_server
 
 for arch in ${VKMT_OPENGL_ARCHES:-arm64 arm64ec x86_64 i386}; do

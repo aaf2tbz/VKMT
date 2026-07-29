@@ -87,11 +87,13 @@ while IFS= read -r dll; do
   install -m 0644 "$dll" "$syswow64/$(basename "$dll")"
 done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 run_wine "$run_root/wineboot.log" "$WINEBOOT" --init || {
   echo "MSI-runtime wineboot failed" >&2
   tail -n 160 "$run_root/wineboot.log" >&2
   exit 1
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 stop_server
 
 for arch in ${VKMT_MSI_ARCHES:-arm64 arm64ec x86_64 i386}; do

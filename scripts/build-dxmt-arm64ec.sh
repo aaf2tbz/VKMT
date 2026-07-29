@@ -7,7 +7,7 @@ SRC="$VKMT/third_party/dxmt-src-v0.80"
 BUILD="$SRC/build-vkmt-arm64ec"
 STAGE="$VKMT/wine/build-ec/dxmt-v0.80"
 WINE_BUILD="$VKMT/wine/build-ec"
-LLVM_MINGW="${LLVM_MINGW:-/Volumes/AverySSD/toolchains/llvm-mingw-20260616-ucrt-macos-universal}"
+LLVM_MINGW="${LLVM_MINGW:-$VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal}"
 LLVM15="${LLVM15:-/opt/homebrew/opt/llvm@15}"
 
 test -d "$SRC/.git" || { echo "Run scripts/fetch.sh first" >&2; exit 1; }
@@ -42,5 +42,12 @@ meson install -C "$BUILD"
 # the build-tree stage too, so WINEDLLPATH can load-test the exact shipped pair.
 cp "$WINE_BUILD/dlls/winemac.drv/winemac.so" "$STAGE/aarch64-unix/winemac.so"
 cp "$WINE_BUILD/dlls/ntdll/ntdll.so" "$STAGE/aarch64-unix/ntdll.so"
+
+# DXMT currently links libunwind from the native LLVM toolchain.  Stage that
+# ARM64 dependency beside the ARM64 Unix driver and make the driver resolve it
+# relative to itself, so a packaged Wine does not depend on Homebrew's prefix.
+ditto "$LLVM15/lib/libunwind.1.dylib" "$STAGE/aarch64-unix/libunwind.1.dylib"
+install_name_tool -change "$LLVM15/lib/libunwind.1.dylib" \
+  '@loader_path/libunwind.1.dylib' "$STAGE/aarch64-unix/winemetal.so"
 
 echo "Installed DXMT ARM64EC/arm64 runtime to $STAGE"

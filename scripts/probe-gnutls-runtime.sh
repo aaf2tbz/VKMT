@@ -67,9 +67,11 @@ while IFS= read -r dll; do
   install -m 0644 "$dll" "$prefix/drive_c/windows/syswow64/$(basename "$dll")"
 done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 \
   WINE_NO_EXPLORER=1 WINEDEBUG=-all "$WINE" "$WINEBOOT" --init \
   >"$run_root/wineboot.log" 2>&1
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 WINEPREFIX="$prefix" "$WINESERVER" -k
 WINEPREFIX="$prefix" "$WINESERVER" -w
 

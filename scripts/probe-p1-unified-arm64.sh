@@ -36,6 +36,8 @@ trap cleanup EXIT
 export WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1
 export WINE_NO_EXPLORER=1 WINEDEBUG=-all VK_ICD_FILENAMES="$VKMT/test/vkmt_icd.json"
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$PREFIX"
+
 "$TOOL/aarch64-w64-mingw32-clang" -O2 -ffixed-x18 -ffixed-x28 \
     -o "$RUN_ROOT/aarch64_smoke.exe" "$VKMT/test/aarch64_smoke.c"
 "$TOOL/aarch64-w64-mingw32-clang" -O2 -ffixed-x18 -ffixed-x28 \
@@ -52,6 +54,7 @@ export WINE_NO_EXPLORER=1 WINEDEBUG=-all VK_ICD_FILENAMES="$VKMT/test/vkmt_icd.j
 file "$WINE" "$WINESERVER" "$BUILD/dlls/ntdll/ntdll.so" | grep -q 'arm64'
 
 "$WINE" "$WINEBOOT" --init >>"$LOG" 2>&1
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$PREFIX"
 
 # Pure AArch64 DXVK and vkd3d-proton form the VKMT route.
 cp "$DXVK/dxgi.dll" "$PREFIX/drive_c/windows/system32/dxgi.dll"

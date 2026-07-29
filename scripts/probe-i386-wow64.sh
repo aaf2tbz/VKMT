@@ -71,6 +71,7 @@ syswow64="$prefix/drive_c/windows/syswow64"
 mkdir -p "$system32" "$syswow64"
 install -m 0644 "$XTAJIT" "$system32/xtajit.dll"
 install -m 0644 "$WOW64" "$system32/wow64.dll"
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 i386_dlls=()
 while IFS= read -r dll; do
   i386_dlls+=("$dll")
@@ -100,6 +101,7 @@ if rg -F 'VKMT i386 WoW64 execution contract passed' "$bootstrap_log" >/dev/null
 else
     : >"$log"
 fi
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 "${timeout_cmd[@]}" env WINEPREFIX="$prefix" "$WINE_BUILD/wine" "$PROBE" "$marker_win" >>"$log" 2>&1 &
 wine_pid=$!

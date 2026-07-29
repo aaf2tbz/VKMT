@@ -178,11 +178,13 @@ check_machine "$run_root/arm64ec/d3d9_probe.exe" IMAGE_FILE_MACHINE_ARM64EC
 check_machine "$run_root/x86_64/d3d9_probe.exe" IMAGE_FILE_MACHINE_AMD64
 check_machine "$run_root/i386/d3d9_probe.exe" IMAGE_FILE_MACHINE_I386
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 run_wine bootstrap "$run_root/wineboot.log" "$WINEBOOT" --init || {
   echo "Phase 7 native ARM64 wineboot failed" >&2
   tail -n 120 "$run_root/wineboot.log" >&2
   exit 1
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 for arch in arm64 arm64ec x86_64 i386; do
   run_wine "$arch" "$run_root/$arch.log" "$run_root/$arch/d3d9_probe.exe" || {

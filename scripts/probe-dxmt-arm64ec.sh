@@ -51,8 +51,10 @@ otool -L "$STAGE/aarch64-unix/winemetal.so" | grep -q '@loader_path/libunwind.1.
 "$LLVM_MINGW/bin/llvm-readobj" --file-headers "$RUN_ROOT/dxmt_dxgi_import_probe.exe" |
     grep -q 'IMAGE_FILE_MACHINE_ARM64EC'
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$PREFIX"
 WINEPREFIX="$PREFIX" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG=-all \
     "$WINE" "$WINEBOOT" --init >"$RUN_ROOT/wineboot.log" 2>&1
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$PREFIX"
 WINEPREFIX="$PREFIX" "$WINESERVER" -k
 WINEPREFIX="$PREFIX" "$WINESERVER" -w
 ln -sfn "$STAGE/aarch64-windows/winemetal.dll" "$PREFIX/drive_c/windows/system32/winemetal.dll"

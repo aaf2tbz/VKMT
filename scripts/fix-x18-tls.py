@@ -5,7 +5,7 @@
 # -ffixed-x18, so no legitimate x18 allocation remains in .text.
 import re, struct, subprocess, sys
 
-BIN = "/Volumes/AverySSD/toolchains/llvm-mingw-20260616-ucrt-macos-universal/bin"
+BIN = "/Volumes/AverySSD/VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal/bin"
 
 def patch(path):
     out = subprocess.run([f"{BIN}/llvm-objdump", "-d", "--no-show-raw-insn", path],

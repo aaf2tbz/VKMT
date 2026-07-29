@@ -49,8 +49,10 @@ trap finish EXIT
 PATH="$TOOLCHAIN/bin:$PATH" aarch64-w64-mingw32-clang -O2 -ffixed-x18 -ffixed-x28 \
     -municode -o "$probe" "$VKMT/test/msync_sync.c"
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 WINEDEBUG=-all \
     "$WINE" "$WINEBOOT" --init >>"$log" 2>&1
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 stop_server
 
 echo "mode=default" >>"$log"

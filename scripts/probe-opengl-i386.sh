@@ -62,6 +62,7 @@ mkdir -p "$system32" "$syswow64"
 install -m 0644 "$XTAJIT" "$system32/xtajit.dll"
 install -m 0644 "$WOW64" "$system32/wow64.dll"
 install -m 0644 "$WOW64WIN" "$system32/wow64win.dll"
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 while IFS= read -r dll; do
   install -m 0644 "$dll" "$syswow64/$(basename "$dll")"
 done < <(find "$WINE_BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
@@ -86,6 +87,7 @@ if ! run_wine "$bootstrap_log" 1 "$WINEBOOT" --init; then
   tail -n 120 "$bootstrap_log" >&2
   exit 1
 fi
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 # The bootstrap server deliberately has no explorer.  End that session before
 # the interactive probe so only one process can publish and own the desktop.
 WINEPREFIX="$prefix" "$WINE_BUILD/server/wineserver" -k

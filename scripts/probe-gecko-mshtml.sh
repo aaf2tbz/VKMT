@@ -9,10 +9,7 @@ TOOLCHAIN="$VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal/bin"
 WINE="$BUILD/wine"
 WINESERVER="$BUILD/server/wineserver"
 WINEBOOT="$BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
-XTAJIT64="$VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll"
-XTAJIT="$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll"
-XTAJIT_STAGE="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
-XTAJIT_SHA256="7810c330b54c4a89c4062e6c9b34e5b54d588c39e39f37da9cb5b7c95444bbc6"
+PROVIDERS="$VKMT/scripts/stage-runtime-providers.sh"
 
 "$VKMT/scripts/stage-gecko-runtime.sh"
 mkdir -p "$RUNS"
@@ -66,16 +63,7 @@ stop_server()
 }
 
 mkdir -p "$prefix/drive_c/windows/system32" "$prefix/drive_c/windows/syswow64"
-echo "3025e679b3728536896d9fd3d78138f3fc26e67ee98ad6d62f2a95e07457b132  $XTAJIT64" |
-  shasum -a 256 -c -
-echo "$XTAJIT_SHA256  $XTAJIT" |
-  shasum -a 256 -c -
-# wineboot refreshes builtin modules from the build tree.  Keep the canonical
-# stage synchronized before creating the prefix, then verify that bootstrap
-# did not silently replace the accepted provider.
-install -m 0644 "$XTAJIT" "$XTAJIT_STAGE"
-install -m 0644 "$XTAJIT64" "$prefix/drive_c/windows/system32/xtajit64.dll"
-install -m 0644 "$XTAJIT" "$prefix/drive_c/windows/system32/xtajit.dll"
+"$PROVIDERS" --prefix "$prefix"
 for dll in wow64 wow64win; do
   install -m 0644 "$BUILD/dlls/$dll/aarch64-windows/$dll.dll" \
     "$prefix/drive_c/windows/system32/$dll.dll"
@@ -89,9 +77,7 @@ VKMT_RUN_TIMEOUT="${VKMT_GECKO_BOOT_TIMEOUT:-180}"
 run_wine "$run_root/wineboot.log" "$WINEBOOT" --init
 unset VKMT_RUN_NO_EXPLORER VKMT_RUN_TIMEOUT
 stop_server
-echo "$XTAJIT_SHA256  $XTAJIT_STAGE" | shasum -a 256 -c -
-echo "$XTAJIT_SHA256  $prefix/drive_c/windows/system32/xtajit.dll" |
-  shasum -a 256 -c -
+"$PROVIDERS" --verify-prefix "$prefix"
 
 gecko_x86="$(printf 'Z:%s' "$VKMT/wine/gecko/wine-gecko-2.47.4-x86" | tr '/' '\\')"
 gecko_x86_64="$(printf 'Z:%s' "$VKMT/wine/gecko/wine-gecko-2.47.4-x86_64" | tr '/' '\\')"

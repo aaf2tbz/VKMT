@@ -32,7 +32,8 @@ for a in "$@"; do
 done
 TRIPLE=$TARGET-w64-mingw32
 
-TC=${LLVM_MINGW:-/Volumes/AverySSD/toolchains/llvm-mingw-20260616-ucrt-macos-universal}
+VKMT=$(cd "$(dirname "$0")/.." && pwd)
+TC=${LLVM_MINGW:-$VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal}
 SRC=$(cd "$(dirname "$0")/../third_party" && pwd)
 TCLIB=$TC/$TRIPLE/lib
 FLAGS='-O2 -ffixed-x18 -ffixed-x28'
@@ -127,7 +128,9 @@ if [ "$MODE" = "cxx" ]; then
     cp "stage/bin/$f" "$TC/$TRIPLE/bin/$f"
   done
   [ -d "$BK/include-c++" ] || cp -R "$TC/$TRIPLE/include/c++" "$BK/include-c++"
-  rm -rf "$TC/$TRIPLE/include/c++"
+  # This is the exact generated C++ include subtree for the selected target,
+  # never a broad toolchain or project-tree cleanup.
+  /usr/bin/find "$TC/$TRIPLE/include/c++" -depth -delete
   cp -R stage/include/c++ "$TC/$TRIPLE/include/c++"
   for f in __libunwind_config.h libunwind.h unwind.h unwind_arm64.h unwind_itanium.h; do
     [ -f "stage/include/$f" ] && cp "stage/include/$f" "$TC/$TRIPLE/include/$f"

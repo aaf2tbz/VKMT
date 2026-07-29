@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 
 int main(void) {
+    const char *extensions[] = { VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME };
     VkApplicationInfo app = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pApplicationName = "vkmt-smoke",
@@ -12,6 +13,9 @@ int main(void) {
     VkInstanceCreateInfo ici = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pApplicationInfo = &app,
+        .enabledExtensionCount = 1,
+        .ppEnabledExtensionNames = extensions,
+        .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
     };
     VkInstance inst;
     VkResult r = vkCreateInstance(&ici, NULL, &inst);
@@ -44,9 +48,11 @@ int main(void) {
     VkPhysicalDeviceProperties2 props2 = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, .pNext = &p13 };
     vkGetPhysicalDeviceProperties2(dev, &props2);
     printf("%-28s %s\n", "storageTexelSingleAlign", p13.storageTexelBufferOffsetSingleTexelAlignment ? "OK" : "** MISSING **");
-    printf("%-28s %u\n", "storageTexelAlignBytes", p13.storageTexelBufferOffsetAlignmentBytes);
+    printf("%-28s %llu\n", "storageTexelAlignBytes",
+           (unsigned long long)p13.storageTexelBufferOffsetAlignmentBytes);
     printf("%-28s %s\n", "uniformTexelSingleAlign", p13.uniformTexelBufferOffsetSingleTexelAlignment ? "OK" : "** MISSING **");
-    printf("%-28s %u\n", "uniformTexelAlignBytes", p13.uniformTexelBufferOffsetAlignmentBytes);
+    printf("%-28s %llu\n", "uniformTexelAlignBytes",
+           (unsigned long long)p13.uniformTexelBufferOffsetAlignmentBytes);
 
     rob2.pNext = &tfProps;
     f13.pNext = &rob2;

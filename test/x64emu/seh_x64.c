@@ -6,11 +6,13 @@
 
 static int failures = 0;
 static volatile int *bad_ptr;
+static volatile ULONG_PTR zero_address;
 
 static void make_bad_ptr( void )
 {
-    /* opaque to the compiler: __argc is 1 at runtime but not foldable */
-    bad_ptr = (volatile int *)(ULONG_PTR)(__argc - 1);
+    /* Keep the deliberate null AV opaque without depending on MinGW's
+     * private __p___argc UCRT import, which is unrelated to SEH. */
+    bad_ptr = (volatile int *)zero_address;
 }
 
 static int av_filter( unsigned code )

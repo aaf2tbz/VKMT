@@ -70,7 +70,9 @@ while IFS= read -r dll; do
   install -m 0644 "$dll" "$prefix/drive_c/windows/syswow64/$(basename "$dll")"
 done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 run_wine "$run_root/wineboot.log" "$WINEBOOT" --init
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 stop_server
 
 extract="$run_root/extracted"

@@ -120,11 +120,13 @@ while IFS= read -r dll; do
   install -m 0644 "$dll" "$syswow64/$(basename "$dll")"
 done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 run_wine "$run_root/wineboot.log" "$WINEBOOT" --init || {
   echo "Phase 6 wineboot failed" >&2
   tail -n 120 "$run_root/wineboot.log" >&2
   exit 1
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 run_wine "$run_root/arm64.log" "$run_root/arm64.exe" || {
   echo "Phase 6 ARM64 baseline failed" >&2
