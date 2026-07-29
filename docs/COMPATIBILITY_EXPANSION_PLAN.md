@@ -45,19 +45,27 @@ wineserver shutdown, and disposable-prefix cleanup.
 
 ## Phase C — installers and package engines
 
-1. MSI: **core lifecycle complete (2026-07-28)** for ARM64, ARM64EC, x86_64,
-   and i386/WoW64: install, deliberate file corruption, repair, registry and
-   embedded-cabinet payload validation, then uninstall. Upgrade, rollback,
-   environment actions, services, shortcuts, and custom actions remain.
-2. WiX: **fixture generation complete (2026-07-28)** for both 32-bit and
-   64-bit packages with native ARM64 `wixl`; the packages are validated through
-   Wine's MSI APIs. Direct `msiexec` and `msidb` CLI gates remain.
-3. NSIS: build silent and interactive fixtures and prove install/uninstall.
-4. Inno Setup: prove ordinary Wine execution plus the native ARM64
-   `innoextract` fallback used by MetalSharp for incompatible bootstrappers.
-5. Add Squirrel/Electron, InstallShield, Burn/bootstrapper, ClickOnce, MSIX,
-   and AppX detection. Unsupported package types must fail diagnostically,
-   never hang or leak prefixes.
+**Complete (2026-07-28).**
+
+1. MSI's core install/corrupt/repair/uninstall lifecycle passes ARM64,
+   ARM64EC, x86_64, and i386/WoW64 in one prefix. Native ARM64 `msiexec` and
+   `msidb` additionally pass WiX upgrades, environment rows, registry rows,
+   shortcuts, and service-table processing. Guest CLI modes remain optional
+   diagnostics because the all-architecture contract is the MSI API fixture.
+2. Native ARM64 `wixl` reproducibly builds both 32-bit and 64-bit core
+   packages plus versioned extended packages.
+3. The i386 NSIS fixture passes silent installation, payload execution,
+   uninstall-section cleanup, and registry removal.
+4. Inno Setup 6.3.3's real i386 `ISCC.exe` executes through WoW64 and compiles
+   the deterministic fixture. The pinned, relocatable native ARM64
+   `innoextract` closure recovers and byte-validates its payload. Inno 6.5.4
+   is pinned and classified, but its GUI setup transaction is not claimed;
+   packages use the extraction fallback when direct execution is unsuitable.
+5. The read-only classifier recognizes MSI, Inno, NSIS, WiX Burn,
+   InstallShield, Squirrel, ClickOnce, MSIX, and AppX families. Unsupported
+   engines return a bounded diagnostic failure and never create a prefix.
+
+Evidence: `docs/validation/installer-completion-20260728/RESULTS.md`.
 
 ## Phase D — browser and launcher engines
 

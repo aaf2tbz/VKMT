@@ -35,10 +35,39 @@ present "$VKMT/third_party/SDL3-3.4.10"
 present "$VKMT/build/fex-wow64/Bin/libwow64fex.dll"
 present "$VKMT/scripts/probe-input-runtime.sh"
 present "$VKMT/test/input_runtime_probe.c"
+present "$VKMT/third_party/inno-setup-6.5.4/innosetup-6.5.4.exe"
+present "$VKMT/third_party/inno-setup-6.3.3/innosetup-6.3.3.exe"
+present "$VKMT/third_party/innoextract-1.9-g6e9e34e/CMakeLists.txt"
+present "$VKMT/patches/innoextract-boost-system-header-only.patch"
+present "$VKMT/scripts/build-inno-runtime.sh"
+present "$VKMT/scripts/probe-inno-runtime.sh"
+present "$VKMT/scripts/classify-installer.sh"
+present "$VKMT/scripts/probe-installer-classifier.sh"
+present "$VKMT/scripts/probe-installer-extended.sh"
 present "$WINE_BUILD/dlls/winebus.sys/winebus.so"
 present "$WINE_BUILD/dlls/winexinput.sys/aarch64-windows/winexinput.sys"
 present "$WINE_BUILD/dlls/winexinput.sys/x86_64-windows/winexinput.sys"
 present "$WINE_BUILD/dlls/winexinput.sys/i386-windows/winexinput.sys"
+
+inno_stage="$WINE_BUILD/installer-runtime/innoextract"
+present "$inno_stage/innoextract"
+present "$inno_stage/manifest.txt"
+inno_missing=0
+while IFS= read -r binary; do
+  if [ "$(/usr/bin/lipo -archs "$binary")" != arm64 ] ||
+     /usr/bin/otool -L "$binary" | grep -Eq '/(opt/homebrew|usr/local)/' ||
+     ! /usr/bin/codesign --verify "$binary" 2>/dev/null; then
+    printf 'MISSING  invalid staged Inno dependency: %s\n' \
+      "${binary#$VKMT/}" >&2
+    inno_missing=1
+  fi
+done < <(find "$inno_stage" -maxdepth 1 -type f \
+  \( -name innoextract -o -name '*.dylib' \) -print 2>/dev/null)
+if [ "$inno_missing" -eq 0 ] && [ -x "$inno_stage/innoextract" ]; then
+  printf '%s\n' 'present  innoextract closure is ARM64-only, signed, and relocatable'
+else
+  missing=1
+fi
 
 for dylib in "$WINE_BUILD/dlls/win32u/libfreetype.6.dylib" \
     "$WINE_BUILD/dlls/win32u/libpng16.16.dylib"; do

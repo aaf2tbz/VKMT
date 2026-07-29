@@ -217,6 +217,25 @@ diagnostic only; Wine's server/Unix provider boundary is native ARM64.
   the preservation inventory. Evidence is in
   `docs/validation/nsis-runtime-20260728/RESULTS.md`.
 
+### 2026-07-28 — installer completion accepted
+
+- `scripts/probe-msi-runtime.sh` remains the all-architecture MSI lifecycle
+  gate. `scripts/probe-installer-extended.sh` is explicitly the native ARM64
+  `msiexec`/`msidb` extended-table gate; do not describe guest CLI modes as
+  accepted merely because the MSI APIs pass there.
+- The pinned Inno contract is native ARM64 `innoextract` plus real i386
+  Inno 6.3.3 `ISCC.exe` execution through WoW64. The compiler builds the
+  deterministic fixture and native extraction byte-validates its payload.
+  Inno 6.5.4 is pinned and classified, but a GUI setup lifecycle is not
+  claimed.
+- `scripts/classify-installer.sh` is read-only. Burn, InstallShield, Squirrel,
+  ClickOnce, MSIX, and AppX are diagnostic-only families and must fail before
+  creating a prefix when `--require-runnable` is used.
+- The staged extractor closure under
+  `wine/build-ec/installer-runtime/innoextract/` is ARM64-only, signed, and
+  free of Homebrew runtime paths. Evidence is in
+  `docs/validation/installer-completion-20260728/RESULTS.md`.
+
 ### 2026-07-26 inventory result
 
 The active build has the ARM64, x86_64, and i386 Wine `dxgi`, `d3d12`, and
