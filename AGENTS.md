@@ -668,3 +668,138 @@ The accepted local source commits are FEX `b5174e00d` on branch
 Two independent, empty, disposable prefixes passed the complete Gecko runner
 without retries or copied profile data. Failed and diagnostic prefixes are
 stopped through their exact wineserver and removed before another is created.
+
+### 2026-07-29 — active completion sequence
+
+The accepted baseline now includes native ARM64 Wine/wineboot, ARM64EC,
+x86_64, and i386/WoW64 execution; VKMT/DXVK/vkd3d-proton, DXMT/Winemetal,
+D3D9 loading/caps, MSync, SDL2/3, Metal-backed OpenGL, XInput/DirectInput,
+MSI/WiX/NSIS/Inno, relocatable native GnuTLS HTTPS, and Gecko/MSHTML. Preserve
+all of those gates while completing the following two phases.
+
+**Phase 1 — provider and release hardening**
+
+1. Make one shared runtime-provider staging command authoritative for
+   `xtajit64.dll` and `xtajit.dll`.
+2. Pin and verify provider hashes before wineboot, in the canonical build
+   stage, and again in every new prefix after wineboot.
+3. Route every fresh-prefix acceptance runner and release packager through
+   that command so wineboot cannot silently restore a stale provider.
+4. Prove a clean staged-prefix cycle plus the architecture, WoW64 lifecycle,
+   Gecko, and graphics regressions.
+5. Produce and verify a new local `.tar.zst` recovery snapshot containing
+   Wine, providers, sources, build/stage scripts, dependencies, and probes.
+
+**Phase 2 — browser and launcher engines**
+
+1. Complete CEF for x86_64 and i386/WoW64 using pinned in-tree
+   redistributables and the MetalSharp compatibility wrapper/child hook.
+2. Gate `libcef.dll` exports, browser/renderer/GPU subprocesses,
+   sandbox-disabled compatibility mode, offscreen rendering, input, audio,
+   HTTPS, deterministic pixel/readback evidence, and exact child teardown.
+3. Add a separately pinned WebView2 fixed-runtime lane with an
+   Evergreen-style installer/launcher fixture.
+4. Add Electron launcher fixtures and prove main/renderer/GPU process
+   creation, HTTPS, input, deterministic rendering, and clean shutdown.
+
+Do not call either phase complete from DLL presence or a warmed prefix. Each
+final gate uses a fresh external-SSD prefix, exact provider hashes, native
+ARM64 host closure, no Rosetta, bounded child processes, exact wineserver
+shutdown, and automatic disposal on both success and failure.
+
+### 2026-07-29 — Phase 1/2 implementation checkpoint
+
+Phase 1 is implemented through the shared
+`scripts/stage-runtime-providers.sh` entry point and every fresh-prefix runner
+now invokes it. The accepted i386 provider is
+`runtime-providers/xtajit-arm64-known-good.dll` with SHA-256
+`ea523a42ca8e7965371122bd7be1eb6b973cded50ecda5da1465b2961ad36479`;
+the accepted x86_64/ARM64EC provider is
+`runtime-providers/xtajit64-arm64ec-known-good.dll` with SHA-256
+`3025e679b3728536896d9fd3d78138f3fc26e67ee98ad6d62f2a95e07457b132`.
+The pre-wineboot canonical-stage and post-wineboot prefix checks remain
+mandatory. Baseline architecture, Phase 4 WoW64, Gecko, and i386 graphics
+regressions passed during this hardening pass. The remaining Phase 1
+deliverable is the newly verified `.tar.zst` recovery snapshot; do not replace
+or delete the existing runtime while producing it.
+
+The previous CEF diagnostic boundary is resolved. Wine now releases and
+restores the exact recursive USER-lock depth around nested message, hook,
+window-call, and accessibility callbacks. WoW64 process-attribute conversion
+always installs the converted high-host `PS_ATTRIBUTE_IMAGE_NAME` pointer, so
+i386 Chromium child creation no longer passes a raw guest pointer to
+`NtCreateUserProcess`. The canonical `GetWindowThreadProcessId` guest-pointer
+repair, focused i386 USER fixture, and WoW64 CoreAudio nested-pointer
+conversion are built and passing. Temporary backtraces, callback traces, VEH,
+PID, window, and CreateProcess instrumentation have been removed.
+
+A new disposable prefix passed the pinned official CEF 109 x86_64 and i386
+export and subprocess acceptance with GPU, renderer, and utility child-command
+evidence and exact cleanup. Required markers are
+`CEF_X86_64_SUBPROCESS_RUNTIME_OK`, `CEF_I386_SUBPROCESS_RUNTIME_OK`, and
+`CEF_X64_I386_ALL_OK`. Do not overstate this boundary as the complete Phase 2
+contract: automated OSR pixel readback, synthetic input, HTTPS/audio evidence,
+WebView2 fixed-runtime acceptance, and Electron main/renderer/GPU acceptance
+remain to be implemented and proven.
+
+### 2026-07-29 — provider hardening, recovery image, and browser checkpoint
+
+Root commit `aa100f6` contains the shared provider staging integration,
+browser/runtime fetchers and probes, focused architecture fixtures, and the
+reproducible snapshot creator. Wine commit `fb22a97` preserves the accepted
+WoW64/browser callback work,
+ARM64EC/x64 LSE feature publication, CoreAudio nested-pointer conversion,
+`TlsGetValue2`/`FlsGetValue2` compatibility aliases, and both canonical
+runtime providers. The current provider hashes are:
+
+- `xtajit64-arm64ec-known-good.dll`:
+  `7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6`
+- `xtajit-arm64-known-good.dll`:
+  `ea523a42ca8e7965371122bd7be1eb6b973cded50ecda5da1465b2961ad36479`
+
+Every fresh-prefix runner uses `scripts/stage-runtime-providers.sh`; it verifies
+the canonical source/build copies before wineboot and the prefix copies after
+wineboot. A final clean run of
+`scripts/probe-p6-single-prefix-architectures.sh` passed
+`P6_SINGLE_PREFIX_ARM64_OK`, `P6_SINGLE_PREFIX_ARM64EC_OK`,
+`P6_SINGLE_PREFIX_X86_64_OK`, `P6_SINGLE_PREFIX_I386_OK`, and
+`P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`.
+
+The high-compression recovery image is:
+
+- `/Volumes/AverySSD/VKMT_snapshots/VKMT-runtime-phase2-20260729-050624.tar.zst`
+- compressed size: 3.6 GiB; logical tar size: 23.5 GiB
+- SHA-256:
+  `777aaa94f49942301e4e1185961893bfd3f4f2e8f63366dc9ca3ecc2cbb8876c`
+- manifest:
+  `/Volumes/AverySSD/VKMT_snapshots/VKMT-runtime-phase2-20260729-050624.manifest.txt`
+
+`zstd -t --long=31` passed, the full tar manifest was decoded, and the
+manifest contains Wine, wineserver, both providers, the shared staging helper,
+and the single-prefix acceptance runner. Recreate future images only through
+`scripts/create-runtime-snapshot.sh`; it streams tar directly into zstd and
+does not create an uncompressed intermediate.
+
+Browser/launcher gates now have explicit levels:
+
+- CEF 109 x86_64 and i386 pass export and browser/renderer/GPU/utility
+  subprocess acceptance through the MetalSharp compatibility DLL and child
+  hook.
+- WebView2 fixed runtime 149 x64 passes environment/controller creation,
+  host HTTPS, renderer/utility/GPU startup, and `ExecuteScript` dispatch. The
+  callback does not yet return, so this is
+  `WEBVIEW2_X64_FIXED_RUNTIME_BOOTSTRAP_OK`, not the full
+  HTTPS/input/audio/pixel marker.
+- Electron 42.7.1 x64 passes deterministic HTTPS, renderer input,
+  `OfflineAudioContext`, RGBA pixel readback, renderer/GPU/utility creation,
+  and teardown with `ELECTRON_X64_OK`.
+- Electron 42.7.1 ia32 advances through image/V8 initialization but eventually
+  dereferences a decommitted Chromium allocation. An experiment reserving the
+  WoW64 guest-null granularity moved that boundary but regressed the golden
+  i386 Phase 6 gate and was reverted. Do not reintroduce it.
+
+Therefore Phase 1 is complete. Phase 2 is not to be called fully complete
+until CEF OSR/input/audio/HTTPS pixel evidence, WebView2 callback completion,
+and Electron ia32 renderer acceptance pass without weakening the four-mode
+single-prefix baseline. Failed probe roots are always stopped through their
+exact wineserver and disposed before another prefix is created.
