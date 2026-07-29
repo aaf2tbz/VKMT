@@ -635,3 +635,36 @@ general vertex layouts, uniforms, textures, framebuffer integration, visible
 presentation, and the wider GL3/4 entrypoint/state surface remain separate
 gates. Exact results are in
 `docs/validation/opengl-runtime-20260728/RESULTS.md`.
+
+### 2026-07-29 Gecko/MSHTML and provider-stage invariant
+
+`scripts/probe-gecko-mshtml.sh` is the fresh-prefix Gecko 2.47.4 acceptance
+runner. It registers both registry views, proves the x86_64 SEH prerequisite,
+proves i386 time, socket, DNS, GnuTLS/WinHTTP/WinINet HTTPS prerequisites, and
+then runs Gecko-backed MSHTML document creation, JavaScript, DOM, event, and
+HTTPS navigation for i386 and x86_64. The final required marker is
+`GECKO_MSHTML_X64_I386_ALL_OK`.
+
+Wineboot refreshes builtin modules from `wine/build-ec`; installing a provider
+only into a new prefix before wineboot is not sufficient. The accepted i386
+provider must first be staged at
+`wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll`. The Gecko runner pins
+SHA-256
+`7810c330b54c4a89c4062e6c9b34e5b54d588c39e39f37da9cb5b7c95444bbc6`
+and verifies both the canonical stage and the post-wineboot prefix copy.
+Never remove those post-bootstrap checks: a stale staged provider caused
+deterministic i386 `CoCreateInstance` failure while all earlier prerequisites
+still passed.
+
+FEX distinguishes external i386 context transfers from contexts reconstructed
+from its currently executing JIT block. External SetContext/SEH/APC transfers
+discard provider call-return continuations; internal synchronous-fault
+delivery imports architectural state while preserving the interrupted
+simulation's call-return cursor. The complete Phase 4 WoW64 lifecycle gate and
+Phase 5 repeated D3D12 readback gate pass with this split.
+The accepted local source commits are FEX `b5174e00d` on branch
+`vkmt/gecko-fresh-prefix` and Wine `6c11892`.
+
+Two independent, empty, disposable prefixes passed the complete Gecko runner
+without retries or copied profile data. Failed and diagnostic prefixes are
+stopped through their exact wineserver and removed before another is created.
