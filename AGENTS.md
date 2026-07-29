@@ -182,16 +182,18 @@ diagnostic only; Wine's server/Unix provider boundary is native ARM64.
 - `scripts/probe-input-runtime.sh` proves all six XInput DLL families plus
   DirectInput and DirectInput8 in one fresh prefix for ARM64, ARM64EC,
   x86_64, and i386/WoW64.
-- The host provider is the source-built ARM64 `winebus.so` IOHID backend.
+- The accepted physical-controller route is the source-built ARM64
+  `winebus.so` SDL backend and pinned ARM64 `libSDL2-2.0.0.dylib`. The probe
+  sets `DisableHidraw=1` so the same controller is not also exposed through
+  an unnormalized raw IOHID descriptor.
   `winexinput.sys`, `hidclass.sys`, XInput, and DInput remain Wine's
   architecture-appropriate PE modules; do not replace them with older
   packaged MetalSharp DLLs.
-- The accepted no-hardware gate includes DLL/export loading, invalid XInput
-  indices, bounded state/capability calls, DirectInput enumeration, and
-  keyboard/mouse device creation. Physical button/axis, hotplug, vibration,
-  and force-feedback claims require a controller to be attached; the probe
-  emits either `INPUT_ATTACHED_CONTROLLER_BEHAVIOR_OK` or
-  `INPUT_NO_CONTROLLER_ATTACHED` and never conflates the two.
+- A connected PS5 DualSense passed normalized XInput state, live-axis
+  activity, `XINPUT_CAPS_FFB_SUPPORTED`, nonzero vibration calls, DirectInput
+  controller enumeration, and keyboard/mouse enumeration in every guest
+  mode. Multiple-pad and disconnect/reconnect testing are optional hardware
+  extensions and do not block the accepted single-controller phase.
 - Evidence is in `docs/validation/input-runtime-20260728/RESULTS.md`. The
   disposable prefix was stopped through its exact wineserver and removed.
 

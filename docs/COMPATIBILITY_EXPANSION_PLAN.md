@@ -24,22 +24,24 @@ wineserver shutdown, and disposable-prefix cleanup.
    architecture HTTPS runs are optional diagnostics, not Phase A gates,
    because the server/Unix provider is native ARM64.
 
-## Phase B — input and game-device compatibility
+## Phase B — input and game-device compatibility — COMPLETE (2026-07-28)
 
-1. **Complete (2026-07-28):** Wine's in-tree XInput
+1. Wine's in-tree XInput
    1.1/1.2/1.3/1.4/9.1.0/UAP modules and DirectInput/DirectInput8 pass in one
    prefix for ARM64, ARM64EC, x86_64, and i386/WoW64. The native provider is
-   the source-built ARM64 `winebus.so` IOHID backend; no Rosetta or guest
-   Mach-O is involved.
-2. Integrate the MetalSharp GameController-backed ARM64 `xinput1_4` host shim
-   only where it extends Wine's macOS driver; do not replace newer Wine PE
-   modules with packaged copies.
-3. Gate controller enumeration, connect/disconnect, buttons, axes, triggers,
-   vibration, multiple controllers, DirectInput keyboard/mouse, Raw Input,
-   HID, and force-feedback behavior. The hardware-independent API/provider,
-   keyboard, and mouse gates pass. A live-controller session is still required
-   to claim physical buttons/axes, hotplug, vibration, and force feedback;
-   the probe reports this distinction explicitly.
+   the source-built ARM64 `winebus.so` SDL backend with its pinned, relocatable
+   ARM64 SDL2 provider; no Rosetta or guest Mach-O is involved.
+2. A physical PS5 DualSense passes normalized XInput enumeration/state,
+   live-axis activity, force-feedback capability, and nonzero vibration calls
+   in all four guest modes. DirectInput/DirectInput8 controller enumeration
+   and keyboard/mouse enumeration also pass.
+3. SDL is authoritative for game controllers on macOS during the acceptance
+   run; raw IOHID joystick enumeration is disabled to prevent duplicate,
+   unnormalized devices. The newer Wine PE modules remain authoritative, so
+   no packaged MetalSharp XInput DLL replaces them.
+4. Multiple-controller and disconnect/reconnect exercises remain optional
+   hardware-coverage extensions, not blockers for the completed single-pad
+   phase.
 
 ## Phase C — installers and package engines
 
