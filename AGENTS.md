@@ -900,3 +900,19 @@ retained.
 Remaining Phase E scope: add Windows Java i386/x86_64, then stage/gate .NET
 Framework and modern .NET/PowerShell, followed by opt-in Python and Node
 fixtures.
+
+### 2026-07-29 — Windows Java i386/WoW64 scope and plan
+
+The implementation plan is `docs/WINDOWS_JAVA_WOW64_PLAN.md`. Current
+official inputs are Temurin 8u472-b08 for Windows i386 (the newest published
+x86 JRE) and Temurin 8u492-b09 for Windows x86_64. Their ZIP hashes,
+architecture inspection, HotSpot VM variants, imported APIs, FEX/Wine
+ownership map, phased gates, and promotion regressions are recorded there.
+
+The i386 archive contains only the PE32 HotSpot Client VM; do not require a
+nonexistent i386 Server VM. The x86_64 archive contains the PE32+ Server VM.
+The accepted `ea523a42...` i386 provider remains the first-run and rollback
+baseline. The current FEX worktree's uncommitted TSO/unaligned/W^X candidates
+must build and stage beside it, never over it. No Windows JRE or candidate
+provider was staged during this planning pass, and all transient archive
+inspection roots were removed.

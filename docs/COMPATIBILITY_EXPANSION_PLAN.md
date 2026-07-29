@@ -108,6 +108,13 @@ and i386, followed by the ordinary ARM64/ARM64EC/x86_64/i386 single-prefix
 regression. Windows Java, .NET Framework/modern .NET/PowerShell, and opt-in
 Python/Node remain.
 
+Windows Java implementation is scoped in
+`docs/WINDOWS_JAVA_WOW64_PLAN.md`: i386 uses the newest published Temurin 8
+x86 Client VM through FEX/WoW64, while x86_64 uses the Temurin 8 Server VM
+through `xtajit64`. The plan freezes the golden providers, stages candidates
+side by side, and gates interpreter, JNI/services, JIT/W^X, TSO atomics,
+safepoints, and unified-prefix regressions before promotion.
+
 ## Phase F — common game/application redistributables
 
 **Closed by scope decision (2026-07-29).**
