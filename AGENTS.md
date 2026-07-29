@@ -803,3 +803,73 @@ until CEF OSR/input/audio/HTTPS pixel evidence, WebView2 callback completion,
 and Electron ia32 renderer acceptance pass without weakening the four-mode
 single-prefix baseline. Failed probe roots are always stopped through their
 exact wineserver and disposed before another prefix is created.
+
+### 2026-07-29 — post-Phase-D roadmap correction
+
+Phase G has been removed from the authoritative roadmap. LDAP,
+Kerberos/GSSAPI, NTLM, ODBC, printing, smart-card, serial, scanner/camera,
+COM/DCOM service expansion, scheduled-task, and shell-association coverage are
+not required for completion of this runtime.
+
+Phase F is not a from-scratch redistributable build. The current
+`wine/build-ec` tree already contains ARM64, x86_64, and i386 modules for
+D3DCompiler, XAudio2/XACT, UCRT/Visual C++/ATL, MSXML, Quartz, Media
+Foundation, MIDI, WineGStreamer, and Windows codecs; ARM64EC uses the native
+ARM64 lane. XNA/FNA and FAudio assets are complete through the preserved
+MetalSharp runtime lane, and legacy D3DX9/10/11 remains intentionally excluded.
+The honest remaining Phase F work is focused all-architecture API acceptance,
+relocatable native audio/video dependency closure, deterministic playback,
+and an explicit include/exclude decision for MFC, OpenAL, PhysX, and core
+fonts. Module presence alone is not acceptance evidence.
+
+### 2026-07-29 — Phase F closed; Phase E is the sole remaining expansion
+
+This entry supersedes the Phase F remaining-work paragraph immediately above.
+Phase F requires no additional validation. Preserve the already-built
+D3DCompiler, XAudio2/XACT, UCRT/Visual C++/ATL, MSXML, Quartz, Media
+Foundation, MIDI, WineGStreamer, Windows codec, XNA/FNA, and FAudio surfaces,
+but do not spend completion work on new Phase F probes. Legacy D3DX9/10/11,
+MFC, OpenAL, PhysX, and additional core-font payload work are outside scope.
+
+Phase E managed and language runtimes is now the only remaining compatibility
+expansion phase. Complete it without reopening Phase F or the removed Phase G.
+
+### 2026-07-29 — Phase E Wine Mono 11.2.0 checkpoint
+
+Official Wine Mono 11.2.0 is the sole Mono payload. The pinned GitHub runtime
+archive SHA-256 is
+`c9fb2e2823acf30b000b8806177db0f40751786136dd3f8fb2be7897b1643d06`;
+the matching source archive SHA-256 is
+`aebef9b43dca80b3ebe4a0ada0f45925d833f371ba5b42f5acf9990461568ba9`.
+Do not replace either with a distro or Homebrew Mono.
+
+`scripts/build-wine-mono-arm64.sh` applies the tracked ARM64 CoreEE/W^X and
+Wine managed-loader patches, builds only the required Mono ARM64 targets, and
+rebuilds only Wine's ARM64X `mscoree.dll`/`ntdll.dll`, native `ntdll.so`, and
+`wineserver`. It audits x18 and stages the result beside the official
+x86/x86_64 engines. The 16-KiB protection is required: Wine exposes 4-KiB
+guest pages, but Darwin ARM64 combines four of them into one host page;
+protecting only the generated trampoline's guest page leaves the host page
+write-only.
+
+`scripts/probe-wine-mono-runtime.sh` is the clean-prefix acceptance runner.
+It passes managed compilation plus pointer width, threads, reflection, XML,
+kernel32 P/Invoke, exact wineserver shutdown, and cleanup for:
+
+- direct i386 CLR startup using the official x86 engine;
+- native ARM64 CLR startup using the source-built engine;
+- direct PE32+ x86_64 IL-only startup using the native ARM64 CLR contract.
+
+The required terminal marker is `VKMT_WINE_MONO_11_2_0_ALL_OK`. Wine now
+classifies same-bitness PE32+ IL-only images as native 64-bit managed
+processes before stack creation, image-view registration, and ARM64EC provider
+startup. Their raw AMD64 PE header is preserved for file identity, but no x64
+instructions exist to emulate. Native-code x86_64 images are unchanged and
+continue through `xtajit64`; the post-change single-prefix regression passes
+ARM64, ARM64EC, x86_64, and i386. Evidence is in
+`docs/validation/wine-mono-11.2.0-20260729/RESULTS.md`. No diagnostic prefix is
+retained.
+
+Remaining Phase E scope: broaden native Java, add Windows Java i386/x86_64,
+then stage/gate .NET Framework and modern .NET/PowerShell, followed by opt-in
+Python and Node fixtures.

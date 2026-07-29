@@ -95,26 +95,30 @@ Evidence: `docs/validation/installer-completion-20260728/RESULTS.md`.
 5. Add opt-in Python and Node.js Windows runtime fixtures for launchers that
    embed those engines.
 
+Status (2026-07-29): the private Oracle JRE 8u501 ARM64 payload is pinned and
+staged. Official Wine Mono 11.2.0 is pinned from GitHub, its x86 and x86_64
+engines are preserved unchanged, and a source-built ARM64 engine is integrated
+with the VKMT ABI/W^X contract. Wine's process, Unix loader, Windows loader,
+and server image-view paths now agree that same-bitness PE32+ IL-only images
+use the native 64-bit CLR rather than starting `xtajit64`. One disposable
+prefix passes managed compile and direct execution gates for ARM64, x86_64,
+and i386, followed by the ordinary ARM64/ARM64EC/x86_64/i386 single-prefix
+regression. Native-Java breadth, Windows Java, .NET Framework/modern
+.NET/PowerShell, and opt-in Python/Node remain.
+
 ## Phase F — common game/application redistributables
 
-Stage from pinned, licensed redistributable inputs and gate:
+**Closed by scope decision (2026-07-29).**
 
-- D3DCompiler plus XAudio/XACT redistributables. Legacy D3DX9/10/11
-  compatibility packages are intentionally out of scope.
-- Visual C++ 2005 through 2022, UCRT, ATL, and MFC.
-- XNA 3.1/4.0, FAudio/FNA, OpenAL, PhysX, and common media codecs.
-- MSXML, core fonts, DirectShow/Media Foundation, Quartz, MIDI, and
-  GStreamer-backed audio/video playback.
+The current Wine build already contains the desired D3DCompiler,
+XAudio2/XACT, UCRT/Visual C++/ATL, MSXML, Quartz, Media Foundation, MIDI,
+WineGStreamer, and Windows codec modules. XNA/FNA and FAudio assets are
+preserved through MetalSharp. No additional Phase F staging, probing, or
+validation is required. Legacy D3DX9/10/11, MFC, OpenAL, PhysX, and additional
+core-font payload work are outside the completion roadmap.
 
-Each component needs detection, idempotent installation, repair, and
-architecture-aware staging; presence of an installer is not an acceptance
-result.
-
-## Phase G — enterprise and peripheral services
-
-Gate LDAP, Kerberos/GSSAPI, NTLM, ODBC, CUPS printing, smart-card/PCSC,
-USB/HID, serial ports, scanners/cameras where macOS exposes them, COM/DCOM,
-services, scheduled tasks, shell associations, and certificate-root updates.
+There is no Phase G. Enterprise services and additional peripheral coverage
+are explicitly outside this runtime's completion roadmap.
 
 ## Final acceptance
 
