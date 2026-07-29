@@ -114,6 +114,9 @@ x86 Client VM through FEX/WoW64, while x86_64 uses the Temurin 8 Server VM
 through `xtajit64`. The plan freezes the golden providers, stages candidates
 side by side, and gates interpreter, JNI/services, JIT/W^X, TSO atomics,
 safepoints, and unified-prefix regressions before promotion.
+The Java lane retains FEX's x86 TSO model but requires software ARM64 ordering
+at final emission: aligned `LDAR`/`STLR`, barrier-backed unaligned accesses,
+and acquire/release locked atomics. It may not depend on Apple hardware TSO.
 
 ## Phase F — common game/application redistributables
 

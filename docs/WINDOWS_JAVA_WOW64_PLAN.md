@@ -22,6 +22,26 @@ source, not permission to overwrite the golden providers. A Java candidate
 must be built to a side directory and selected through
 `VKMT_XTAJIT_SOURCE`/`VKMT_XTAJIT_SHA256`.
 
+### Mandatory memory-model invariant
+
+Do not remove or bypass FEX's x86 TSO semantic model. Also do not depend on
+Apple hardware TSO being present. Guest operations remain classified as TSO
+through the IR, and the final AArch64 emitter supplies their ordering:
+
+- naturally aligned scalar load: size-appropriate `LDAR`;
+- naturally aligned scalar store: size-appropriate `STLR`;
+- unaligned scalar load: ordinary `LDR` followed by `DMB ISHLD`;
+- unaligned scalar store: `DMB ISH` followed by ordinary `STR`;
+- locked read/modify/write: acquire/release atomic operation or
+  `LDAXR`/`STLXR` loop, with a serialized fallback for split or unaligned
+  atomics.
+
+The alignment-selection sequence must preserve NZCV. Darwin W^X means the
+unaligned form is emitted before publication; it may not depend on patching an
+RX JIT page after an alignment fault. The existing candidate's optional
+`LDAPR` path is not the conservative Java baseline: use `LDAR` unless a
+separate cumulative-ordering proof and fixture justify otherwise.
+
 ## Pinned inputs discovered during scoping
 
 As of 2026-07-29, Eclipse Temurin publishes different latest Java 8 levels for
@@ -59,7 +79,7 @@ loading, and performance counters. The i386 VM also contains `cmpxchg8b`,
 | 32-bit heap, code-cache and mapped-JAR addresses | Wine canonical guest-memory manager | `dlls/wow64/memory.c`, `dlls/wow64/virtual.c`, `dlls/ntdll/unix/virtual.c` |
 | Guest effective-address translation | FEX i386 page-table path | `JIT/MemoryOps.cpp`, `JIT/AtomicOps.cpp`, `JIT/JITClass.h` |
 | JIT RW→RX, instruction-cache flush and SMC eviction | Wine VM notifications plus FEX code cache | `dlls/wow64/virtual.c`, `Source/Windows/WOW64/Module.cpp`, `CPUBackend.cpp`, `JIT/JIT.cpp`, `Core.cpp`, `CodeCache.cpp` |
-| x86 TSO, volatile accesses, CAS and unaligned access | FEX memory/atomic emitter | `JIT/MemoryOps.cpp`, `JIT/AtomicOps.cpp`, `Common/TSOHandlerConfig.h`, `ArchHelpers/Arm64Emitter.*` |
+| x86 TSO, volatile accesses, CAS and unaligned access | FEX TSO IR plus final ARM64 memory/atomic emitter; never host TSO | `JIT/MemoryOps.cpp`, `JIT/AtomicOps.cpp`, `Common/TSOHandlerConfig.h`, `ArchHelpers/Arm64Emitter.*` |
 | TLS and segment bases | Wine loader/WoW64 plus FEX CPU state | `dlls/ntdll/loader.c`, `dlls/wow64/syscall.c`, `Source/Windows/WOW64/Module.cpp`, `CoreState.h` |
 | Implicit null checks, stack guards, SEH and continuation | Wine exception dispatch plus FEX reconstruction | `dlls/wow64/syscall.c`, `dlls/ntdll/unix/signal_arm64.c`, `Source/Windows/WOW64/Module.cpp` |
 | Safepoint suspension and thread context | Wine thread syscalls plus `BTCpu*Context` | `dlls/wow64/process.c`, `dlls/wow64/syscall.c`, `Source/Windows/WOW64/Module.cpp` |
@@ -83,20 +103,26 @@ The first failing gate selects the owner.
 4. Build candidates only under `build/fex-wow64-java/`. Adjust the existing
    FEX builder before using it so it cannot replace the canonical
    `xtajit.dll`.
+5. Add a provider-mode audit proving Darwin uses software TSO lowering, then
+   disassemble focused aligned, unaligned, and locked fixtures. Require the
+   exact `LDAR`/`STLR` or `LDR`/`DMB`/`STR` families above before launching
+   either JVM.
 
 Gate: inputs, hashes, architecture manifests, and provider selection are
-deterministic; the golden provider files remain byte-identical.
+deterministic; the golden provider files remain byte-identical; software TSO
+lowering is visible in generated ARM64 code.
 
 ## Phase J1 — loader and interpreter gate
 
 At each step, run x86_64 first as the fixture/control lane and then i386 in the
 same fresh prefix:
 
-1. `java.exe -version`;
-2. i386 `-client -Xint -version`, x86_64 `-server -Xint -version`;
-3. class-path execution;
-4. executable-JAR execution;
-5. reflection, class loading, ZIP/JAR reads, and clean VM shutdown.
+1. run the focused TSO publication/CAS preflight with the selected provider;
+2. `java.exe -version`;
+3. i386 `-client -Xint -version`, x86_64 `-server -Xint -version`;
+4. class-path execution;
+5. executable-JAR execution;
+6. reflection, class loading, ZIP/JAR reads, and clean VM shutdown.
 
 Require logs to identify the expected VM and data model: i386 Client VM/32-bit
 and x86_64 Server VM/64-bit. No JIT fix is considered during this phase.
@@ -153,9 +179,11 @@ method counts.
 
 ## Phase J4 — x86 memory-model acceptance
 
-Run the golden i386 provider first. FEX already defaults scalar TSO emulation
-on; vector and REP memcpy/set TSO are intentionally off. Do not globally
-enable more modes without a fixture proving the need.
+Run the golden i386 provider first. FEX's x86 TSO model remains enabled, but
+Darwin must always use software lowering at the final ARM64 emitter. It must
+not call `SetHardwareTSOSupport(true)` or otherwise suppress TSO IR based on a
+host capability. Vector and REP memcpy/set TSO are intentionally separate
+modes; do not globally enable them without a fixture proving the need.
 
 The acceptance suite covers:
 
@@ -168,12 +196,13 @@ The acceptance suite covers:
 7. GC write barriers while mutator threads are active.
 
 If the golden provider fails an unaligned TSO access, evaluate the existing
-side candidate that keeps aligned accesses on LDAR/STLR and emits
-LDR/STR plus the required DMB only for unaligned addresses. This avoids
-runtime backpatching of Darwin RX pages. Flags must be preserved across the
-alignment test. Strict split-lock mode is enabled only for a reproduced
-cross-boundary atomic. Vector or memcpy TSO is enabled only for a failing
-vector/REP ordering fixture.
+side candidate after making its final lowering match the mandatory invariant:
+aligned accesses use `LDAR`/`STLR`; unaligned loads use `LDR` then
+`DMB ISHLD`; unaligned stores use `DMB ISH` then `STR`. This avoids runtime
+backpatching of Darwin RX pages. Flags must be preserved across the alignment
+test. Strict split-lock mode is enabled only for a reproduced cross-boundary
+atomic. Vector or memcpy TSO is enabled only for a failing vector/REP ordering
+fixture.
 
 Gate: deterministic checksums and sequence counts across repeated high-load
 runs with no torn 64-bit atomic, missed publication, deadlock, or exception

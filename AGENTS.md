@@ -916,3 +916,10 @@ baseline. The current FEX worktree's uncommitted TSO/unaligned/W^X candidates
 must build and stage beside it, never over it. No Windows JRE or candidate
 provider was staged during this planning pass, and all transient archive
 inspection roots were removed.
+
+For Java, preserve FEX's x86 TSO classification but never rely on host
+hardware TSO. Before either JVM launches, generated ARM64 code must prove
+aligned `LDAR`/`STLR`, unaligned `LDR; DMB ISHLD` and `DMB ISH; STR`, and
+acquire/release locked-RMW lowering. Preserve NZCV across alignment
+selection, do not backpatch Darwin RX pages, and do not use the candidate
+`LDAPR` shortcut as the conservative Java baseline.
