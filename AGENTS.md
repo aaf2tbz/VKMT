@@ -195,6 +195,26 @@ diagnostic only; Wine's server/Unix provider boundary is native ARM64.
 - Evidence is in `docs/validation/input-runtime-20260728/RESULTS.md`. The
   disposable prefix was stopped through its exact wineserver and removed.
 
+### 2026-07-28 — i386 NSIS lifecycle accepted
+
+- `scripts/build-nsis-fixture.sh` reproducibly builds the relocation-stripped
+  i386 NSIS fixture with the in-tree LLVM-MinGW compiler and native ARM64
+  `makensis`.
+- `scripts/probe-nsis-runtime.sh` passes a fresh-prefix silent install,
+  installed i386 payload execution, in-place uninstall-section cleanup, and
+  registry removal. The in-place `_?=` route intentionally leaves only the
+  running `uninstall.exe`; the exact disposable prefix is then stopped and
+  trashed.
+- Wine's ARM64 Darwin WoW64 arena reserves DOS compatibility memory at guest
+  `0x110000` instead of allowing it to consume the conventional `0x400000`
+  PE image base. `WINEPRELOADRESERVE` guest bounds are translated into the
+  biased host arena, allowing relocation-stripped i386 images to load at
+  their preferred base without breaking FEX.
+- Post-change regressions passed the complete Phase 4 i386 contract, the
+  single-prefix ARM64/ARM64EC/x86_64/i386 gate, every MSI lifecycle mode, and
+  the preservation inventory. Evidence is in
+  `docs/validation/nsis-runtime-20260728/RESULTS.md`.
+
 ### 2026-07-26 inventory result
 
 The active build has the ARM64, x86_64, and i386 Wine `dxgi`, `d3d12`, and
