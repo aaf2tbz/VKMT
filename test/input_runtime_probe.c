@@ -14,6 +14,8 @@ typedef HRESULT (WINAPI *directinput_create_fn)(HINSTANCE, DWORD, LPDIRECTINPUTA
 
 static unsigned int dinput8_gamepads, dinput8_all, dinput7_gamepads, dinput7_all;
 static int xinput_connected;
+static int xinput_activity;
+static int xinput_vibration;
 
 static BOOL CALLBACK count_dinput8(const DIDEVICEINSTANCEA *device, void *context)
 {
@@ -102,8 +104,64 @@ static int probe_xinput_dll(const char *name)
             FreeLibrary(module);
             return 0;
         }
-        printf("XINPUT_CONNECTED dll=%s index=%lu packet=%lu buttons=%#x subtype=%u\n",
-               name, index, state.dwPacketNumber, state.Gamepad.wButtons, caps.SubType);
+        printf("XINPUT_CONNECTED dll=%s index=%lu packet=%lu buttons=%#x "
+               "lt=%u rt=%u lx=%d ly=%d rx=%d ry=%d subtype=%u flags=%#x\n",
+               name, index, state.dwPacketNumber, state.Gamepad.wButtons,
+               state.Gamepad.bLeftTrigger, state.Gamepad.bRightTrigger,
+               state.Gamepad.sThumbLX, state.Gamepad.sThumbLY,
+               state.Gamepad.sThumbRX, state.Gamepad.sThumbRY,
+               caps.SubType, caps.Flags);
+
+        if (!strcmp(name, "xinput1_4.dll"))
+        {
+            XINPUT_STATE previous = state;
+            unsigned int sample;
+
+            if (!(caps.Flags & XINPUT_CAPS_FFB_SUPPORTED))
+            {
+                printf("FAIL %s controller lacks force-feedback capability\n", name);
+                FreeLibrary(module);
+                return 0;
+            }
+            for (sample = 0; sample < 40; ++sample)
+            {
+                Sleep(50);
+                memset(&state, 0, sizeof(state));
+                if (get_state(index, &state) != ERROR_SUCCESS) break;
+                if (memcmp(&state.Gamepad, &previous.Gamepad, sizeof(state.Gamepad)))
+                {
+                    xinput_activity = 1;
+                    printf("XINPUT_ACTIVITY index=%lu packet=%lu buttons=%#x "
+                           "lt=%u rt=%u lx=%d ly=%d rx=%d ry=%d\n",
+                           index, state.dwPacketNumber, state.Gamepad.wButtons,
+                           state.Gamepad.bLeftTrigger, state.Gamepad.bRightTrigger,
+                           state.Gamepad.sThumbLX, state.Gamepad.sThumbLY,
+                           state.Gamepad.sThumbRX, state.Gamepad.sThumbRY);
+                    previous = state;
+                }
+            }
+
+            vibration.wLeftMotorSpeed = 16000;
+            vibration.wRightMotorSpeed = 32000;
+            result = set_state(index, &vibration);
+            if (result != ERROR_SUCCESS)
+            {
+                printf("FAIL %s nonzero-vibration[%lu]=%lu\n", name, index, result);
+                FreeLibrary(module);
+                return 0;
+            }
+            Sleep(400);
+            memset(&vibration, 0, sizeof(vibration));
+            result = set_state(index, &vibration);
+            if (result != ERROR_SUCCESS)
+            {
+                printf("FAIL %s vibration-reset[%lu]=%lu\n", name, index, result);
+                FreeLibrary(module);
+                return 0;
+            }
+            xinput_vibration = 1;
+            printf("XINPUT_VIBRATION_API_OK index=%lu\n", index);
+        }
     }
     printf("XINPUT_DLL_OK %s connected=%d\n", name, connected);
     FreeLibrary(module);
@@ -205,6 +263,11 @@ int main(void)
     if (!probe_dinput8()) return 30;
     if (!probe_dinput7()) return 31;
     puts("INPUT_PROVIDER_READY");
+    if (xinput_connected)
+    {
+        puts(xinput_activity ? "INPUT_LIVE_STATE_CHANGE_OK" : "INPUT_LIVE_STATE_CHANGE_NOT_OBSERVED");
+        puts(xinput_vibration ? "INPUT_NONZERO_VIBRATION_API_OK" : "INPUT_NONZERO_VIBRATION_API_FAIL");
+    }
     puts(xinput_connected || dinput8_gamepads || dinput7_gamepads
          ? "INPUT_ATTACHED_CONTROLLER_BEHAVIOR_OK"
          : "INPUT_NO_CONTROLLER_ATTACHED");

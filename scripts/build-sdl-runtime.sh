@@ -122,6 +122,31 @@ mkdir -p "$STAGE/include"
 cmake -E copy_directory "$SDL2_SOURCE/include" "$STAGE/include/SDL2"
 cmake -E copy_directory "$SDL3_SOURCE/include" "$STAGE/include/SDL3"
 
+# winebus loads SDL2 as a native Unix-side controller provider.  Build it from
+# the same pinned source and stage it beside ntdll, which is on this Wine
+# build's native dylib search path.
+NATIVE_BUILD="$BUILD_ROOT/SDL2-$SDL2_VERSION/native-arm64"
+NATIVE_STAGE="$VKMT/wine/build-ec/dlls/ntdll/libSDL2-2.0.0.dylib"
+cmake --fresh -S "$SDL2_SOURCE" -B "$NATIVE_BUILD" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_OSX_ARCHITECTURES=arm64 \
+    -DSDL_SHARED=ON \
+    -DSDL_STATIC=OFF \
+    -DSDL_TEST=OFF \
+    -DSDL_TESTS=OFF \
+    -DSDL_INSTALL_TESTS=OFF \
+    -DSDL_EXAMPLES=OFF \
+    >"$NATIVE_BUILD.configure.log"
+cmake --build "$NATIVE_BUILD" --target SDL2 -j"$JOBS"
+install -m 0755 "$NATIVE_BUILD/libSDL2-2.0.0.dylib" "$NATIVE_STAGE"
+install_name_tool -id '@rpath/libSDL2-2.0.0.dylib' "$NATIVE_STAGE"
+codesign --force --sign - "$NATIVE_STAGE"
+test "$(/usr/bin/lipo -archs "$NATIVE_STAGE")" = arm64
+if otool -L "$NATIVE_STAGE" | tail -n +2 | grep -E '/(opt/homebrew|usr/local)/'; then
+    echo "Native SDL2 provider contains a non-relocatable package-manager dependency" >&2
+    exit 1
+fi
+
 {
     echo "SDL2_VERSION=$SDL2_VERSION"
     echo "SDL2_UPSTREAM_COMMIT=$SDL2_UPSTREAM_COMMIT"
@@ -129,6 +154,7 @@ cmake -E copy_directory "$SDL3_SOURCE/include" "$STAGE/include/SDL3"
     echo "SDL3_VERSION=$SDL3_VERSION"
     echo "SDL3_UPSTREAM_COMMIT=$SDL3_UPSTREAM_COMMIT"
     echo "SDL3_COMMIT=$SDL3_COMMIT"
+    echo "NATIVE_SDL2_PROVIDER=dlls/ntdll/libSDL2-2.0.0.dylib"
 } >"$STAGE/manifest.txt"
 
 echo "SDL_RUNTIME_STAGE_OK $STAGE"

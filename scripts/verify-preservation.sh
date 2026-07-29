@@ -107,6 +107,18 @@ for spec in \
   done
 done
 present "$WINE_BUILD/sdl-runtime/manifest.txt"
+native_sdl2="$WINE_BUILD/dlls/ntdll/libSDL2-2.0.0.dylib"
+present "$native_sdl2"
+if [ -e "$native_sdl2" ]; then
+  if [ "$(/usr/bin/lipo -archs "$native_sdl2")" = arm64 ] &&
+     ! otool -L "$native_sdl2" | tail -n +2 |
+       grep -Eq '/(opt/homebrew|usr/local)/'; then
+    printf '%s\n' 'present  native SDL2 winebus provider is ARM64-only and relocatable'
+  else
+    printf '%s\n' 'MISSING  native SDL2 winebus provider validation failed' >&2
+    missing=1
+  fi
+fi
 
 printf '%s\n' 'DXMT stage (must be present before DXMT is claimed as runnable):'
 for runtime in aarch64-windows/winemetal.dll aarch64-unix/winemetal.so aarch64-unix/libunwind.1.dylib; do

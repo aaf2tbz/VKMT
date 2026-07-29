@@ -89,7 +89,8 @@ wineserver shutdown, and disposable-prefix cleanup.
 
 Stage from pinned, licensed redistributable inputs and gate:
 
-- DirectX legacy D3DX9/10/11, D3DCompiler, XAudio/XACT, and XInput redists.
+- D3DCompiler plus XAudio/XACT redistributables. Legacy D3DX9/10/11
+  compatibility packages are intentionally out of scope.
 - Visual C++ 2005 through 2022, UCRT, ATL, and MFC.
 - XNA 3.1/4.0, FAudio/FNA, OpenAL, PhysX, and common media codecs.
 - MSXML, core fonts, DirectShow/Media Foundation, Quartz, MIDI, and

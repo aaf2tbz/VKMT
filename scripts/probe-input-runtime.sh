@@ -15,12 +15,13 @@ XTAJIT="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
 WOW64="$BUILD/dlls/wow64/aarch64-windows/wow64.dll"
 WOW64WIN="$BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"
 WINEBUS="$BUILD/dlls/winebus.sys/winebus.so"
+NATIVE_SDL2="$BUILD/dlls/ntdll/libSDL2-2.0.0.dylib"
 
 for required in "$SOURCE" "$WINE" "$WINESERVER" "$WINEBOOT" "$XTAJIT64" \
-    "$XTAJIT" "$WOW64" "$WOW64WIN" "$WINEBUS"; do
+    "$XTAJIT" "$WOW64" "$WOW64WIN" "$WINEBUS" "$NATIVE_SDL2"; do
   test -e "$required" || { echo "Missing input-runtime artifact: $required" >&2; exit 1; }
 done
-for macho in "$WINE" "$WINESERVER" "$WINEBUS"; do
+for macho in "$WINE" "$WINESERVER" "$WINEBUS" "$NATIVE_SDL2"; do
   test "$(/usr/bin/lipo -archs "$macho")" = arm64 || {
     echo "Non-ARM64 host artifact: $macho" >&2
     exit 1
@@ -111,6 +112,14 @@ run_wine "$run_root/wineboot.log" "$WINEBOOT" --init || {
   exit 1
 }
 echo "INPUT_WINEBOOT_OK"
+stop_server
+
+# SDL supplies normalized controller mappings and haptics on macOS.  Disable
+# the parallel raw IOHID joystick provider so one physical pad is not exposed
+# twice with an unnormalized HID descriptor.
+run_wine "$run_root/winebus-registry.log" reg.exe add \
+  'HKLM\System\CurrentControlSet\Services\WineBus' \
+  /v DisableHidraw /t REG_DWORD /d 1 /f
 stop_server
 
 for arch in ${VKMT_INPUT_ARCHES:-arm64 arm64ec x86_64 i386}; do
