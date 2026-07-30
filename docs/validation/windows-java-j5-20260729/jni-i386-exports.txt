@@ -1,0 +1,35 @@
+
+File: /Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j5.epSHUh/vkmt-java-lifecycle-i386.dll
+Format: COFF-i386
+Arch: i386
+AddressSize: 32bit
+Export {
+  Ordinal: 1
+  Name: JNI_OnLoad
+  RVA: 0x1310
+}
+Export {
+  Ordinal: 2
+  Name: Java_VkmtWindowsJavaLifecycleProbe_nativeApcRoundtrip
+  RVA: 0x1650
+}
+Export {
+  Ordinal: 3
+  Name: Java_VkmtWindowsJavaLifecycleProbe_nativeAttachCallback
+  RVA: 0x1500
+}
+Export {
+  Ordinal: 4
+  Name: Java_VkmtWindowsJavaLifecycleProbe_nativeClose
+  RVA: 0x1750
+}
+Export {
+  Ordinal: 5
+  Name: Java_VkmtWindowsJavaLifecycleProbe_nativeRegisterWorker
+  RVA: 0x1330
+}
+Export {
+  Ordinal: 6
+  Name: Java_VkmtWindowsJavaLifecycleProbe_nativeSuspendContextResume
+  RVA: 0x1350
+}

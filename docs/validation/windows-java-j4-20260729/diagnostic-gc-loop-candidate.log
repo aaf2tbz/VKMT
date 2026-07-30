@@ -1,0 +1,24 @@
+VKMT_J4_STAGE_BEGIN round=0 stage=publication
+VKMT_J4_STAGE_OK round=0 stage=publication
+VKMT_J4_STAGE_OK round=0 stage=monitor
+VKMT_J4_STAGE_OK round=0 stage=atomic
+VKMT_J4_STAGE_OK round=0 stage=queue-once
+VKMT_J4_STAGE_OK round=0 stage=native-memory
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x79b8bae5, pid=372, tid=0x00000180
+#
+# JRE version: OpenJDK Runtime Environment (8.0_472-b08) (build 1.8.0_472-b08)
+# Java VM: OpenJDK Client VM (25.472-b08 mixed mode windows-x86 )
+# Problematic frame:
+# V  [jvm.dll+0x1abae5]
+#
+# Failed to write core dump. Minidumps are not enabled by default on client versions of Windows
+#
+# An error report file with more information is saved as:
+# C:\users\averyfelts\AppData\Local\Temp\\hs_err_pid372.log
+#
+# If you would like to submit a bug report, please visit:
+#   https://github.com/adoptium/adoptium-support/issues
+#

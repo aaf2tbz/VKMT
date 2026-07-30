@@ -10,7 +10,9 @@ XTAJIT_SOURCE="${VKMT_XTAJIT_SOURCE:-$SOURCE/xtajit-arm64-known-good.dll}"
 XTAJIT64_STAGE="$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll"
 XTAJIT_STAGE="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
 XTAJIT64_SHA256="${VKMT_XTAJIT64_SHA256:-7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6}"
-XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-ea523a42ca8e7965371122bd7be1eb6b973cded50ecda5da1465b2961ad36479}"
+XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073}"
+CANONICAL_XTAJIT64_SOURCE="$SOURCE/xtajit64-arm64ec-known-good.dll"
+CANONICAL_XTAJIT_SOURCE="$SOURCE/xtajit-arm64-known-good.dll"
 mode=stage
 prefix=
 
@@ -46,7 +48,20 @@ esac
 check "$XTAJIT64_SHA256" "$XTAJIT64_SOURCE"
 check "$XTAJIT_SHA256" "$XTAJIT_SOURCE"
 
-if test "$mode" != verify-prefix; then
+stage_build=1
+if test "$mode" = prefix &&
+   { test "$XTAJIT64_SOURCE" != "$CANONICAL_XTAJIT64_SOURCE" ||
+     test "$XTAJIT_SOURCE" != "$CANONICAL_XTAJIT_SOURCE"; }; then
+  stage_build=0
+fi
+if test "${VKMT_PROVIDER_STAGE_BUILD:-$stage_build}" = 1 &&
+   test "$mode" != verify-prefix; then
+  if { test "$XTAJIT64_SOURCE" != "$CANONICAL_XTAJIT64_SOURCE" ||
+       test "$XTAJIT_SOURCE" != "$CANONICAL_XTAJIT_SOURCE"; } &&
+     test "${VKMT_PROVIDER_PROMOTE:-0}" != 1; then
+    echo "Refusing to promote candidate providers without VKMT_PROVIDER_PROMOTE=1" >&2
+    exit 1
+  fi
   install -m 0644 "$XTAJIT64_SOURCE" "$XTAJIT64_STAGE"
   install -m 0644 "$XTAJIT_SOURCE" "$XTAJIT_STAGE"
   check "$XTAJIT64_SHA256" "$XTAJIT64_STAGE"

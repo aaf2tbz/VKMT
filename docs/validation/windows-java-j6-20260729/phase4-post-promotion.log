@@ -1,0 +1,59 @@
+Phase 4 i386 DLLs staged: 642
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/i386-phase4.hx50mA/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/i386-phase4.hx50mA/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/i386-phase4.hx50mA/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/i386-phase4.hx50mA/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/i386-phase4.hx50mA/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/i386-phase4.hx50mA/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_VERIFY_PREFIX_OK
+Phase 4 WoW64 system contract passed
+P4_LOADLIBRARY_OK
+P4_SYSCALL_RETURN_OK
+P4_TLS_MAIN_OK
+P4_TRACE_CONTEXT_BEGIN
+P4_TRACE_CONTEXT_THREAD_CREATED
+P4_TRACE_CONTEXT_THREAD_SUSPENDED
+P4_TRACE_CONTEXT_GET_BEFORE
+P4_TRACE_CONTEXT_SET
+P4_TRACE_CONTEXT_GET_AFTER
+P4_TRACE_CONTEXT_THREAD_RESUMED
+P4_TRACE_CONTEXT_THREAD_EXITED
+P4_CONTEXT_OK
+P4_TRACE_SEH_BEGIN
+P4_TRACE_SEH_RAISE_RETURNED
+P4_TRACE_SEH_ACCESS_RETURNED
+P4_SEH_OK
+P4_TRACE_APC_BEGIN
+P4_TRACE_APC_WORKER_ENTER
+P4_TRACE_APC_WORKER_DYNAMIC_TLS
+P4_TRACE_APC_WORKER_DLL_TLS
+P4_TRACE_APC_WORKER_ALERTABLE_WAIT
+P4_TRACE_APC_WORKER_READY
+P4_TRACE_APC_QUEUED
+P4_TRACE_APC_CALLBACK_1
+P4_TRACE_APC_CALLBACK_2
+P4_TRACE_APC_WAIT_IO_COMPLETION
+P4_TRACE_APC_WORKER_EXIT
+P4_TRACE_APC_WORKER_JOINED
+P4_APC_OK
+P4_SECOND_THREAD_OK
+P4_TRACE_USER_CALLBACK_BEGIN
+P4_TRACE_USER_CALLBACK_QUEUED
+P4_TRACE_USER_CALLBACK_ENTER
+P4_TRACE_USER_CALLBACK_RETURNED
+P4_USER_CALLBACK_OK
+P4_THREAD_LIFECYCLE_OK
+P4_ALL_SYSTEM_CONTRACT_OK
+VKMT i386 WoW64 execution contract passed

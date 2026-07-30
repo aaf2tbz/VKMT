@@ -1,0 +1,30 @@
+    792    1     n       VkmtWindowsJavaJitProbe::nativeExecutableMemory (native)   (static)
+VKMT_J3_EXECMEM_OK transitions=257 flushes=257 patches=128
+    802    2    b        VkmtWindowsJavaJitProbe::hotLoop (34 bytes)
+VKMT_J3_HOT_OK checksum=64bba351d3
+VKMT_J3_XCOMP_CONTROL_OK checksum=339a29d2bc
+VKMT_J3_DEOPT_OK mode=tiered-covered checksum=339a29d2bc
+   1052    3    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1057    4    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1063    5    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1067    6    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=0
+   1117    7    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1122    8    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1128    9    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1133   10    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=1
+   1145   11    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1150   12    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1155   13    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1161   14    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=2
+   1172   15    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1178   16    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1183   17    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   1189   18    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=3
+   1197   19    b        VkmtWindowsJavaJitProbe::warmExceptionSites (48 bytes)
+VKMT_J3_EXCEPTION_WARMUP_OK checksum=4c573b0d3
+VKMT_WINDOWS_JAVA_J3_OK model=32 vm=OpenJDK Client VM mode=i386-xcomp compilationTimeMs=45 loaderChecksum=2660e76fe0 exceptions=VKMT_J3_EXCEPTIONS_OK
+CodeCache: size=32768Kb used=663Kb max_used=663Kb free=32104Kb

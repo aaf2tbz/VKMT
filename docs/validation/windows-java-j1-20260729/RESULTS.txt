@@ -1,0 +1,12 @@
+candidate_sha256=f7ace1980b33e270c9ee8b9d240705a82bcface99e868ff65895a3dbcfd4d247
+golden_i386_sha256=ea523a42ca8e7965371122bd7be1eb6b973cded50ecda5da1465b2961ad36479
+golden_x86_64_sha256=7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6
+prefix_order=x86_64,i386
+JAVA_TSO_PREFLIGHT_OK checksum=00000000a5a50ff0 aligned32=12345678 aligned64=1122334455667788
+VKMT_WINDOWS_JAVA_J1_OK mode=classpath model=64 vm=OpenJDK 64-Bit Server VM os.arch=amd64 version=1.8.0_492 dynamic=VKMT_J1_REFLECTION_OK zip=VKMT_J1_ZIP_OK
+VKMT_WINDOWS_JAVA_J1_OK mode=jar model=64 vm=OpenJDK 64-Bit Server VM os.arch=amd64 version=1.8.0_492 dynamic=VKMT_J1_REFLECTION_OK zip=VKMT_J1_ZIP_OK
+VKMT_WINDOWS_JAVA_J1_OK mode=classpath model=32 vm=OpenJDK Client VM os.arch=x86 version=1.8.0_472 dynamic=VKMT_J1_REFLECTION_OK zip=VKMT_J1_ZIP_OK
+VKMT_WINDOWS_JAVA_J1_OK mode=jar model=32 vm=OpenJDK Client VM os.arch=x86 version=1.8.0_472 dynamic=VKMT_J1_REFLECTION_OK zip=VKMT_J1_ZIP_OK
+x86_64_interpreter=-server -Xint
+i386_interpreter=-client -Xint
+exact_shutdown=1

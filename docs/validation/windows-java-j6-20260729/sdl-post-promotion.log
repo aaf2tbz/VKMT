@@ -1,0 +1,29 @@
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/sdl-runtime.1UgbeA/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/sdl-runtime.1UgbeA/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/sdl-runtime.1UgbeA/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/sdl-runtime.1UgbeA/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/sdl-runtime.1UgbeA/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/sdl-runtime.1UgbeA/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_VERIFY_PREFIX_OK
+VKMT_SDL_X86_64_MOVNT_OK
+VKMT_SDL2_AARCH64_OK
+VKMT_SDL3_AARCH64_OK
+VKMT_SDL2_ARM64EC_OK
+VKMT_SDL3_ARM64EC_OK
+VKMT_SDL2_X86_64_OK
+VKMT_SDL3_X86_64_OK
+VKMT_SDL2_I386_OK
+VKMT_SDL3_I386_OK
+VKMT_SDL2_SDL3_ALL_ARCHITECTURES_OK

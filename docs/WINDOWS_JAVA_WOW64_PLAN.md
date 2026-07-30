@@ -9,10 +9,10 @@ the Windows x86_64 JVM executes through `xtajit64.dll`. Windows JNI libraries
 must match the guest JVM architecture. Neither guest JVM may load an ARM64
 Mach-O JNI library.
 
-The first implementation attempt must use the accepted providers unchanged:
+The canonical accepted providers after J6 are:
 
 - i386 `xtajit-arm64-known-good.dll`, SHA-256
-  `ea523a42ca8e7965371122bd7be1eb6b973cded50ecda5da1465b2961ad36479`;
+  `fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073`;
 - x86_64 `xtajit64-arm64ec-known-good.dll`, SHA-256
   `7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6`.
 
@@ -90,7 +90,7 @@ loading, and performance counters. The i386 VM also contains `cmpxchg8b`,
 This map is diagnostic ownership, not a list of files to edit preemptively.
 The first failing gate selects the owner.
 
-## Phase J0 — preserve and stage
+## Phase J0 — preserve and stage — complete 2026-07-29
 
 1. Record root, Wine, and FEX revisions, all dirty nested-source paths, golden
    provider hashes, and the current four-architecture baseline.
@@ -112,7 +112,13 @@ Gate: inputs, hashes, architecture manifests, and provider selection are
 deterministic; the golden provider files remain byte-identical; software TSO
 lowering is visible in generated ARM64 code.
 
-## Phase J1 — loader and interpreter gate
+Acceptance evidence is
+`docs/validation/windows-java-j0-20260729/RESULTS.md`. The retained,
+source-integrated side baseline is `third_party/FEX-2607-java-baseline`; its
+accepted candidate is deliberately not promoted before the later Java and
+WoW64 regression phases.
+
+## Phase J1 — loader and interpreter gate — complete 2026-07-29
 
 At each step, run x86_64 first as the fixture/control lane and then i386 in the
 same fresh prefix:
@@ -136,7 +142,13 @@ Failure ownership:
 
 Gate: both interpreters run the same class and JAR fixtures and exit exactly.
 
-## Phase J2 — services and guest JNI gate under `-Xint`
+Acceptance evidence is
+`docs/validation/windows-java-j1-20260729/RESULTS.md`. One fresh prefix ran
+x86_64 first and i386 second; both reported interpreted mode, the correct
+Server/Client VM and data model, and identical class-path, executable-JAR,
+reflection/class-loader, and ZIP/JAR markers before exact shutdown.
+
+## Phase J2 — services and guest JNI gate under `-Xint` — complete 2026-07-29
 
 Use architecture-matched Windows JNI DLLs built with the in-tree LLVM-MinGW
 toolchain. Cover:
@@ -154,7 +166,17 @@ toolchain. Cover:
 Gate: identical semantic markers from i386 and x86_64, no host pointer in an
 i386 exception or Java-visible address, and no leaked child process.
 
-## Phase J3 — HotSpot JIT and executable-memory gate
+Acceptance evidence is
+`docs/validation/windows-java-j2-20260729/RESULTS.md`. One fresh prefix ran
+x86_64 first and i386 second. Architecture-matched JNI DLLs passed load,
+callback, exception, pointer-width, and native-thread attach/detach gates.
+Both interpreted JVMs then passed matching allocation/GC, direct and mapped
+buffer, class-loader, monitor/TLS, exception/stack-overflow, child-process,
+socket, local HTTPS, timer, sleep, and shutdown-hook fixtures. The i386
+Java-visible native address was `0x78925034`, the mapped files were removed
+at VM shutdown, and exact wineserver shutdown left no child or prefix.
+
+## Phase J3 — HotSpot JIT and executable-memory gate — complete 2026-07-29
 
 Enable one compiler at a time:
 
@@ -177,7 +199,23 @@ provider hash, and last completed Java marker.
 Gate: both JIT lanes complete twice in one prefix and report nonzero compiled
 method counts.
 
-## Phase J4 — x86 memory-model acceptance
+Acceptance evidence is
+`docs/validation/windows-java-j3-20260729/RESULTS.md`. One fresh prefix ran
+x86_64 Server tiered and scoped `-Xcomp`, then i386 Client/C1 and scoped
+`-Xcomp`. All four lanes passed with nonzero fixture compilation counts,
+nonzero HotSpot compilation time, four code-cache unload/reload waves, and
+architecture-matched RW→RX/patch/flush executable-memory fixtures. Tiered
+lanes own uncommon-trap and exception-resume acceptance; forced lanes own
+compile-on-first-use and repeated execution, with orchestration/reflection
+and exception-catching coordinators deliberately excluded from `-Xcomp`.
+
+The x86_64 side provider is
+`build/xtajit64-java-j3-final/provider/xtajit64.dll`, SHA-256
+`3c5878816c78dc670190e3587e76ace53e472c14a50972cd97808fda25636c3b`.
+It adds guest-byte validation, free/unmap invalidation, and
+`VKMT_X64_TIER0=0` for a precise dynamic-code lane. It is not promoted.
+
+## Phase J4 — x86 memory-model acceptance — complete 2026-07-29
 
 Run the golden i386 provider first. FEX's x86 TSO model remains enabled, but
 Darwin must always use software lowering at the final ARM64 emitter. It must
@@ -208,7 +246,16 @@ Gate: deterministic checksums and sequence counts across repeated high-load
 runs with no torn 64-bit atomic, missed publication, deadlock, or exception
 loop.
 
-## Phase J5 — safepoint and lifecycle stress
+Acceptance evidence is
+`docs/validation/windows-java-j4-20260729/RESULTS.md`. Three independent
+fresh-prefix repetitions selected the accepted golden provider without
+promotion. Each repetition passed a mixed/JIT volatile, monitor, CAS,
+queue/once, unaligned, REP, and `movntq` lane plus an interpreted
+allocation-driven GC/write-barrier lane. The split is intentional: J5 owns
+the separately reproduced interaction between repeated safepoints and
+compiled mutators.
+
+## Phase J5 — safepoint and lifecycle stress — complete 2026-07-29
 
 Combine the JIT and memory-model fixtures with:
 
@@ -225,7 +272,27 @@ Wine `NtContinueEx`, PE TLS, APC delivery, and second-thread isolation.
 Gate: 100 lifecycle iterations with exact process exit and no retained Java,
 Wine, or TLS-server process.
 
-## Phase J6 — unified-prefix and regression promotion
+Acceptance evidence is
+`docs/validation/windows-java-j5-20260729/RESULTS.md`. One fresh prefix
+completed 10 i386 Client-VM launches with 10 lifecycle iterations per launch:
+100/100 total. Every iteration ran four compiled/allocation workers through
+two full collections, JNI native-thread attach/callback/detach, PE TLS,
+compiled null/divide exceptions, APC delivery, and exact worker/JVM exit.
+Launch 0 additionally passed a controlled HotSpot
+SuspendThread/GetThreadContext/SetThreadContext/ResumeThread roundtrip.
+
+The accepted side provider is
+`build/fex-wow64-java-j5-divide/provider/xtajit.dll`, SHA-256
+`fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073`.
+The final targeted `wow64.dll` is SHA-256
+`3f252921f12806907c78a4bf07c1aa5a761ba7882d3b72bb876c1dc316f93e7b`.
+The provider invalidates only dirty writable-executable HotSpot code-cache
+ranges at non-alertable, quiescent wait boundaries; alertable APC waits are
+excluded. The complete Phase 4 i386/WoW64 contract passed afterward,
+including context, SEH, APC, second-thread, user-callback, and repeated-thread
+gates. No J5 or Phase 4 prefix/process remains.
+
+## Phase J6 — unified-prefix and regression promotion — complete 2026-07-29
 
 One fresh prefix must run, sequentially:
 
@@ -245,6 +312,30 @@ A candidate provider is promoted only after every affected regression passes.
 Then update the canonical provider hash, preservation inventory, recovery
 snapshot manifest, validation evidence, and `AGENTS.md`.
 
+Acceptance evidence is
+`docs/validation/windows-java-j6-20260729/RESULTS.md`. One clean prefix ran
+the native Oracle ARM64 Server VM handoff, Windows x86_64 Temurin Server VM,
+Windows i386 Temurin Client VM, then ARM64, ARM64EC, x86_64, and i386 Wine
+fixtures in that order. Exact shutdown passed with no retained process or
+prefix.
+
+The J5 i386 provider was promoted to the canonical source and Wine build
+copies at SHA-256
+`fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073`.
+The established x86_64 provider remains canonical at
+`7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6`.
+J6 proved that build-tree Wine resolves `xtajit64` from its build output
+rather than a prefix override. Promoting the experimental J3 x86_64 binary
+there exposed a reproducible tier-0 interpreter crash, so it was rejected and
+the byte-identical established provider was restored before final acceptance.
+
+After promotion, the complete Phase 4 WoW64 contract, i386 VKMT
+DXGI/D3D12/D3D11, Gecko/MSHTML, OpenGL through GLSL 4.5 Metal readback,
+SDL2/SDL3, and the ordinary four-architecture single-prefix gate all passed
+without provider override variables. All affected probes re-stage the
+selected providers after `wineboot` and delete only their exact disposable
+run root.
+
 ## Build and cleanup discipline
 
 - Never perform a full Wine rebuild for this work. Rebuild only the owning
@@ -253,8 +344,8 @@ snapshot manifest, validation evidence, and `AGENTS.md`.
 - Every probe root lives under
   `/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.*`.
 - Every exit path stops that root's exact `wine/build-ec/server/wineserver`
-  with `-k` and `-w`, stops local TLS/child processes, then moves only that
-  run root to Trash.
+  with `-k` and `-w`, stops local TLS/child processes, then deletes only that
+  exact disposable run root.
 - A retained diagnostic root must be removed before the next prefix is
   created.
 - Never overwrite or delete the golden Wine tree or providers. Candidate

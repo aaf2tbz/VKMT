@@ -1,0 +1,158 @@
+/Volumes/AverySSD/VKMT/third_party/wine-gecko-2.47.4/wine-gecko-2.47.4-x86.msi: OK
+/Volumes/AverySSD/VKMT/third_party/wine-gecko-2.47.4/wine-gecko-2.47.4-x86_64.msi: OK
+WINE_GECKO_2_47_4_STAGE_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/gecko-mshtml.D5Edoo/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/gecko-mshtml.D5Edoo/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/gecko-mshtml.D5Edoo/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/gecko-mshtml.D5Edoo/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/gecko-mshtml.D5Edoo/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/gecko-mshtml.D5Edoo/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_VERIFY_PREFIX_OK
+GECKO_REGISTRY_X64_I386_OK
+/Volumes/AverySSD/VKMT/test/x64emu/seh_x64.c:20:43: warning: format specifies type 'unsigned long' but the argument has type 'unsigned int' [-Wformat]
+   20 |     printf( "filter saw exception %lx\n", code ); fflush(stdout);
+      |                                   ~~~     ^~~~
+      |                                   %x
+1 warning generated.
+GECKO_PREREQ_X86_64_SEH_OK
+GECKO_PREREQ_I386_TIME_OK
+GECKO_PREREQ_I386_SOCKET_OK
+GECKO_PREREQ_I386_DNS_OK
+GECKO_PREREQ_I386_HTTPS_OK
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:14:59: warning: unused parameter 'iface' [-Wunused-parameter]
+   14 | static HRESULT WINAPI host_QueryInterface(IOleClientSite *iface, REFIID riid, void **out)
+      |                                                           ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:27:49: warning: unused parameter 'iface' [-Wunused-parameter]
+   27 | static ULONG WINAPI host_AddRef(IOleClientSite *iface)
+      |                                                 ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:32:50: warning: unused parameter 'iface' [-Wunused-parameter]
+   32 | static ULONG WINAPI host_Release(IOleClientSite *iface)
+      |                                                  ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:37:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   37 | static HRESULT WINAPI host_SaveObject(IOleClientSite *iface)
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:42:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   42 | static HRESULT WINAPI host_GetMoniker(IOleClientSite *iface, DWORD assign, DWORD which,
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:42:68: warning: unused parameter 'assign' [-Wunused-parameter]
+   42 | static HRESULT WINAPI host_GetMoniker(IOleClientSite *iface, DWORD assign, DWORD which,
+      |                                                                    ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:42:82: warning: unused parameter 'which' [-Wunused-parameter]
+   42 | static HRESULT WINAPI host_GetMoniker(IOleClientSite *iface, DWORD assign, DWORD which,
+      |                                                                                  ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:49:57: warning: unused parameter 'iface' [-Wunused-parameter]
+   49 | static HRESULT WINAPI host_GetContainer(IOleClientSite *iface, IOleContainer **container)
+      |                                                         ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:55:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   55 | static HRESULT WINAPI host_ShowObject(IOleClientSite *iface)
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:60:57: warning: unused parameter 'iface' [-Wunused-parameter]
+   60 | static HRESULT WINAPI host_OnShowWindow(IOleClientSite *iface, BOOL show)
+      |                                                         ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:60:69: warning: unused parameter 'show' [-Wunused-parameter]
+   60 | static HRESULT WINAPI host_OnShowWindow(IOleClientSite *iface, BOOL show)
+      |                                                                     ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:65:67: warning: unused parameter 'iface' [-Wunused-parameter]
+   65 | static HRESULT WINAPI host_RequestNewObjectLayout(IOleClientSite *iface)
+      |                                                                   ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:82:65: warning: unused parameter 'iface' [-Wunused-parameter]
+   82 | static HRESULT WINAPI services_QueryInterface(IServiceProvider *iface, REFIID riid, void **out)
+      |                                                                 ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:87:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   87 | static ULONG WINAPI services_AddRef(IServiceProvider *iface)
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:92:56: warning: unused parameter 'iface' [-Wunused-parameter]
+   92 | static ULONG WINAPI services_Release(IServiceProvider *iface)
+      |                                                        ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:97:63: warning: unused parameter 'iface' [-Wunused-parameter]
+   97 | static HRESULT WINAPI services_QueryService(IServiceProvider *iface, REFGUID service,
+      |                                                               ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:97:78: warning: unused parameter 'service' [-Wunused-parameter]
+   97 | static HRESULT WINAPI services_QueryService(IServiceProvider *iface, REFGUID service,
+      |                                                                              ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:98:53: warning: unused parameter 'riid' [-Wunused-parameter]
+   98 |                                              REFIID riid, void **out)
+      |                                                     ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:111:39: warning: initializing 'IOleClientSiteVtbl *' (aka 'struct IOleClientSiteVtbl *') with an expression of type 'const IOleClientSiteVtbl *' (aka 'const struct IOleClientSiteVtbl *') discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  111 | static IOleClientSite client_site = { &client_site_vtbl };
+      |                                       ^~~~~~~~~~~~~~~~~
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:112:46: warning: initializing 'IServiceProviderVtbl *' (aka 'struct IServiceProviderVtbl *') with an expression of type 'const IServiceProviderVtbl *' (aka 'const struct IServiceProviderVtbl *') discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  112 | static IServiceProvider service_provider = { &service_provider_vtbl };
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~
+20 warnings generated.
+GECKO_MSHTML_I386_OK
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:14:59: warning: unused parameter 'iface' [-Wunused-parameter]
+   14 | static HRESULT WINAPI host_QueryInterface(IOleClientSite *iface, REFIID riid, void **out)
+      |                                                           ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:27:49: warning: unused parameter 'iface' [-Wunused-parameter]
+   27 | static ULONG WINAPI host_AddRef(IOleClientSite *iface)
+      |                                                 ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:32:50: warning: unused parameter 'iface' [-Wunused-parameter]
+   32 | static ULONG WINAPI host_Release(IOleClientSite *iface)
+      |                                                  ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:37:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   37 | static HRESULT WINAPI host_SaveObject(IOleClientSite *iface)
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:42:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   42 | static HRESULT WINAPI host_GetMoniker(IOleClientSite *iface, DWORD assign, DWORD which,
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:42:68: warning: unused parameter 'assign' [-Wunused-parameter]
+   42 | static HRESULT WINAPI host_GetMoniker(IOleClientSite *iface, DWORD assign, DWORD which,
+      |                                                                    ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:42:82: warning: unused parameter 'which' [-Wunused-parameter]
+   42 | static HRESULT WINAPI host_GetMoniker(IOleClientSite *iface, DWORD assign, DWORD which,
+      |                                                                                  ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:49:57: warning: unused parameter 'iface' [-Wunused-parameter]
+   49 | static HRESULT WINAPI host_GetContainer(IOleClientSite *iface, IOleContainer **container)
+      |                                                         ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:55:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   55 | static HRESULT WINAPI host_ShowObject(IOleClientSite *iface)
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:60:57: warning: unused parameter 'iface' [-Wunused-parameter]
+   60 | static HRESULT WINAPI host_OnShowWindow(IOleClientSite *iface, BOOL show)
+      |                                                         ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:60:69: warning: unused parameter 'show' [-Wunused-parameter]
+   60 | static HRESULT WINAPI host_OnShowWindow(IOleClientSite *iface, BOOL show)
+      |                                                                     ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:65:67: warning: unused parameter 'iface' [-Wunused-parameter]
+   65 | static HRESULT WINAPI host_RequestNewObjectLayout(IOleClientSite *iface)
+      |                                                                   ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:82:65: warning: unused parameter 'iface' [-Wunused-parameter]
+   82 | static HRESULT WINAPI services_QueryInterface(IServiceProvider *iface, REFIID riid, void **out)
+      |                                                                 ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:87:55: warning: unused parameter 'iface' [-Wunused-parameter]
+   87 | static ULONG WINAPI services_AddRef(IServiceProvider *iface)
+      |                                                       ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:92:56: warning: unused parameter 'iface' [-Wunused-parameter]
+   92 | static ULONG WINAPI services_Release(IServiceProvider *iface)
+      |                                                        ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:97:63: warning: unused parameter 'iface' [-Wunused-parameter]
+   97 | static HRESULT WINAPI services_QueryService(IServiceProvider *iface, REFGUID service,
+      |                                                               ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:97:78: warning: unused parameter 'service' [-Wunused-parameter]
+   97 | static HRESULT WINAPI services_QueryService(IServiceProvider *iface, REFGUID service,
+      |                                                                              ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:98:53: warning: unused parameter 'riid' [-Wunused-parameter]
+   98 |                                              REFIID riid, void **out)
+      |                                                     ^
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:111:39: warning: initializing 'IOleClientSiteVtbl *' (aka 'struct IOleClientSiteVtbl *') with an expression of type 'const IOleClientSiteVtbl *' (aka 'const struct IOleClientSiteVtbl *') discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  111 | static IOleClientSite client_site = { &client_site_vtbl };
+      |                                       ^~~~~~~~~~~~~~~~~
+/Volumes/AverySSD/VKMT/test/browser/mshtml_runtime_probe.c:112:46: warning: initializing 'IServiceProviderVtbl *' (aka 'struct IServiceProviderVtbl *') with an expression of type 'const IServiceProviderVtbl *' (aka 'const struct IServiceProviderVtbl *') discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  112 | static IServiceProvider service_provider = { &service_provider_vtbl };
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~
+20 warnings generated.
+GECKO_MSHTML_X86_64_OK
+GECKO_MSHTML_X64_I386_ALL_OK

@@ -54,7 +54,7 @@ cleanup()
       if test "${VKMT_KEEP_PROBE_RUN:-0}" = 1; then
         echo "Retained disposable OpenGL run: $run_root" >&2
       else
-        /usr/bin/trash "$run_root" 2>/dev/null || true
+        find "$run_root" -depth -delete 2>/dev/null || true
       fi
       ;;
   esac
@@ -151,6 +151,7 @@ run_wine "$run_root/wineboot.log" 1 "$WINEBOOT" --init || {
   tail -n 120 "$run_root/wineboot.log" >&2
   exit 1
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 stop_server
 

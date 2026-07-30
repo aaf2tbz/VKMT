@@ -22,7 +22,7 @@ cleanup()
   WINEPREFIX="$prefix" "$WINESERVER" -w 2>/dev/null || true
   case "$run_root" in "$RUNS"/*)
     test "${VKMT_KEEP_PROBE_RUN:-0}" = 1 ||
-      /usr/bin/trash "$run_root" 2>/dev/null || true
+      find "$run_root" -depth -delete 2>/dev/null || true
   esac
   exit "$status"
 }
@@ -77,6 +77,7 @@ VKMT_RUN_TIMEOUT="${VKMT_GECKO_BOOT_TIMEOUT:-180}"
 run_wine "$run_root/wineboot.log" "$WINEBOOT" --init
 unset VKMT_RUN_NO_EXPLORER VKMT_RUN_TIMEOUT
 stop_server
+"$PROVIDERS" --prefix "$prefix"
 "$PROVIDERS" --verify-prefix "$prefix"
 
 gecko_x86="$(printf 'Z:%s' "$VKMT/wine/gecko/wine-gecko-2.47.4-x86" | tr '/' '\\')"

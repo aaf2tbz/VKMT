@@ -1,0 +1,15 @@
+VKMT_J4_STAGE_BEGIN round=0 stage=publication
+VKMT_J4_STAGE_OK round=0 stage=publication
+VKMT_J4_STAGE_OK round=0 stage=monitor
+VKMT_J4_STAGE_OK round=0 stage=atomic
+VKMT_J4_STAGE_OK round=0 stage=queue-once
+VKMT_J4_STAGE_OK round=0 stage=native-memory
+VKMT_J4_GC_CYCLE_OK cycle=0
+VKMT_J4_GC_CYCLE_OK cycle=1
+VKMT_J4_GC_CYCLE_OK cycle=2
+VKMT_J4_GC_CYCLE_OK cycle=3
+VKMT_J4_GC_THREADS_JOINED created=100000 overlap=4
+VKMT_J4_GC_TRAVERSAL_OK seen=100000 sum=1249950000
+VKMT_J4_STAGE_OK round=0 stage=gc-barrier
+VKMT_J4_ROUND_OK provider=golden round=0 publication=4657f8de1200 atomic=9c4000009c40 native=4a34000000004e20
+VKMT_J4_STAGE_BEGIN round=1 stage=publication

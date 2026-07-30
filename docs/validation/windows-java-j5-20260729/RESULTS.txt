@@ -1,0 +1,17 @@
+provider_sha256=fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073
+wow64_sha256=3f252921f12806907c78a4bf07c1aa5a761ba7882d3b72bb876c1dc316f93e7b
+jni_sha256=c059e1d00af4ff25c19f1f506f3f09a3b127d46cbfceb88e4b3da912879bdeb7
+launches=10
+cycles_per_launch=10
+total_cycles=100
+VKMT_WINDOWS_JAVA_J5_OK launch=0 cycles=10 callbacks=10 callbackChecksum=2e6122ef4 checksum=7ffd062ff956c244
+VKMT_WINDOWS_JAVA_J5_OK launch=1 cycles=10 callbacks=10 callbackChecksum=2e612486c checksum=fffff7a113190228
+VKMT_WINDOWS_JAVA_J5_OK launch=2 cycles=10 callbacks=10 callbackChecksum=2e61263ec checksum=31bea1d505a
+VKMT_WINDOWS_JAVA_J5_OK launch=3 cycles=10 callbacks=10 callbackChecksum=2e6127d64 checksum=fffffeedfd04dc09
+VKMT_WINDOWS_JAVA_J5_OK launch=4 cycles=10 callbacks=10 callbackChecksum=2e61296dc checksum=fffff823274d8119
+VKMT_WINDOWS_JAVA_J5_OK launch=5 cycles=10 callbacks=10 callbackChecksum=2e61268cc checksum=313eeb325a1
+VKMT_WINDOWS_JAVA_J5_OK launch=6 cycles=10 callbacks=10 callbackChecksum=2e612845c checksum=fffffd1d803f6c10
+VKMT_WINDOWS_JAVA_J5_OK launch=7 cycles=10 callbacks=10 callbackChecksum=2e6129b68 checksum=39a4bdcd4b5
+VKMT_WINDOWS_JAVA_J5_OK launch=8 cycles=10 callbacks=10 callbackChecksum=2e612b67c checksum=94eb578101
+VKMT_WINDOWS_JAVA_J5_OK launch=9 cycles=10 callbacks=10 callbackChecksum=2e612d0b8 checksum=fffffe0e7600e8b6
+exact_shutdown=1

@@ -1,0 +1,17 @@
+VKMT_J4_STAGE_BEGIN round=0 stage=publication
+VKMT_J4_STAGE_OK round=0 stage=publication
+VKMT_J4_STAGE_OK round=0 stage=monitor
+VKMT_J4_STAGE_OK round=0 stage=atomic
+VKMT_J4_STAGE_OK round=0 stage=queue-once
+VKMT_J4_STAGE_OK round=0 stage=native-memory
+VKMT_J4_GC_CYCLE_OK cycle=0
+VKMT_J4_GC_CYCLE_OK cycle=1
+VKMT_J4_GC_CYCLE_OK cycle=2
+VKMT_J4_GC_CYCLE_OK cycle=3
+VKMT_J4_GC_THREADS_JOINED created=100000 overlap=4
+VKMT_J4_GC_TRAVERSAL_OK seen=100000 sum=1249950000
+VKMT_J4_STAGE_OK round=0 stage=gc-barrier
+Exception in thread "main" java.lang.AbstractMethodError: java.lang.SecurityManager.checkPackageAccess(Ljava/lang/String;)V
+	at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:332)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:351)
+	at VkmtWindowsJavaMemoryModelProbe.main(VkmtWindowsJavaMemoryModelProbe.java:333)

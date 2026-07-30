@@ -1,6 +1,16 @@
 # VKMT wine patch series
 
 - `wine-11.12-vkmt.patch` — apply to pristine wine-11.12.tar.xz (`patch -p1 < patches/wine-11.12-vkmt.patch`).
+- `wine-11.12-java-j5.patch` — reproducible snapshot of the current Wine
+  source delta at J5 acceptance, including the WoW64 guest-memory,
+  exception/callback, local-suspend, and non-alertable dynamic-code
+  synchronization contracts. Apply with `git apply` to Wine commit
+  `fb22a9782ad812d0cf9df9021047eccee84b5135`.
+- `fex-2607-java-j5.patch` — reproducible FEX Java/WoW64 delta at J5
+  acceptance, including conservative non-TSO lowering, managed guest-address
+  translation, synchronous divide faults, context/call-return handling, and
+  safepoint code-cache invalidation. Apply with `git apply` to FEX commit
+  `a745bebae8c65025869288be1b50275928702338`.
 - `wine-11.12-arm64-mono-fusion.patch` — native ARM64 `mscoree` fallback
   plus the same-bitness PE32+ IL-only process/loader/server contract.
   `scripts/build-wine-mono-arm64.sh` applies it and rebuilds only ARM64X

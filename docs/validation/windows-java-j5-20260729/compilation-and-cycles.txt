@@ -1,0 +1,1034 @@
+    674    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    711    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    717    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=0 phase=workers-start
+VKMT_J5_PHASE iteration=0 phase=compiled-ready
+VKMT_J5_CONTEXT slot=0 phase=open
+VKMT_J5_CONTEXT slot=0 phase=suspended result=0
+VKMT_J5_CONTEXT slot=0 phase=context eip=7ffd0000
+VKMT_J5_CONTEXT slot=0 phase=resumed result=1
+VKMT_J5_PHASE iteration=0 phase=context-complete
+VKMT_J5_PHASE iteration=0 phase=allocation-ready
+VKMT_J5_PHASE iteration=0 phase=callback-attached
+VKMT_J5_PHASE iteration=0 phase=gc-complete
+VKMT_J5_PHASE iteration=0 phase=callback-detached
+VKMT_J5_PHASE iteration=0 phase=workers-joined
+VKMT_J5_PHASE iteration=0 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=1 phase=workers-start
+VKMT_J5_PHASE iteration=1 phase=compiled-ready
+VKMT_J5_PHASE iteration=1 phase=context-complete
+VKMT_J5_PHASE iteration=1 phase=allocation-ready
+VKMT_J5_PHASE iteration=1 phase=callback-attached
+VKMT_J5_PHASE iteration=1 phase=gc-complete
+VKMT_J5_PHASE iteration=1 phase=callback-detached
+VKMT_J5_PHASE iteration=1 phase=workers-joined
+VKMT_J5_PHASE iteration=1 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=2 phase=workers-start
+VKMT_J5_PHASE iteration=2 phase=compiled-ready
+VKMT_J5_PHASE iteration=2 phase=context-complete
+VKMT_J5_PHASE iteration=2 phase=allocation-ready
+VKMT_J5_PHASE iteration=2 phase=callback-attached
+VKMT_J5_PHASE iteration=2 phase=gc-complete
+VKMT_J5_PHASE iteration=2 phase=callback-detached
+VKMT_J5_PHASE iteration=2 phase=workers-joined
+VKMT_J5_PHASE iteration=2 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=3 phase=workers-start
+VKMT_J5_PHASE iteration=3 phase=compiled-ready
+VKMT_J5_PHASE iteration=3 phase=context-complete
+VKMT_J5_PHASE iteration=3 phase=allocation-ready
+VKMT_J5_PHASE iteration=3 phase=callback-attached
+VKMT_J5_PHASE iteration=3 phase=gc-complete
+VKMT_J5_PHASE iteration=3 phase=callback-detached
+VKMT_J5_PHASE iteration=3 phase=workers-joined
+VKMT_J5_PHASE iteration=3 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=4 phase=workers-start
+VKMT_J5_PHASE iteration=4 phase=compiled-ready
+VKMT_J5_PHASE iteration=4 phase=context-complete
+VKMT_J5_PHASE iteration=4 phase=allocation-ready
+VKMT_J5_PHASE iteration=4 phase=callback-attached
+VKMT_J5_PHASE iteration=4 phase=gc-complete
+VKMT_J5_PHASE iteration=4 phase=callback-detached
+VKMT_J5_PHASE iteration=4 phase=workers-joined
+VKMT_J5_PHASE iteration=4 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=5 phase=workers-start
+VKMT_J5_PHASE iteration=5 phase=compiled-ready
+VKMT_J5_PHASE iteration=5 phase=context-complete
+VKMT_J5_PHASE iteration=5 phase=allocation-ready
+VKMT_J5_PHASE iteration=5 phase=callback-attached
+VKMT_J5_PHASE iteration=5 phase=gc-complete
+VKMT_J5_PHASE iteration=5 phase=callback-detached
+VKMT_J5_PHASE iteration=5 phase=workers-joined
+VKMT_J5_PHASE iteration=5 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=6 phase=workers-start
+VKMT_J5_PHASE iteration=6 phase=compiled-ready
+VKMT_J5_PHASE iteration=6 phase=context-complete
+VKMT_J5_PHASE iteration=6 phase=allocation-ready
+VKMT_J5_PHASE iteration=6 phase=callback-attached
+VKMT_J5_PHASE iteration=6 phase=gc-complete
+VKMT_J5_PHASE iteration=6 phase=callback-detached
+VKMT_J5_PHASE iteration=6 phase=workers-joined
+VKMT_J5_PHASE iteration=6 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=7 phase=workers-start
+VKMT_J5_PHASE iteration=7 phase=compiled-ready
+VKMT_J5_PHASE iteration=7 phase=context-complete
+VKMT_J5_PHASE iteration=7 phase=allocation-ready
+VKMT_J5_PHASE iteration=7 phase=callback-attached
+VKMT_J5_PHASE iteration=7 phase=gc-complete
+VKMT_J5_PHASE iteration=7 phase=callback-detached
+VKMT_J5_PHASE iteration=7 phase=workers-joined
+VKMT_J5_PHASE iteration=7 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=8 phase=workers-start
+VKMT_J5_PHASE iteration=8 phase=compiled-ready
+VKMT_J5_PHASE iteration=8 phase=context-complete
+VKMT_J5_PHASE iteration=8 phase=allocation-ready
+VKMT_J5_PHASE iteration=8 phase=callback-attached
+VKMT_J5_PHASE iteration=8 phase=gc-complete
+VKMT_J5_PHASE iteration=8 phase=callback-detached
+VKMT_J5_PHASE iteration=8 phase=workers-joined
+VKMT_J5_PHASE iteration=8 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=9 phase=workers-start
+VKMT_J5_PHASE iteration=9 phase=compiled-ready
+VKMT_J5_PHASE iteration=9 phase=context-complete
+VKMT_J5_PHASE iteration=9 phase=allocation-ready
+VKMT_J5_PHASE iteration=9 phase=callback-attached
+VKMT_J5_PHASE iteration=9 phase=gc-complete
+VKMT_J5_PHASE iteration=9 phase=callback-detached
+VKMT_J5_PHASE iteration=9 phase=workers-joined
+VKMT_J5_PHASE iteration=9 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=0 cycle=9 callbacks=10
+    688    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    725    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    730    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=10 phase=workers-start
+VKMT_J5_PHASE iteration=10 phase=compiled-ready
+VKMT_J5_PHASE iteration=10 phase=context-complete
+VKMT_J5_PHASE iteration=10 phase=allocation-ready
+VKMT_J5_PHASE iteration=10 phase=callback-attached
+VKMT_J5_PHASE iteration=10 phase=gc-complete
+VKMT_J5_PHASE iteration=10 phase=callback-detached
+VKMT_J5_PHASE iteration=10 phase=workers-joined
+VKMT_J5_PHASE iteration=10 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=11 phase=workers-start
+VKMT_J5_PHASE iteration=11 phase=compiled-ready
+VKMT_J5_PHASE iteration=11 phase=context-complete
+VKMT_J5_PHASE iteration=11 phase=allocation-ready
+VKMT_J5_PHASE iteration=11 phase=callback-attached
+VKMT_J5_PHASE iteration=11 phase=gc-complete
+VKMT_J5_PHASE iteration=11 phase=callback-detached
+VKMT_J5_PHASE iteration=11 phase=workers-joined
+VKMT_J5_PHASE iteration=11 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=12 phase=workers-start
+VKMT_J5_PHASE iteration=12 phase=compiled-ready
+VKMT_J5_PHASE iteration=12 phase=context-complete
+VKMT_J5_PHASE iteration=12 phase=allocation-ready
+VKMT_J5_PHASE iteration=12 phase=callback-attached
+VKMT_J5_PHASE iteration=12 phase=gc-complete
+VKMT_J5_PHASE iteration=12 phase=callback-detached
+VKMT_J5_PHASE iteration=12 phase=workers-joined
+VKMT_J5_PHASE iteration=12 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=13 phase=workers-start
+VKMT_J5_PHASE iteration=13 phase=compiled-ready
+VKMT_J5_PHASE iteration=13 phase=context-complete
+VKMT_J5_PHASE iteration=13 phase=allocation-ready
+VKMT_J5_PHASE iteration=13 phase=callback-attached
+VKMT_J5_PHASE iteration=13 phase=gc-complete
+VKMT_J5_PHASE iteration=13 phase=callback-detached
+VKMT_J5_PHASE iteration=13 phase=workers-joined
+VKMT_J5_PHASE iteration=13 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=14 phase=workers-start
+VKMT_J5_PHASE iteration=14 phase=compiled-ready
+VKMT_J5_PHASE iteration=14 phase=context-complete
+VKMT_J5_PHASE iteration=14 phase=allocation-ready
+VKMT_J5_PHASE iteration=14 phase=callback-attached
+VKMT_J5_PHASE iteration=14 phase=gc-complete
+VKMT_J5_PHASE iteration=14 phase=callback-detached
+VKMT_J5_PHASE iteration=14 phase=workers-joined
+VKMT_J5_PHASE iteration=14 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=15 phase=workers-start
+VKMT_J5_PHASE iteration=15 phase=compiled-ready
+VKMT_J5_PHASE iteration=15 phase=context-complete
+VKMT_J5_PHASE iteration=15 phase=allocation-ready
+VKMT_J5_PHASE iteration=15 phase=callback-attached
+VKMT_J5_PHASE iteration=15 phase=gc-complete
+VKMT_J5_PHASE iteration=15 phase=callback-detached
+VKMT_J5_PHASE iteration=15 phase=workers-joined
+VKMT_J5_PHASE iteration=15 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=16 phase=workers-start
+VKMT_J5_PHASE iteration=16 phase=compiled-ready
+VKMT_J5_PHASE iteration=16 phase=context-complete
+VKMT_J5_PHASE iteration=16 phase=allocation-ready
+VKMT_J5_PHASE iteration=16 phase=callback-attached
+VKMT_J5_PHASE iteration=16 phase=gc-complete
+VKMT_J5_PHASE iteration=16 phase=callback-detached
+VKMT_J5_PHASE iteration=16 phase=workers-joined
+VKMT_J5_PHASE iteration=16 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=17 phase=workers-start
+VKMT_J5_PHASE iteration=17 phase=compiled-ready
+VKMT_J5_PHASE iteration=17 phase=context-complete
+VKMT_J5_PHASE iteration=17 phase=allocation-ready
+VKMT_J5_PHASE iteration=17 phase=callback-attached
+VKMT_J5_PHASE iteration=17 phase=gc-complete
+VKMT_J5_PHASE iteration=17 phase=callback-detached
+VKMT_J5_PHASE iteration=17 phase=workers-joined
+VKMT_J5_PHASE iteration=17 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=18 phase=workers-start
+VKMT_J5_PHASE iteration=18 phase=compiled-ready
+VKMT_J5_PHASE iteration=18 phase=context-complete
+VKMT_J5_PHASE iteration=18 phase=allocation-ready
+VKMT_J5_PHASE iteration=18 phase=callback-attached
+VKMT_J5_PHASE iteration=18 phase=gc-complete
+VKMT_J5_PHASE iteration=18 phase=callback-detached
+VKMT_J5_PHASE iteration=18 phase=workers-joined
+VKMT_J5_PHASE iteration=18 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=19 phase=workers-start
+VKMT_J5_PHASE iteration=19 phase=compiled-ready
+VKMT_J5_PHASE iteration=19 phase=context-complete
+VKMT_J5_PHASE iteration=19 phase=allocation-ready
+VKMT_J5_PHASE iteration=19 phase=callback-attached
+VKMT_J5_PHASE iteration=19 phase=gc-complete
+VKMT_J5_PHASE iteration=19 phase=callback-detached
+VKMT_J5_PHASE iteration=19 phase=workers-joined
+VKMT_J5_PHASE iteration=19 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=1 cycle=9 callbacks=10
+    690    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    728    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    733    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=20 phase=workers-start
+VKMT_J5_PHASE iteration=20 phase=compiled-ready
+VKMT_J5_PHASE iteration=20 phase=context-complete
+VKMT_J5_PHASE iteration=20 phase=allocation-ready
+VKMT_J5_PHASE iteration=20 phase=callback-attached
+VKMT_J5_PHASE iteration=20 phase=gc-complete
+VKMT_J5_PHASE iteration=20 phase=callback-detached
+VKMT_J5_PHASE iteration=20 phase=workers-joined
+VKMT_J5_PHASE iteration=20 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=21 phase=workers-start
+VKMT_J5_PHASE iteration=21 phase=compiled-ready
+VKMT_J5_PHASE iteration=21 phase=context-complete
+VKMT_J5_PHASE iteration=21 phase=allocation-ready
+VKMT_J5_PHASE iteration=21 phase=callback-attached
+VKMT_J5_PHASE iteration=21 phase=gc-complete
+VKMT_J5_PHASE iteration=21 phase=callback-detached
+VKMT_J5_PHASE iteration=21 phase=workers-joined
+VKMT_J5_PHASE iteration=21 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=22 phase=workers-start
+VKMT_J5_PHASE iteration=22 phase=compiled-ready
+VKMT_J5_PHASE iteration=22 phase=context-complete
+VKMT_J5_PHASE iteration=22 phase=allocation-ready
+VKMT_J5_PHASE iteration=22 phase=callback-attached
+VKMT_J5_PHASE iteration=22 phase=gc-complete
+VKMT_J5_PHASE iteration=22 phase=callback-detached
+VKMT_J5_PHASE iteration=22 phase=workers-joined
+VKMT_J5_PHASE iteration=22 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=23 phase=workers-start
+VKMT_J5_PHASE iteration=23 phase=compiled-ready
+VKMT_J5_PHASE iteration=23 phase=context-complete
+VKMT_J5_PHASE iteration=23 phase=allocation-ready
+VKMT_J5_PHASE iteration=23 phase=callback-attached
+VKMT_J5_PHASE iteration=23 phase=gc-complete
+VKMT_J5_PHASE iteration=23 phase=callback-detached
+VKMT_J5_PHASE iteration=23 phase=workers-joined
+VKMT_J5_PHASE iteration=23 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=24 phase=workers-start
+VKMT_J5_PHASE iteration=24 phase=compiled-ready
+VKMT_J5_PHASE iteration=24 phase=context-complete
+VKMT_J5_PHASE iteration=24 phase=allocation-ready
+VKMT_J5_PHASE iteration=24 phase=callback-attached
+VKMT_J5_PHASE iteration=24 phase=gc-complete
+VKMT_J5_PHASE iteration=24 phase=callback-detached
+VKMT_J5_PHASE iteration=24 phase=workers-joined
+VKMT_J5_PHASE iteration=24 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=25 phase=workers-start
+VKMT_J5_PHASE iteration=25 phase=compiled-ready
+VKMT_J5_PHASE iteration=25 phase=context-complete
+VKMT_J5_PHASE iteration=25 phase=allocation-ready
+VKMT_J5_PHASE iteration=25 phase=callback-attached
+VKMT_J5_PHASE iteration=25 phase=gc-complete
+VKMT_J5_PHASE iteration=25 phase=callback-detached
+VKMT_J5_PHASE iteration=25 phase=workers-joined
+VKMT_J5_PHASE iteration=25 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=26 phase=workers-start
+VKMT_J5_PHASE iteration=26 phase=compiled-ready
+VKMT_J5_PHASE iteration=26 phase=context-complete
+VKMT_J5_PHASE iteration=26 phase=allocation-ready
+VKMT_J5_PHASE iteration=26 phase=callback-attached
+VKMT_J5_PHASE iteration=26 phase=gc-complete
+VKMT_J5_PHASE iteration=26 phase=callback-detached
+VKMT_J5_PHASE iteration=26 phase=workers-joined
+VKMT_J5_PHASE iteration=26 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=27 phase=workers-start
+VKMT_J5_PHASE iteration=27 phase=compiled-ready
+VKMT_J5_PHASE iteration=27 phase=context-complete
+VKMT_J5_PHASE iteration=27 phase=allocation-ready
+VKMT_J5_PHASE iteration=27 phase=callback-attached
+VKMT_J5_PHASE iteration=27 phase=gc-complete
+VKMT_J5_PHASE iteration=27 phase=callback-detached
+VKMT_J5_PHASE iteration=27 phase=workers-joined
+VKMT_J5_PHASE iteration=27 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=28 phase=workers-start
+VKMT_J5_PHASE iteration=28 phase=compiled-ready
+VKMT_J5_PHASE iteration=28 phase=context-complete
+VKMT_J5_PHASE iteration=28 phase=allocation-ready
+VKMT_J5_PHASE iteration=28 phase=callback-attached
+VKMT_J5_PHASE iteration=28 phase=gc-complete
+VKMT_J5_PHASE iteration=28 phase=callback-detached
+VKMT_J5_PHASE iteration=28 phase=workers-joined
+VKMT_J5_PHASE iteration=28 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=29 phase=workers-start
+VKMT_J5_PHASE iteration=29 phase=compiled-ready
+VKMT_J5_PHASE iteration=29 phase=context-complete
+VKMT_J5_PHASE iteration=29 phase=allocation-ready
+VKMT_J5_PHASE iteration=29 phase=callback-attached
+VKMT_J5_PHASE iteration=29 phase=gc-complete
+VKMT_J5_PHASE iteration=29 phase=callback-detached
+VKMT_J5_PHASE iteration=29 phase=workers-joined
+VKMT_J5_PHASE iteration=29 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=2 cycle=9 callbacks=10
+    683    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    719    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    814    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=30 phase=workers-start
+VKMT_J5_PHASE iteration=30 phase=compiled-ready
+VKMT_J5_PHASE iteration=30 phase=context-complete
+VKMT_J5_PHASE iteration=30 phase=allocation-ready
+VKMT_J5_PHASE iteration=30 phase=callback-attached
+VKMT_J5_PHASE iteration=30 phase=gc-complete
+VKMT_J5_PHASE iteration=30 phase=callback-detached
+VKMT_J5_PHASE iteration=30 phase=workers-joined
+VKMT_J5_PHASE iteration=30 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=31 phase=workers-start
+VKMT_J5_PHASE iteration=31 phase=compiled-ready
+VKMT_J5_PHASE iteration=31 phase=context-complete
+VKMT_J5_PHASE iteration=31 phase=allocation-ready
+VKMT_J5_PHASE iteration=31 phase=callback-attached
+VKMT_J5_PHASE iteration=31 phase=gc-complete
+VKMT_J5_PHASE iteration=31 phase=callback-detached
+VKMT_J5_PHASE iteration=31 phase=workers-joined
+VKMT_J5_PHASE iteration=31 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=32 phase=workers-start
+VKMT_J5_PHASE iteration=32 phase=compiled-ready
+VKMT_J5_PHASE iteration=32 phase=context-complete
+VKMT_J5_PHASE iteration=32 phase=allocation-ready
+VKMT_J5_PHASE iteration=32 phase=callback-attached
+VKMT_J5_PHASE iteration=32 phase=gc-complete
+VKMT_J5_PHASE iteration=32 phase=callback-detached
+VKMT_J5_PHASE iteration=32 phase=workers-joined
+VKMT_J5_PHASE iteration=32 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=33 phase=workers-start
+VKMT_J5_PHASE iteration=33 phase=compiled-ready
+VKMT_J5_PHASE iteration=33 phase=context-complete
+VKMT_J5_PHASE iteration=33 phase=allocation-ready
+VKMT_J5_PHASE iteration=33 phase=callback-attached
+VKMT_J5_PHASE iteration=33 phase=gc-complete
+VKMT_J5_PHASE iteration=33 phase=callback-detached
+VKMT_J5_PHASE iteration=33 phase=workers-joined
+VKMT_J5_PHASE iteration=33 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=34 phase=workers-start
+VKMT_J5_PHASE iteration=34 phase=compiled-ready
+VKMT_J5_PHASE iteration=34 phase=context-complete
+VKMT_J5_PHASE iteration=34 phase=allocation-ready
+VKMT_J5_PHASE iteration=34 phase=callback-attached
+VKMT_J5_PHASE iteration=34 phase=gc-complete
+VKMT_J5_PHASE iteration=34 phase=callback-detached
+VKMT_J5_PHASE iteration=34 phase=workers-joined
+VKMT_J5_PHASE iteration=34 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=35 phase=workers-start
+VKMT_J5_PHASE iteration=35 phase=compiled-ready
+VKMT_J5_PHASE iteration=35 phase=context-complete
+VKMT_J5_PHASE iteration=35 phase=allocation-ready
+VKMT_J5_PHASE iteration=35 phase=callback-attached
+VKMT_J5_PHASE iteration=35 phase=gc-complete
+VKMT_J5_PHASE iteration=35 phase=callback-detached
+VKMT_J5_PHASE iteration=35 phase=workers-joined
+VKMT_J5_PHASE iteration=35 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=36 phase=workers-start
+VKMT_J5_PHASE iteration=36 phase=compiled-ready
+VKMT_J5_PHASE iteration=36 phase=context-complete
+VKMT_J5_PHASE iteration=36 phase=allocation-ready
+VKMT_J5_PHASE iteration=36 phase=callback-attached
+VKMT_J5_PHASE iteration=36 phase=gc-complete
+VKMT_J5_PHASE iteration=36 phase=callback-detached
+VKMT_J5_PHASE iteration=36 phase=workers-joined
+VKMT_J5_PHASE iteration=36 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=37 phase=workers-start
+VKMT_J5_PHASE iteration=37 phase=compiled-ready
+VKMT_J5_PHASE iteration=37 phase=context-complete
+VKMT_J5_PHASE iteration=37 phase=allocation-ready
+VKMT_J5_PHASE iteration=37 phase=callback-attached
+VKMT_J5_PHASE iteration=37 phase=gc-complete
+VKMT_J5_PHASE iteration=37 phase=callback-detached
+VKMT_J5_PHASE iteration=37 phase=workers-joined
+VKMT_J5_PHASE iteration=37 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=38 phase=workers-start
+VKMT_J5_PHASE iteration=38 phase=compiled-ready
+VKMT_J5_PHASE iteration=38 phase=context-complete
+VKMT_J5_PHASE iteration=38 phase=allocation-ready
+VKMT_J5_PHASE iteration=38 phase=callback-attached
+VKMT_J5_PHASE iteration=38 phase=gc-complete
+VKMT_J5_PHASE iteration=38 phase=callback-detached
+VKMT_J5_PHASE iteration=38 phase=workers-joined
+VKMT_J5_PHASE iteration=38 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=39 phase=workers-start
+VKMT_J5_PHASE iteration=39 phase=compiled-ready
+VKMT_J5_PHASE iteration=39 phase=context-complete
+VKMT_J5_PHASE iteration=39 phase=allocation-ready
+VKMT_J5_PHASE iteration=39 phase=callback-attached
+VKMT_J5_PHASE iteration=39 phase=gc-complete
+VKMT_J5_PHASE iteration=39 phase=callback-detached
+VKMT_J5_PHASE iteration=39 phase=workers-joined
+VKMT_J5_PHASE iteration=39 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=3 cycle=9 callbacks=10
+    684    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    720    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    726    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=40 phase=workers-start
+VKMT_J5_PHASE iteration=40 phase=compiled-ready
+VKMT_J5_PHASE iteration=40 phase=context-complete
+VKMT_J5_PHASE iteration=40 phase=allocation-ready
+VKMT_J5_PHASE iteration=40 phase=callback-attached
+VKMT_J5_PHASE iteration=40 phase=gc-complete
+VKMT_J5_PHASE iteration=40 phase=callback-detached
+VKMT_J5_PHASE iteration=40 phase=workers-joined
+VKMT_J5_PHASE iteration=40 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=41 phase=workers-start
+VKMT_J5_PHASE iteration=41 phase=compiled-ready
+VKMT_J5_PHASE iteration=41 phase=context-complete
+VKMT_J5_PHASE iteration=41 phase=allocation-ready
+VKMT_J5_PHASE iteration=41 phase=callback-attached
+VKMT_J5_PHASE iteration=41 phase=gc-complete
+VKMT_J5_PHASE iteration=41 phase=callback-detached
+VKMT_J5_PHASE iteration=41 phase=workers-joined
+VKMT_J5_PHASE iteration=41 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=42 phase=workers-start
+VKMT_J5_PHASE iteration=42 phase=compiled-ready
+VKMT_J5_PHASE iteration=42 phase=context-complete
+VKMT_J5_PHASE iteration=42 phase=allocation-ready
+VKMT_J5_PHASE iteration=42 phase=callback-attached
+VKMT_J5_PHASE iteration=42 phase=gc-complete
+VKMT_J5_PHASE iteration=42 phase=callback-detached
+VKMT_J5_PHASE iteration=42 phase=workers-joined
+VKMT_J5_PHASE iteration=42 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=43 phase=workers-start
+VKMT_J5_PHASE iteration=43 phase=compiled-ready
+VKMT_J5_PHASE iteration=43 phase=context-complete
+VKMT_J5_PHASE iteration=43 phase=allocation-ready
+VKMT_J5_PHASE iteration=43 phase=callback-attached
+VKMT_J5_PHASE iteration=43 phase=gc-complete
+VKMT_J5_PHASE iteration=43 phase=callback-detached
+VKMT_J5_PHASE iteration=43 phase=workers-joined
+VKMT_J5_PHASE iteration=43 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=44 phase=workers-start
+VKMT_J5_PHASE iteration=44 phase=compiled-ready
+VKMT_J5_PHASE iteration=44 phase=context-complete
+VKMT_J5_PHASE iteration=44 phase=allocation-ready
+VKMT_J5_PHASE iteration=44 phase=callback-attached
+VKMT_J5_PHASE iteration=44 phase=gc-complete
+VKMT_J5_PHASE iteration=44 phase=callback-detached
+VKMT_J5_PHASE iteration=44 phase=workers-joined
+VKMT_J5_PHASE iteration=44 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=45 phase=workers-start
+VKMT_J5_PHASE iteration=45 phase=compiled-ready
+VKMT_J5_PHASE iteration=45 phase=context-complete
+VKMT_J5_PHASE iteration=45 phase=allocation-ready
+VKMT_J5_PHASE iteration=45 phase=callback-attached
+VKMT_J5_PHASE iteration=45 phase=gc-complete
+VKMT_J5_PHASE iteration=45 phase=callback-detached
+VKMT_J5_PHASE iteration=45 phase=workers-joined
+VKMT_J5_PHASE iteration=45 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=46 phase=workers-start
+VKMT_J5_PHASE iteration=46 phase=compiled-ready
+VKMT_J5_PHASE iteration=46 phase=context-complete
+VKMT_J5_PHASE iteration=46 phase=allocation-ready
+VKMT_J5_PHASE iteration=46 phase=callback-attached
+VKMT_J5_PHASE iteration=46 phase=gc-complete
+VKMT_J5_PHASE iteration=46 phase=callback-detached
+VKMT_J5_PHASE iteration=46 phase=workers-joined
+VKMT_J5_PHASE iteration=46 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=47 phase=workers-start
+VKMT_J5_PHASE iteration=47 phase=compiled-ready
+VKMT_J5_PHASE iteration=47 phase=context-complete
+VKMT_J5_PHASE iteration=47 phase=allocation-ready
+VKMT_J5_PHASE iteration=47 phase=callback-attached
+VKMT_J5_PHASE iteration=47 phase=gc-complete
+VKMT_J5_PHASE iteration=47 phase=callback-detached
+VKMT_J5_PHASE iteration=47 phase=workers-joined
+VKMT_J5_PHASE iteration=47 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=48 phase=workers-start
+VKMT_J5_PHASE iteration=48 phase=compiled-ready
+VKMT_J5_PHASE iteration=48 phase=context-complete
+VKMT_J5_PHASE iteration=48 phase=allocation-ready
+VKMT_J5_PHASE iteration=48 phase=callback-attached
+VKMT_J5_PHASE iteration=48 phase=gc-complete
+VKMT_J5_PHASE iteration=48 phase=callback-detached
+VKMT_J5_PHASE iteration=48 phase=workers-joined
+VKMT_J5_PHASE iteration=48 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=49 phase=workers-start
+VKMT_J5_PHASE iteration=49 phase=compiled-ready
+VKMT_J5_PHASE iteration=49 phase=context-complete
+VKMT_J5_PHASE iteration=49 phase=allocation-ready
+VKMT_J5_PHASE iteration=49 phase=callback-attached
+VKMT_J5_PHASE iteration=49 phase=gc-complete
+VKMT_J5_PHASE iteration=49 phase=callback-detached
+VKMT_J5_PHASE iteration=49 phase=workers-joined
+VKMT_J5_PHASE iteration=49 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=4 cycle=9 callbacks=10
+    686    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    723    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    729    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=50 phase=workers-start
+VKMT_J5_PHASE iteration=50 phase=compiled-ready
+VKMT_J5_PHASE iteration=50 phase=context-complete
+VKMT_J5_PHASE iteration=50 phase=allocation-ready
+VKMT_J5_PHASE iteration=50 phase=callback-attached
+VKMT_J5_PHASE iteration=50 phase=gc-complete
+VKMT_J5_PHASE iteration=50 phase=callback-detached
+VKMT_J5_PHASE iteration=50 phase=workers-joined
+VKMT_J5_PHASE iteration=50 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=51 phase=workers-start
+VKMT_J5_PHASE iteration=51 phase=compiled-ready
+VKMT_J5_PHASE iteration=51 phase=context-complete
+VKMT_J5_PHASE iteration=51 phase=allocation-ready
+VKMT_J5_PHASE iteration=51 phase=callback-attached
+VKMT_J5_PHASE iteration=51 phase=gc-complete
+VKMT_J5_PHASE iteration=51 phase=callback-detached
+VKMT_J5_PHASE iteration=51 phase=workers-joined
+VKMT_J5_PHASE iteration=51 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=52 phase=workers-start
+VKMT_J5_PHASE iteration=52 phase=compiled-ready
+VKMT_J5_PHASE iteration=52 phase=context-complete
+VKMT_J5_PHASE iteration=52 phase=allocation-ready
+VKMT_J5_PHASE iteration=52 phase=callback-attached
+VKMT_J5_PHASE iteration=52 phase=gc-complete
+VKMT_J5_PHASE iteration=52 phase=callback-detached
+VKMT_J5_PHASE iteration=52 phase=workers-joined
+VKMT_J5_PHASE iteration=52 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=53 phase=workers-start
+VKMT_J5_PHASE iteration=53 phase=compiled-ready
+VKMT_J5_PHASE iteration=53 phase=context-complete
+VKMT_J5_PHASE iteration=53 phase=allocation-ready
+VKMT_J5_PHASE iteration=53 phase=callback-attached
+VKMT_J5_PHASE iteration=53 phase=gc-complete
+VKMT_J5_PHASE iteration=53 phase=callback-detached
+VKMT_J5_PHASE iteration=53 phase=workers-joined
+VKMT_J5_PHASE iteration=53 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=54 phase=workers-start
+VKMT_J5_PHASE iteration=54 phase=compiled-ready
+VKMT_J5_PHASE iteration=54 phase=context-complete
+VKMT_J5_PHASE iteration=54 phase=allocation-ready
+VKMT_J5_PHASE iteration=54 phase=callback-attached
+VKMT_J5_PHASE iteration=54 phase=gc-complete
+VKMT_J5_PHASE iteration=54 phase=callback-detached
+VKMT_J5_PHASE iteration=54 phase=workers-joined
+VKMT_J5_PHASE iteration=54 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=55 phase=workers-start
+VKMT_J5_PHASE iteration=55 phase=compiled-ready
+VKMT_J5_PHASE iteration=55 phase=context-complete
+VKMT_J5_PHASE iteration=55 phase=allocation-ready
+VKMT_J5_PHASE iteration=55 phase=callback-attached
+VKMT_J5_PHASE iteration=55 phase=gc-complete
+VKMT_J5_PHASE iteration=55 phase=callback-detached
+VKMT_J5_PHASE iteration=55 phase=workers-joined
+VKMT_J5_PHASE iteration=55 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=56 phase=workers-start
+VKMT_J5_PHASE iteration=56 phase=compiled-ready
+VKMT_J5_PHASE iteration=56 phase=context-complete
+VKMT_J5_PHASE iteration=56 phase=allocation-ready
+VKMT_J5_PHASE iteration=56 phase=callback-attached
+VKMT_J5_PHASE iteration=56 phase=gc-complete
+VKMT_J5_PHASE iteration=56 phase=callback-detached
+VKMT_J5_PHASE iteration=56 phase=workers-joined
+VKMT_J5_PHASE iteration=56 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=57 phase=workers-start
+VKMT_J5_PHASE iteration=57 phase=compiled-ready
+VKMT_J5_PHASE iteration=57 phase=context-complete
+VKMT_J5_PHASE iteration=57 phase=allocation-ready
+VKMT_J5_PHASE iteration=57 phase=callback-attached
+VKMT_J5_PHASE iteration=57 phase=gc-complete
+VKMT_J5_PHASE iteration=57 phase=callback-detached
+VKMT_J5_PHASE iteration=57 phase=workers-joined
+VKMT_J5_PHASE iteration=57 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=58 phase=workers-start
+VKMT_J5_PHASE iteration=58 phase=compiled-ready
+VKMT_J5_PHASE iteration=58 phase=context-complete
+VKMT_J5_PHASE iteration=58 phase=allocation-ready
+VKMT_J5_PHASE iteration=58 phase=callback-attached
+VKMT_J5_PHASE iteration=58 phase=gc-complete
+VKMT_J5_PHASE iteration=58 phase=callback-detached
+VKMT_J5_PHASE iteration=58 phase=workers-joined
+VKMT_J5_PHASE iteration=58 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=59 phase=workers-start
+VKMT_J5_PHASE iteration=59 phase=compiled-ready
+VKMT_J5_PHASE iteration=59 phase=context-complete
+VKMT_J5_PHASE iteration=59 phase=allocation-ready
+VKMT_J5_PHASE iteration=59 phase=callback-attached
+VKMT_J5_PHASE iteration=59 phase=gc-complete
+VKMT_J5_PHASE iteration=59 phase=callback-detached
+VKMT_J5_PHASE iteration=59 phase=workers-joined
+VKMT_J5_PHASE iteration=59 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=5 cycle=9 callbacks=10
+    686    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    721    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    728    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=60 phase=workers-start
+VKMT_J5_PHASE iteration=60 phase=compiled-ready
+VKMT_J5_PHASE iteration=60 phase=context-complete
+VKMT_J5_PHASE iteration=60 phase=allocation-ready
+VKMT_J5_PHASE iteration=60 phase=callback-attached
+VKMT_J5_PHASE iteration=60 phase=gc-complete
+VKMT_J5_PHASE iteration=60 phase=callback-detached
+VKMT_J5_PHASE iteration=60 phase=workers-joined
+VKMT_J5_PHASE iteration=60 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=61 phase=workers-start
+VKMT_J5_PHASE iteration=61 phase=compiled-ready
+VKMT_J5_PHASE iteration=61 phase=context-complete
+VKMT_J5_PHASE iteration=61 phase=allocation-ready
+VKMT_J5_PHASE iteration=61 phase=callback-attached
+VKMT_J5_PHASE iteration=61 phase=gc-complete
+VKMT_J5_PHASE iteration=61 phase=callback-detached
+VKMT_J5_PHASE iteration=61 phase=workers-joined
+VKMT_J5_PHASE iteration=61 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=62 phase=workers-start
+VKMT_J5_PHASE iteration=62 phase=compiled-ready
+VKMT_J5_PHASE iteration=62 phase=context-complete
+VKMT_J5_PHASE iteration=62 phase=allocation-ready
+VKMT_J5_PHASE iteration=62 phase=callback-attached
+VKMT_J5_PHASE iteration=62 phase=gc-complete
+VKMT_J5_PHASE iteration=62 phase=callback-detached
+VKMT_J5_PHASE iteration=62 phase=workers-joined
+VKMT_J5_PHASE iteration=62 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=63 phase=workers-start
+VKMT_J5_PHASE iteration=63 phase=compiled-ready
+VKMT_J5_PHASE iteration=63 phase=context-complete
+VKMT_J5_PHASE iteration=63 phase=allocation-ready
+VKMT_J5_PHASE iteration=63 phase=callback-attached
+VKMT_J5_PHASE iteration=63 phase=gc-complete
+VKMT_J5_PHASE iteration=63 phase=callback-detached
+VKMT_J5_PHASE iteration=63 phase=workers-joined
+VKMT_J5_PHASE iteration=63 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=64 phase=workers-start
+VKMT_J5_PHASE iteration=64 phase=compiled-ready
+VKMT_J5_PHASE iteration=64 phase=context-complete
+VKMT_J5_PHASE iteration=64 phase=allocation-ready
+VKMT_J5_PHASE iteration=64 phase=callback-attached
+VKMT_J5_PHASE iteration=64 phase=gc-complete
+VKMT_J5_PHASE iteration=64 phase=callback-detached
+VKMT_J5_PHASE iteration=64 phase=workers-joined
+VKMT_J5_PHASE iteration=64 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=65 phase=workers-start
+VKMT_J5_PHASE iteration=65 phase=compiled-ready
+VKMT_J5_PHASE iteration=65 phase=context-complete
+VKMT_J5_PHASE iteration=65 phase=allocation-ready
+VKMT_J5_PHASE iteration=65 phase=callback-attached
+VKMT_J5_PHASE iteration=65 phase=gc-complete
+VKMT_J5_PHASE iteration=65 phase=callback-detached
+VKMT_J5_PHASE iteration=65 phase=workers-joined
+VKMT_J5_PHASE iteration=65 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=66 phase=workers-start
+VKMT_J5_PHASE iteration=66 phase=compiled-ready
+VKMT_J5_PHASE iteration=66 phase=context-complete
+VKMT_J5_PHASE iteration=66 phase=allocation-ready
+VKMT_J5_PHASE iteration=66 phase=callback-attached
+VKMT_J5_PHASE iteration=66 phase=gc-complete
+VKMT_J5_PHASE iteration=66 phase=callback-detached
+VKMT_J5_PHASE iteration=66 phase=workers-joined
+VKMT_J5_PHASE iteration=66 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=67 phase=workers-start
+VKMT_J5_PHASE iteration=67 phase=compiled-ready
+VKMT_J5_PHASE iteration=67 phase=context-complete
+VKMT_J5_PHASE iteration=67 phase=allocation-ready
+VKMT_J5_PHASE iteration=67 phase=callback-attached
+VKMT_J5_PHASE iteration=67 phase=gc-complete
+VKMT_J5_PHASE iteration=67 phase=callback-detached
+VKMT_J5_PHASE iteration=67 phase=workers-joined
+VKMT_J5_PHASE iteration=67 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=68 phase=workers-start
+VKMT_J5_PHASE iteration=68 phase=compiled-ready
+VKMT_J5_PHASE iteration=68 phase=context-complete
+VKMT_J5_PHASE iteration=68 phase=allocation-ready
+VKMT_J5_PHASE iteration=68 phase=callback-attached
+VKMT_J5_PHASE iteration=68 phase=gc-complete
+VKMT_J5_PHASE iteration=68 phase=callback-detached
+VKMT_J5_PHASE iteration=68 phase=workers-joined
+VKMT_J5_PHASE iteration=68 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=69 phase=workers-start
+VKMT_J5_PHASE iteration=69 phase=compiled-ready
+VKMT_J5_PHASE iteration=69 phase=context-complete
+VKMT_J5_PHASE iteration=69 phase=allocation-ready
+VKMT_J5_PHASE iteration=69 phase=callback-attached
+VKMT_J5_PHASE iteration=69 phase=gc-complete
+VKMT_J5_PHASE iteration=69 phase=callback-detached
+VKMT_J5_PHASE iteration=69 phase=workers-joined
+VKMT_J5_PHASE iteration=69 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=6 cycle=9 callbacks=10
+    686    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    721    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    729    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=70 phase=workers-start
+VKMT_J5_PHASE iteration=70 phase=compiled-ready
+VKMT_J5_PHASE iteration=70 phase=context-complete
+VKMT_J5_PHASE iteration=70 phase=allocation-ready
+VKMT_J5_PHASE iteration=70 phase=callback-attached
+VKMT_J5_PHASE iteration=70 phase=gc-complete
+VKMT_J5_PHASE iteration=70 phase=callback-detached
+VKMT_J5_PHASE iteration=70 phase=workers-joined
+VKMT_J5_PHASE iteration=70 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=71 phase=workers-start
+VKMT_J5_PHASE iteration=71 phase=compiled-ready
+VKMT_J5_PHASE iteration=71 phase=context-complete
+VKMT_J5_PHASE iteration=71 phase=allocation-ready
+VKMT_J5_PHASE iteration=71 phase=callback-attached
+VKMT_J5_PHASE iteration=71 phase=gc-complete
+VKMT_J5_PHASE iteration=71 phase=callback-detached
+VKMT_J5_PHASE iteration=71 phase=workers-joined
+VKMT_J5_PHASE iteration=71 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=72 phase=workers-start
+VKMT_J5_PHASE iteration=72 phase=compiled-ready
+VKMT_J5_PHASE iteration=72 phase=context-complete
+VKMT_J5_PHASE iteration=72 phase=allocation-ready
+VKMT_J5_PHASE iteration=72 phase=callback-attached
+VKMT_J5_PHASE iteration=72 phase=gc-complete
+VKMT_J5_PHASE iteration=72 phase=callback-detached
+VKMT_J5_PHASE iteration=72 phase=workers-joined
+VKMT_J5_PHASE iteration=72 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=73 phase=workers-start
+VKMT_J5_PHASE iteration=73 phase=compiled-ready
+VKMT_J5_PHASE iteration=73 phase=context-complete
+VKMT_J5_PHASE iteration=73 phase=allocation-ready
+VKMT_J5_PHASE iteration=73 phase=callback-attached
+VKMT_J5_PHASE iteration=73 phase=gc-complete
+VKMT_J5_PHASE iteration=73 phase=callback-detached
+VKMT_J5_PHASE iteration=73 phase=workers-joined
+VKMT_J5_PHASE iteration=73 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=74 phase=workers-start
+VKMT_J5_PHASE iteration=74 phase=compiled-ready
+VKMT_J5_PHASE iteration=74 phase=context-complete
+VKMT_J5_PHASE iteration=74 phase=allocation-ready
+VKMT_J5_PHASE iteration=74 phase=callback-attached
+VKMT_J5_PHASE iteration=74 phase=gc-complete
+VKMT_J5_PHASE iteration=74 phase=callback-detached
+VKMT_J5_PHASE iteration=74 phase=workers-joined
+VKMT_J5_PHASE iteration=74 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=75 phase=workers-start
+VKMT_J5_PHASE iteration=75 phase=compiled-ready
+VKMT_J5_PHASE iteration=75 phase=context-complete
+VKMT_J5_PHASE iteration=75 phase=allocation-ready
+VKMT_J5_PHASE iteration=75 phase=callback-attached
+VKMT_J5_PHASE iteration=75 phase=gc-complete
+VKMT_J5_PHASE iteration=75 phase=callback-detached
+VKMT_J5_PHASE iteration=75 phase=workers-joined
+VKMT_J5_PHASE iteration=75 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=76 phase=workers-start
+VKMT_J5_PHASE iteration=76 phase=compiled-ready
+VKMT_J5_PHASE iteration=76 phase=context-complete
+VKMT_J5_PHASE iteration=76 phase=allocation-ready
+VKMT_J5_PHASE iteration=76 phase=callback-attached
+VKMT_J5_PHASE iteration=76 phase=gc-complete
+VKMT_J5_PHASE iteration=76 phase=callback-detached
+VKMT_J5_PHASE iteration=76 phase=workers-joined
+VKMT_J5_PHASE iteration=76 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=77 phase=workers-start
+VKMT_J5_PHASE iteration=77 phase=compiled-ready
+VKMT_J5_PHASE iteration=77 phase=context-complete
+VKMT_J5_PHASE iteration=77 phase=allocation-ready
+VKMT_J5_PHASE iteration=77 phase=callback-attached
+VKMT_J5_PHASE iteration=77 phase=gc-complete
+VKMT_J5_PHASE iteration=77 phase=callback-detached
+VKMT_J5_PHASE iteration=77 phase=workers-joined
+VKMT_J5_PHASE iteration=77 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=78 phase=workers-start
+VKMT_J5_PHASE iteration=78 phase=compiled-ready
+VKMT_J5_PHASE iteration=78 phase=context-complete
+VKMT_J5_PHASE iteration=78 phase=allocation-ready
+VKMT_J5_PHASE iteration=78 phase=callback-attached
+VKMT_J5_PHASE iteration=78 phase=gc-complete
+VKMT_J5_PHASE iteration=78 phase=callback-detached
+VKMT_J5_PHASE iteration=78 phase=workers-joined
+VKMT_J5_PHASE iteration=78 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=79 phase=workers-start
+VKMT_J5_PHASE iteration=79 phase=compiled-ready
+VKMT_J5_PHASE iteration=79 phase=context-complete
+VKMT_J5_PHASE iteration=79 phase=allocation-ready
+VKMT_J5_PHASE iteration=79 phase=callback-attached
+VKMT_J5_PHASE iteration=79 phase=gc-complete
+VKMT_J5_PHASE iteration=79 phase=callback-detached
+VKMT_J5_PHASE iteration=79 phase=workers-joined
+VKMT_J5_PHASE iteration=79 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=7 cycle=9 callbacks=10
+    685    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    723    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    729    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=80 phase=workers-start
+VKMT_J5_PHASE iteration=80 phase=compiled-ready
+VKMT_J5_PHASE iteration=80 phase=context-complete
+VKMT_J5_PHASE iteration=80 phase=allocation-ready
+VKMT_J5_PHASE iteration=80 phase=callback-attached
+VKMT_J5_PHASE iteration=80 phase=gc-complete
+VKMT_J5_PHASE iteration=80 phase=callback-detached
+VKMT_J5_PHASE iteration=80 phase=workers-joined
+VKMT_J5_PHASE iteration=80 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=81 phase=workers-start
+VKMT_J5_PHASE iteration=81 phase=compiled-ready
+VKMT_J5_PHASE iteration=81 phase=context-complete
+VKMT_J5_PHASE iteration=81 phase=allocation-ready
+VKMT_J5_PHASE iteration=81 phase=callback-attached
+VKMT_J5_PHASE iteration=81 phase=gc-complete
+VKMT_J5_PHASE iteration=81 phase=callback-detached
+VKMT_J5_PHASE iteration=81 phase=workers-joined
+VKMT_J5_PHASE iteration=81 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=82 phase=workers-start
+VKMT_J5_PHASE iteration=82 phase=compiled-ready
+VKMT_J5_PHASE iteration=82 phase=context-complete
+VKMT_J5_PHASE iteration=82 phase=allocation-ready
+VKMT_J5_PHASE iteration=82 phase=callback-attached
+VKMT_J5_PHASE iteration=82 phase=gc-complete
+VKMT_J5_PHASE iteration=82 phase=callback-detached
+VKMT_J5_PHASE iteration=82 phase=workers-joined
+VKMT_J5_PHASE iteration=82 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=83 phase=workers-start
+VKMT_J5_PHASE iteration=83 phase=compiled-ready
+VKMT_J5_PHASE iteration=83 phase=context-complete
+VKMT_J5_PHASE iteration=83 phase=allocation-ready
+VKMT_J5_PHASE iteration=83 phase=callback-attached
+VKMT_J5_PHASE iteration=83 phase=gc-complete
+VKMT_J5_PHASE iteration=83 phase=callback-detached
+VKMT_J5_PHASE iteration=83 phase=workers-joined
+VKMT_J5_PHASE iteration=83 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=84 phase=workers-start
+VKMT_J5_PHASE iteration=84 phase=compiled-ready
+VKMT_J5_PHASE iteration=84 phase=context-complete
+VKMT_J5_PHASE iteration=84 phase=allocation-ready
+VKMT_J5_PHASE iteration=84 phase=callback-attached
+VKMT_J5_PHASE iteration=84 phase=gc-complete
+VKMT_J5_PHASE iteration=84 phase=callback-detached
+VKMT_J5_PHASE iteration=84 phase=workers-joined
+VKMT_J5_PHASE iteration=84 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=85 phase=workers-start
+VKMT_J5_PHASE iteration=85 phase=compiled-ready
+VKMT_J5_PHASE iteration=85 phase=context-complete
+VKMT_J5_PHASE iteration=85 phase=allocation-ready
+VKMT_J5_PHASE iteration=85 phase=callback-attached
+VKMT_J5_PHASE iteration=85 phase=gc-complete
+VKMT_J5_PHASE iteration=85 phase=callback-detached
+VKMT_J5_PHASE iteration=85 phase=workers-joined
+VKMT_J5_PHASE iteration=85 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=86 phase=workers-start
+VKMT_J5_PHASE iteration=86 phase=compiled-ready
+VKMT_J5_PHASE iteration=86 phase=context-complete
+VKMT_J5_PHASE iteration=86 phase=allocation-ready
+VKMT_J5_PHASE iteration=86 phase=callback-attached
+VKMT_J5_PHASE iteration=86 phase=gc-complete
+VKMT_J5_PHASE iteration=86 phase=callback-detached
+VKMT_J5_PHASE iteration=86 phase=workers-joined
+VKMT_J5_PHASE iteration=86 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=87 phase=workers-start
+VKMT_J5_PHASE iteration=87 phase=compiled-ready
+VKMT_J5_PHASE iteration=87 phase=context-complete
+VKMT_J5_PHASE iteration=87 phase=allocation-ready
+VKMT_J5_PHASE iteration=87 phase=callback-attached
+VKMT_J5_PHASE iteration=87 phase=gc-complete
+VKMT_J5_PHASE iteration=87 phase=callback-detached
+VKMT_J5_PHASE iteration=87 phase=workers-joined
+VKMT_J5_PHASE iteration=87 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=88 phase=workers-start
+VKMT_J5_PHASE iteration=88 phase=compiled-ready
+VKMT_J5_PHASE iteration=88 phase=context-complete
+VKMT_J5_PHASE iteration=88 phase=allocation-ready
+VKMT_J5_PHASE iteration=88 phase=callback-attached
+VKMT_J5_PHASE iteration=88 phase=gc-complete
+VKMT_J5_PHASE iteration=88 phase=callback-detached
+VKMT_J5_PHASE iteration=88 phase=workers-joined
+VKMT_J5_PHASE iteration=88 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=89 phase=workers-start
+VKMT_J5_PHASE iteration=89 phase=compiled-ready
+VKMT_J5_PHASE iteration=89 phase=context-complete
+VKMT_J5_PHASE iteration=89 phase=allocation-ready
+VKMT_J5_PHASE iteration=89 phase=callback-attached
+VKMT_J5_PHASE iteration=89 phase=gc-complete
+VKMT_J5_PHASE iteration=89 phase=callback-detached
+VKMT_J5_PHASE iteration=89 phase=workers-joined
+VKMT_J5_PHASE iteration=89 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=8 cycle=9 callbacks=10
+    689    1 %           VkmtWindowsJavaLifecycleProbe::hotKernel @ 7 (36 bytes)
+    726    2             VkmtWindowsJavaLifecycleProbe::hotKernel (36 bytes)
+    731    3   !         VkmtWindowsJavaLifecycleProbe::compiledExceptionContract (41 bytes)
+VKMT_J5_PHASE iteration=90 phase=workers-start
+VKMT_J5_PHASE iteration=90 phase=compiled-ready
+VKMT_J5_PHASE iteration=90 phase=context-complete
+VKMT_J5_PHASE iteration=90 phase=allocation-ready
+VKMT_J5_PHASE iteration=90 phase=callback-attached
+VKMT_J5_PHASE iteration=90 phase=gc-complete
+VKMT_J5_PHASE iteration=90 phase=callback-detached
+VKMT_J5_PHASE iteration=90 phase=workers-joined
+VKMT_J5_PHASE iteration=90 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=0 callbacks=1
+VKMT_J5_PHASE iteration=91 phase=workers-start
+VKMT_J5_PHASE iteration=91 phase=compiled-ready
+VKMT_J5_PHASE iteration=91 phase=context-complete
+VKMT_J5_PHASE iteration=91 phase=allocation-ready
+VKMT_J5_PHASE iteration=91 phase=callback-attached
+VKMT_J5_PHASE iteration=91 phase=gc-complete
+VKMT_J5_PHASE iteration=91 phase=callback-detached
+VKMT_J5_PHASE iteration=91 phase=workers-joined
+VKMT_J5_PHASE iteration=91 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=1 callbacks=2
+VKMT_J5_PHASE iteration=92 phase=workers-start
+VKMT_J5_PHASE iteration=92 phase=compiled-ready
+VKMT_J5_PHASE iteration=92 phase=context-complete
+VKMT_J5_PHASE iteration=92 phase=allocation-ready
+VKMT_J5_PHASE iteration=92 phase=callback-attached
+VKMT_J5_PHASE iteration=92 phase=gc-complete
+VKMT_J5_PHASE iteration=92 phase=callback-detached
+VKMT_J5_PHASE iteration=92 phase=workers-joined
+VKMT_J5_PHASE iteration=92 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=2 callbacks=3
+VKMT_J5_PHASE iteration=93 phase=workers-start
+VKMT_J5_PHASE iteration=93 phase=compiled-ready
+VKMT_J5_PHASE iteration=93 phase=context-complete
+VKMT_J5_PHASE iteration=93 phase=allocation-ready
+VKMT_J5_PHASE iteration=93 phase=callback-attached
+VKMT_J5_PHASE iteration=93 phase=gc-complete
+VKMT_J5_PHASE iteration=93 phase=callback-detached
+VKMT_J5_PHASE iteration=93 phase=workers-joined
+VKMT_J5_PHASE iteration=93 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=3 callbacks=4
+VKMT_J5_PHASE iteration=94 phase=workers-start
+VKMT_J5_PHASE iteration=94 phase=compiled-ready
+VKMT_J5_PHASE iteration=94 phase=context-complete
+VKMT_J5_PHASE iteration=94 phase=allocation-ready
+VKMT_J5_PHASE iteration=94 phase=callback-attached
+VKMT_J5_PHASE iteration=94 phase=gc-complete
+VKMT_J5_PHASE iteration=94 phase=callback-detached
+VKMT_J5_PHASE iteration=94 phase=workers-joined
+VKMT_J5_PHASE iteration=94 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=4 callbacks=5
+VKMT_J5_PHASE iteration=95 phase=workers-start
+VKMT_J5_PHASE iteration=95 phase=compiled-ready
+VKMT_J5_PHASE iteration=95 phase=context-complete
+VKMT_J5_PHASE iteration=95 phase=allocation-ready
+VKMT_J5_PHASE iteration=95 phase=callback-attached
+VKMT_J5_PHASE iteration=95 phase=gc-complete
+VKMT_J5_PHASE iteration=95 phase=callback-detached
+VKMT_J5_PHASE iteration=95 phase=workers-joined
+VKMT_J5_PHASE iteration=95 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=5 callbacks=6
+VKMT_J5_PHASE iteration=96 phase=workers-start
+VKMT_J5_PHASE iteration=96 phase=compiled-ready
+VKMT_J5_PHASE iteration=96 phase=context-complete
+VKMT_J5_PHASE iteration=96 phase=allocation-ready
+VKMT_J5_PHASE iteration=96 phase=callback-attached
+VKMT_J5_PHASE iteration=96 phase=gc-complete
+VKMT_J5_PHASE iteration=96 phase=callback-detached
+VKMT_J5_PHASE iteration=96 phase=workers-joined
+VKMT_J5_PHASE iteration=96 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=6 callbacks=7
+VKMT_J5_PHASE iteration=97 phase=workers-start
+VKMT_J5_PHASE iteration=97 phase=compiled-ready
+VKMT_J5_PHASE iteration=97 phase=context-complete
+VKMT_J5_PHASE iteration=97 phase=allocation-ready
+VKMT_J5_PHASE iteration=97 phase=callback-attached
+VKMT_J5_PHASE iteration=97 phase=gc-complete
+VKMT_J5_PHASE iteration=97 phase=callback-detached
+VKMT_J5_PHASE iteration=97 phase=workers-joined
+VKMT_J5_PHASE iteration=97 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=7 callbacks=8
+VKMT_J5_PHASE iteration=98 phase=workers-start
+VKMT_J5_PHASE iteration=98 phase=compiled-ready
+VKMT_J5_PHASE iteration=98 phase=context-complete
+VKMT_J5_PHASE iteration=98 phase=allocation-ready
+VKMT_J5_PHASE iteration=98 phase=callback-attached
+VKMT_J5_PHASE iteration=98 phase=gc-complete
+VKMT_J5_PHASE iteration=98 phase=callback-detached
+VKMT_J5_PHASE iteration=98 phase=workers-joined
+VKMT_J5_PHASE iteration=98 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=8 callbacks=9
+VKMT_J5_PHASE iteration=99 phase=workers-start
+VKMT_J5_PHASE iteration=99 phase=compiled-ready
+VKMT_J5_PHASE iteration=99 phase=context-complete
+VKMT_J5_PHASE iteration=99 phase=allocation-ready
+VKMT_J5_PHASE iteration=99 phase=callback-attached
+VKMT_J5_PHASE iteration=99 phase=gc-complete
+VKMT_J5_PHASE iteration=99 phase=callback-detached
+VKMT_J5_PHASE iteration=99 phase=workers-joined
+VKMT_J5_PHASE iteration=99 phase=apc-complete
+VKMT_J5_CYCLE_OK launch=9 cycle=9 callbacks=10

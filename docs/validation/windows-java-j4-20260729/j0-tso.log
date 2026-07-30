@@ -1,0 +1,22 @@
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/fex-wow64-java-final/provider/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/fex-wow64-java-final/provider/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j0-tso.oxYY7Z/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j0-tso.oxYY7Z/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/fex-wow64-java-final/provider/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j0-tso.oxYY7Z/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j0-tso.oxYY7Z/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/fex-wow64-java-final/provider/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j0-tso.oxYY7Z/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j0-tso.oxYY7Z/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_VERIFY_PREFIX_OK
+JAVA_TSO_PREFLIGHT_OK checksum=00000000a5a50ff0 aligned32=12345678 aligned64=1122334455667788
+FEX_JIT_EXTRACT_OK blocks=629 bytes=2223288
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+VKMT_WINDOWS_JAVA_J0_TSO_OK f7ace1980b33e270c9ee8b9d240705a82bcface99e868ff65895a3dbcfd4d247

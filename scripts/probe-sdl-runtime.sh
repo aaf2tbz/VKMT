@@ -81,7 +81,7 @@ cleanup()
       if test "$run_succeeded" = 1 && test "${VKMT_KEEP_SDL_RUN:-0}" = 1; then
         echo "Retained successful disposable SDL run: $run_root" >&2
       else
-        /usr/bin/trash "$run_root" 2>/dev/null || true
+        find "$run_root" -depth -delete 2>/dev/null || true
       fi
       ;;
   esac
@@ -164,6 +164,7 @@ run_wine "$run_root/wineboot.log" "$WINEBOOT" --init || {
   tail -n 160 "$run_root/wineboot.log" >&2
   exit 1
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 run_wine "$run_root/x86_64-movnt.log" "$run_root/x86_64/movnt_probe.exe" || {

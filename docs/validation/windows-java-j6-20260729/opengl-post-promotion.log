@@ -1,0 +1,36 @@
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/opengl-all-arch.1xbxG7/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/opengl-all-arch.1xbxG7/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/opengl-all-arch.1xbxG7/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/opengl-all-arch.1xbxG7/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/opengl-all-arch.1xbxG7/prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/opengl-all-arch.1xbxG7/prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_RUNTIME_PROVIDERS_VERIFY_PREFIX_OK
+OPENGL_ARM64_RUNTIME_OK
+OPENGL_ARM64_GLSL120_DRAW_OK
+OPENGL_ARM64_GLSL330_METAL_DRAW_OK
+OPENGL_ARM64_GLSL450_METAL_DRAW_OK
+OPENGL_ARM64EC_RUNTIME_OK
+OPENGL_ARM64EC_GLSL120_DRAW_OK
+OPENGL_ARM64EC_GLSL330_METAL_DRAW_OK
+OPENGL_ARM64EC_GLSL450_METAL_DRAW_OK
+OPENGL_X86_64_RUNTIME_OK
+OPENGL_X86_64_GLSL120_DRAW_OK
+OPENGL_X86_64_GLSL330_METAL_DRAW_OK
+OPENGL_X86_64_GLSL450_METAL_DRAW_OK
+OPENGL_I386_RUNTIME_OK
+OPENGL_I386_GLSL120_DRAW_OK
+OPENGL_I386_GLSL330_METAL_DRAW_OK
+OPENGL_I386_GLSL450_METAL_DRAW_OK
+OPENGL_SINGLE_PREFIX_ALL_ARCHITECTURES_OK

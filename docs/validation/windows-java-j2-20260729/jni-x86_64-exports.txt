@@ -1,0 +1,45 @@
+
+File: /Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j2.89UweX/vkmt-java-jni-x86_64.dll
+Format: COFF-x86-64
+Arch: x86_64
+AddressSize: 64bit
+Export {
+  Ordinal: 1
+  Name: JNI_OnLoad
+  RVA: 0x1350
+}
+Export {
+  Ordinal: 2
+  Name: Java_VkmtWindowsJavaServiceProbe_nativeAddress
+  RVA: 0x1370
+}
+Export {
+  Ordinal: 3
+  Name: Java_VkmtWindowsJavaServiceProbe_nativeCallback
+  RVA: 0x1390
+}
+Export {
+  Ordinal: 4
+  Name: Java_VkmtWindowsJavaServiceProbe_nativeCallbackException
+  RVA: 0x13F0
+}
+Export {
+  Ordinal: 5
+  Name: Java_VkmtWindowsJavaServiceProbe_nativePointerBits
+  RVA: 0x1360
+}
+Export {
+  Ordinal: 6
+  Name: Java_VkmtWindowsJavaServiceProbe_nativeQpcSleepMicros
+  RVA: 0x1640
+}
+Export {
+  Ordinal: 7
+  Name: Java_VkmtWindowsJavaServiceProbe_nativeRoundTrip
+  RVA: 0x1380
+}
+Export {
+  Ordinal: 8
+  Name: Java_VkmtWindowsJavaServiceProbe_nativeSecondThread
+  RVA: 0x1470
+}

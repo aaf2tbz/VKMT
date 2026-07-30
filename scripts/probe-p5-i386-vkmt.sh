@@ -77,7 +77,7 @@ cleanup()
       if test "${VKMT_KEEP_P5_RUN:-0}" = 1; then
         echo "Retained disposable Phase 5 run: $run_root" >&2
       else
-        /usr/bin/trash "$run_root" 2>/dev/null || true
+        find "$run_root" -depth -delete 2>/dev/null || true
       fi
       ;;
   esac
@@ -129,6 +129,7 @@ done
 run_wine "$run_root/wineboot.log" -all "$WINEBOOT" --init || {
   echo "P5 native ARM64 wineboot failed" >&2; tail -n 100 "$run_root/wineboot.log" >&2; exit 1;
 }
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 run_wine "$run_root/substrate.log" -all "$run_root/substrate.exe" "Z:$run_root/substrate.marker" || {
   echo "P5 i386 substrate regression failed" >&2; tail -n 120 "$run_root/substrate.log" >&2; exit 1;

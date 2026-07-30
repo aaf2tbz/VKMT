@@ -1,0 +1,10 @@
+
+File: /Volumes/AverySSD/VKMT/build/probe-runs/windows-java.j4.rlige0/vkmt-java-memory-i386.dll
+Format: COFF-i386
+Arch: i386
+AddressSize: 32bit
+Export {
+  Ordinal: 1
+  Name: Java_VkmtWindowsJavaMemoryModelProbe_nativeMemoryPrimitives
+  RVA: 0x1310
+}

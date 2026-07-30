@@ -1,0 +1,23 @@
+golden_status=pass
+candidate_status=not-needed
+selected_provider=golden
+golden_sha256=ea523a42ca8e7965371122bd7be1eb6b973cded50ecda5da1465b2961ad36479
+candidate_sha256=f7ace1980b33e270c9ee8b9d240705a82bcface99e868ff65895a3dbcfd4d247
+jni_i386_sha256=380f4ab71824ff779c08dd1836c8b18b49a6c60e856eecd1ba40f300a4016d6c
+jni_machine=IMAGE_FILE_MACHINE_I386
+VKMT_J4_ROUND_OK provider=golden mode=memory round=0 publication=4657f8de1200 atomic=9c4000009c40 native=4a34000000004e20
+VKMT_J4_ROUND_OK provider=golden mode=gc round=0 publication=0 atomic=0 native=0
+VKMT_J4_ROUND_OK provider=golden mode=memory round=0 publication=4657f8de1200 atomic=9c4000009c40 native=4a34000000004e20
+VKMT_J4_ROUND_OK provider=golden mode=gc round=0 publication=0 atomic=0 native=0
+VKMT_J4_ROUND_OK provider=golden mode=memory round=0 publication=4657f8de1200 atomic=9c4000009c40 native=4a34000000004e20
+VKMT_J4_ROUND_OK provider=golden mode=gc round=0 publication=0 atomic=0 native=0
+VKMT_WINDOWS_JAVA_J4_OK provider=golden mode=memory rounds=1 checksum=4a34e29804cae571
+VKMT_WINDOWS_JAVA_J4_OK provider=golden mode=gc rounds=1 checksum=4e2002dcee20
+VKMT_WINDOWS_JAVA_J4_OK provider=golden mode=memory rounds=1 checksum=4a34e29804cae571
+VKMT_WINDOWS_JAVA_J4_OK provider=golden mode=gc rounds=1 checksum=4e2002dcee20
+VKMT_WINDOWS_JAVA_J4_OK provider=golden mode=memory rounds=1 checksum=4a34e29804cae571
+VKMT_WINDOWS_JAVA_J4_OK provider=golden mode=gc rounds=1 checksum=4e2002dcee20
+golden_gc_events=3
+software_tso=1
+hardware_tso=0
+exact_shutdown=1

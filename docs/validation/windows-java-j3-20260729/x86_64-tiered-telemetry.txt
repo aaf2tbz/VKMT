@@ -1,0 +1,36 @@
+VKMT_J3_EXECMEM_OK transitions=257 flushes=257 patches=128
+   2388    1       3       VkmtWindowsJavaJitProbe::arithmetic (35 bytes)
+   2686    2 %     4       VkmtWindowsJavaJitProbe::arithmetic @ 7 (35 bytes)
+   3048    3       4       VkmtWindowsJavaJitProbe::arithmetic (35 bytes)
+   3065    1       3       VkmtWindowsJavaJitProbe::arithmetic (35 bytes)   made not entrant
+VKMT_J3_HOT_OK checksum=27224fc49f29
+  19362    4       3       VkmtWindowsJavaJitProbe::polymorphic (8 bytes)
+  19388    5       4       VkmtWindowsJavaJitProbe::polymorphic (8 bytes)
+VKMT_J3_DEOPT_OK mode=exercised checksum=6e4bbfec590
+  19443    4       3       VkmtWindowsJavaJitProbe::polymorphic (8 bytes)   made not entrant
+  19635    6       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19649    7       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19670    8       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19682    9       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=0
+  21028   10       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  21041   11       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  21062   12       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  21084   13       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=1
+  22332   14       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  22344   15       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  22371   16       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  22395   17       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=2
+  23543   18       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  23555   19       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  23587   20       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  23615   21       3       vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_CODECACHE_WAVE_OK wave=3
+  24654   22       3       VkmtWindowsJavaJitProbe::divide (18 bytes)
+VKMT_J3_EXCEPTION_WARMUP_OK checksum=12a34fe2f5c5
+  24675   24       2       VkmtWindowsJavaJitProbe::recurse (17 bytes)
+  24688   23       2       VkmtWindowsJavaJitProbe::implicitNull (23 bytes)
+VKMT_WINDOWS_JAVA_J3_OK model=64 vm=OpenJDK 64-Bit Server VM mode=x86_64-tiered compilationTimeMs=673 loaderChecksum=8feada69880 exceptions=VKMT_J3_EXCEPTIONS_OK
+CodeCache: size=245760Kb used=1104Kb max_used=1104Kb free=244656Kb

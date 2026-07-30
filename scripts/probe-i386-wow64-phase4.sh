@@ -71,7 +71,7 @@ cleanup() {
       if [[ "${VKMT_KEEP_PROBE_RUN:-0}" = 1 ]]; then
         echo "Retained disposable Phase 4 run: $run_root" >&2
       else
-        /usr/bin/trash "$run_root" 2>/dev/null || true
+        find "$run_root" -depth -delete 2>/dev/null || true
       fi
       ;;
   esac
@@ -115,6 +115,7 @@ if ! run_wine "$bootstrap_log" "$WINEBOOT" --init; then
   tail -n 120 "$bootstrap_log" >&2
   exit 1
 fi
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 if run_wine "$log" "$PHASE4_EXE" "Z:$phase4_marker"; then code=0; else code=$?; fi

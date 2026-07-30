@@ -1,0 +1,80 @@
+      b0: d50339bf     	dmb	ishld
+      bc: 88dfff0a     	ldar	w10, [x24]
+     180: 08dfff14     	ldarb	w20, [x24]
+     1cc: d50339bf     	dmb	ishld
+     1d8: 88dfff04     	ldar	w4, [x24]
+     218: d50339bf     	dmb	ishld
+     224: 88dfff07     	ldar	w7, [x24]
+     528: d5033bbf     	dmb	ish
+     538: 889fff1f     	stlr	wzr, [x24]
+     56c: 08dfff1b     	ldarb	w27, [x24]
+     668: d50339bf     	dmb	ishld
+     674: 88dfff0a     	ldar	w10, [x24]
+     6a0: 08dfff14     	ldarb	w20, [x24]
+     758: 08dfff15     	ldarb	w21, [x24]
+     790: 08dfff14     	ldarb	w20, [x24]
+     7dc: d50339bf     	dmb	ishld
+     7e8: 88dfff04     	ldar	w4, [x24]
+     828: d50339bf     	dmb	ishld
+     834: 88dfff04     	ldar	w4, [x24]
+     878: d50339bf     	dmb	ishld
+     884: 88dfff06     	ldar	w6, [x24]
+     8cc: d50339bf     	dmb	ishld
+     8d8: 88dfff14     	ldar	w20, [x24]
+     928: d50339bf     	dmb	ishld
+     934: 88dfff07     	ldar	w7, [x24]
+     980: d50339bf     	dmb	ishld
+     98c: 88dfff14     	ldar	w20, [x24]
+     9e0: d50339bf     	dmb	ishld
+     9ec: 88dfff07     	ldar	w7, [x24]
+     a8c: d50339bf     	dmb	ishld
+     a98: 88dfff0b     	ldar	w11, [x24]
+     adc: d5033bbf     	dmb	ish
+     aec: 889fff14     	stlr	w20, [x24]
+     b30: d5033bbf     	dmb	ish
+     b40: 889fff14     	stlr	w20, [x24]
+     b84: d5033bbf     	dmb	ish
+     b94: 889fff14     	stlr	w20, [x24]
+     bd8: d5033bbf     	dmb	ish
+     be8: 889fff14     	stlr	w20, [x24]
+     c2c: d5033bbf     	dmb	ish
+     c3c: 889fff14     	stlr	w20, [x24]
+     d68: d5033bbf     	dmb	ish
+     d78: 889fff04     	stlr	w4, [x24]
+     f1c: d50339bf     	dmb	ishld
+     f28: 88dfff1b     	ldar	w27, [x24]
+     fa8: d50339bf     	dmb	ishld
+     fb4: 88dfff14     	ldar	w20, [x24]
+    10c4: d50339bf     	dmb	ishld
+    10d0: 88dfff14     	ldar	w20, [x24]
+    1180: d50339bf     	dmb	ishld
+    118c: 88dfff04     	ldar	w4, [x24]
+    11d0: d50339bf     	dmb	ishld
+    11dc: 88dfff07     	ldar	w7, [x24]
+    1298: d50339bf     	dmb	ishld
+    12a4: 88dfff14     	ldar	w20, [x24]
+    1354: d5033bbf     	dmb	ish
+    1364: 889fff04     	stlr	w4, [x24]
+    145c: d5033bbf     	dmb	ish
+    146c: 889fff14     	stlr	w20, [x24]
+    14a4: d5033bbf     	dmb	ish
+    14b4: 889fff14     	stlr	w20, [x24]
+    14fc: d5033bbf     	dmb	ish
+    150c: 889fff14     	stlr	w20, [x24]
+    1544: d5033bbf     	dmb	ish
+    1554: 889fff14     	stlr	w20, [x24]
+    159c: d5033bbf     	dmb	ish
+    15ac: 889fff14     	stlr	w20, [x24]
+    15e4: d5033bbf     	dmb	ish
+    15f4: 889fff14     	stlr	w20, [x24]
+    163c: d5033bbf     	dmb	ish
+    164c: 889fff14     	stlr	w20, [x24]
+    1684: d5033bbf     	dmb	ish
+    1694: 889fff14     	stlr	w20, [x24]
+    16dc: d5033bbf     	dmb	ish
+    16ec: 889fff14     	stlr	w20, [x24]
+    1724: d5033bbf     	dmb	ish
+    1734: 889fff14     	stlr	w20, [x24]
+    177c: d5033bbf     	dmb	ish
+    178c: 889fff14     	stlr	w20, [x24]
+    17c4: d5033bbf     	dmb	ish
