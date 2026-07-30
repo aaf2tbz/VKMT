@@ -1139,3 +1139,37 @@ Its 322,137-entry manifest is beside it as
 `VKMT-runtime-j6-20260729-1738.manifest.txt`. The archive passed `zstd -t`
 and required-manifest checks for Wine, both canonical providers, the J5
 Wine/FEX patches, the J6 runner, and the Java/WoW64 plan.
+
+### 2026-07-30 — Steam WebHelper ARM64EC syscall boundary complete
+
+The installed x86_64 `steamwebhelper.exe` CEF runtime now passes sustained
+40-second probes in the existing all-architecture Steam prefix with both
+`FEX_TSOENABLED=0` and `FEX_TSOENABLED=1`. Both lanes reached the extended
+CEF dependency set, including Shell, SDL3, SetupAPI, and HID, without the
+previous `chrome_elf` PartitionAlloc trap, another exception, or an error
+signature. Each run ended with exact wineserver `-k`/`-w`; no helper or Wine
+process remains.
+
+The failure was not TSO scheduling. The x64 `NtQueryValueKey` path supplied a
+24-byte output buffer, but the internal ARM64EC syscall hp target received
+guest `R10/R11` as native arguments 5/6 because the hp-target shortcut
+bypassed the normal ARM64EC entry-thunk argument lift. Wine consequently
+treated a large pointer as the buffer length and wrote registry data into
+Chrome's adjacent PartitionAlloc freelist word.
+
+`ExitFunctionEC` now performs the complete x64-to-native syscall call
+contract: x64 stack arguments 5-8 are loaded into `x4-x7`, arguments 9-16 are
+copied into an aligned native stack frame, and the exact guest return address
+and post-pop stack pointer survive the native syscall in memory. Sixteen
+arguments covers the largest syscall in the pinned Wine table. Temporary
+Steam/allocator watchpoints, transition histories, and exception tracing
+were removed after proof.
+
+The complete accumulated FEX ARM64EC/WoW64 boundary is committed in the FEX
+source tree as `6b17b7c1e` (`Complete ARM64EC and WoW64 guest boundary`).
+The clean provider SHA-256 is
+`4d52a4f2a6d6c8587d1d4274346826738026abf2e93a29d591f9574364367db0`;
+the candidate, Wine build-tree provider, and prefix provider are
+byte-identical. Probe logs are
+`/tmp/vkmt-steamwebhelper-clean-tso0.log` and
+`/tmp/vkmt-steamwebhelper-clean-tso1.log`.
