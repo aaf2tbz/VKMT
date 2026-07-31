@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <winhttp.h>
 #include <objbase.h>
+#include <wincodec.h>
 #include <stdio.h>
 #include <atomic>
 #include "WebView2.h"
@@ -8,8 +9,8 @@
 static HWND window_handle;
 static ICoreWebView2Controller *controller;
 static ICoreWebView2 *webview;
+static IStream *preview_stream;
 static const wchar_t *https_url;
-static int navigation_stage;
 static bool finished;
 
 static HRESULT prove_https(const wchar_t *url)
@@ -67,6 +68,17 @@ static void fail(const char *where, HRESULT hr)
     PostQuitMessage(2);
 }
 
+static const wchar_t renderer_script[] =
+    L"(()=>{"
+    L"const i=document.getElementById('i');"
+    L"if(!i)throw new Error('fixture DOM missing');"
+    L"i.value='VKMT';i.dispatchEvent(new Event('input',{bubbles:true}));"
+    L"const a=new OfflineAudioContext(1,8,8000);"
+    L"const b=a.createBuffer(1,8,8000);b.getChannelData(0)[0]=0.5;"
+    L"return {marker:'VKMT_WEBVIEW2_OK',input:i.dataset.hit,"
+    L"audio:(b.getChannelData(0)[0]===0.5?'audio-ok':'audio-bad')};"
+    L"})()";
+
 template <typename Interface, const IID *InterfaceId>
 class HandlerBase : public Interface
 {
@@ -95,6 +107,67 @@ public:
     }
 };
 
+class PreviewHandler final :
+    public HandlerBase<ICoreWebView2CapturePreviewCompletedHandler,
+                       &IID_ICoreWebView2CapturePreviewCompletedHandler>
+{
+public:
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT error) override
+    {
+        IWICImagingFactory *factory = nullptr;
+        IWICBitmapDecoder *decoder = nullptr;
+        IWICBitmapFrameDecode *frame = nullptr;
+        IWICFormatConverter *converter = nullptr;
+        LARGE_INTEGER start = {};
+        WICRect rect;
+        UINT width = 0, height = 0;
+        BYTE pixel[4] = {};
+        HRESULT hr = error;
+
+        if (SUCCEEDED(hr)) hr = preview_stream->Seek(start, STREAM_SEEK_SET, nullptr);
+        if (SUCCEEDED(hr))
+            hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr,
+                                  CLSCTX_INPROC_SERVER,
+                                  IID_PPV_ARGS(&factory));
+        if (SUCCEEDED(hr))
+            hr = factory->CreateDecoderFromStream(
+                preview_stream, nullptr, WICDecodeMetadataCacheOnLoad,
+                &decoder);
+        if (SUCCEEDED(hr)) hr = decoder->GetFrame(0, &frame);
+        if (SUCCEEDED(hr)) hr = frame->GetSize(&width, &height);
+        if (SUCCEEDED(hr)) hr = factory->CreateFormatConverter(&converter);
+        if (SUCCEEDED(hr))
+            hr = converter->Initialize(frame, GUID_WICPixelFormat32bppRGBA,
+                                       WICBitmapDitherTypeNone, nullptr, 0,
+                                       WICBitmapPaletteTypeCustom);
+        rect = {(INT)(width / 2), (INT)(height / 2), 1, 1};
+        if (SUCCEEDED(hr)) hr = converter->CopyPixels(&rect, 4, 4, pixel);
+
+        if (converter) converter->Release();
+        if (frame) frame->Release();
+        if (decoder) decoder->Release();
+        if (factory) factory->Release();
+        preview_stream->Release();
+        preview_stream = nullptr;
+
+        if (FAILED(hr) || pixel[0] != 17 || pixel[1] != 34 ||
+            pixel[2] != 51 || pixel[3] != 255)
+        {
+            printf("WEBVIEW2_BAD_PREVIEW size=%ux%u rgba=%u,%u,%u,%u\n",
+                   width, height, pixel[0], pixel[1], pixel[2], pixel[3]);
+            fail("CapturePreview pixel", FAILED(hr) ? hr : E_FAIL);
+            return S_OK;
+        }
+        printf("WEBVIEW2_PREVIEW_PIXEL_OK size=%ux%u rgba=%u,%u,%u,%u\n",
+               width, height, pixel[0], pixel[1], pixel[2], pixel[3]);
+        puts("WEBVIEW2_HTTPS_INPUT_AUDIO_PIXEL_OK");
+        finished = true;
+        KillTimer(window_handle, 3);
+        PostQuitMessage(0);
+        return S_OK;
+    }
+};
+
 class ScriptHandler final :
     public HandlerBase<ICoreWebView2ExecuteScriptCompletedHandler,
                        &IID_ICoreWebView2ExecuteScriptCompletedHandler>
@@ -108,43 +181,30 @@ public:
             return S_OK;
         }
         bool marker = wcsstr(result, L"VKMT_WEBVIEW2_OK") != nullptr;
-        bool pixel = wcsstr(result, L"17,34,51,255") != nullptr;
         bool input = wcsstr(result, L"input-ok") != nullptr;
         bool audio = wcsstr(result, L"audio-ok") != nullptr;
-        if (!marker || !pixel || !input || !audio)
+        if (!marker || !input || !audio)
         {
             wprintf(L"WEBVIEW2_BAD_RESULT %ls\n", result);
             fail("deterministic result", E_FAIL);
             return S_OK;
         }
         wprintf(L"WEBVIEW2_SCRIPT_RESULT %ls\n", result);
-        puts("WEBVIEW2_HTTPS_INPUT_AUDIO_PIXEL_OK");
-        finished = true;
-        PostQuitMessage(0);
+        HRESULT hr = CreateStreamOnHGlobal(nullptr, TRUE, &preview_stream);
+        if (FAILED(hr))
+        {
+            fail("CreateStreamOnHGlobal", hr);
+            return S_OK;
+        }
+        auto handler = new PreviewHandler();
+        hr = webview->CapturePreview(COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG,
+                                     preview_stream, handler);
+        handler->Release();
+        if (FAILED(hr)) fail("CapturePreview", hr);
+        else puts("WEBVIEW2_CAPTURE_PREVIEW_STARTED");
         return S_OK;
     }
 };
-
-static void run_renderer_script()
-{
-    auto handler = new ScriptHandler();
-    HRESULT hr = webview->ExecuteScript(
-        L"(()=>{"
-        L"i.value='VKMT';i.dispatchEvent(new Event('input',{bubbles:true}));"
-        L"const p=[...c.getContext('2d').getImageData(0,0,1,1).data];"
-        L"const a=new OfflineAudioContext(1,8,8000);"
-        L"const b=a.createBuffer(1,8,8000);b.getChannelData(0)[0]=0.5;"
-        L"return {marker:'VKMT_WEBVIEW2_OK',pixel:p,input:i.dataset.hit,"
-        L"audio:(b.getChannelData(0)[0]===0.5?'audio-ok':'audio-bad')};"
-        L"})()",
-        handler);
-    if (FAILED(hr)) fail("ExecuteScript", hr);
-    else
-    {
-        puts("WEBVIEW2_RENDERER_SCRIPT_STARTED");
-        SetTimer(window_handle, 3, 15000, nullptr);
-    }
-}
 
 class NavigationHandler final :
     public HandlerBase<ICoreWebView2NavigationCompletedEventHandler,
@@ -154,32 +214,26 @@ public:
     HRESULT STDMETHODCALLTYPE Invoke(
         ICoreWebView2 *, ICoreWebView2NavigationCompletedEventArgs *args) override
     {
-        printf("WEBVIEW2_NAVIGATION_COMPLETED stage=%d\n", navigation_stage);
+        puts("WEBVIEW2_NAVIGATION_COMPLETED");
         BOOL success = FALSE;
         HRESULT hr = args->get_IsSuccess(&success);
         if (FAILED(hr) || !success)
         {
             COREWEBVIEW2_WEB_ERROR_STATUS status;
             args->get_WebErrorStatus(&status);
-            printf("WEBVIEW2_NAV_FAIL stage=%d status=%d\n",
-                   navigation_stage, (int)status);
+            printf("WEBVIEW2_NAV_FAIL status=%d\n", (int)status);
             fail("navigation", FAILED(hr) ? hr : E_FAIL);
             return S_OK;
         }
-        navigation_stage++;
         auto handler = new ScriptHandler();
-        hr = webview->ExecuteScript(
-            L"(()=>{"
-            L"i.value='VKMT';i.dispatchEvent(new Event('input',{bubbles:true}));"
-            L"const p=[...c.getContext('2d').getImageData(0,0,1,1).data];"
-            L"const a=new OfflineAudioContext(1,8,8000);"
-            L"const b=a.createBuffer(1,8,8000);b.getChannelData(0)[0]=0.5;"
-            L"return {marker:'VKMT_WEBVIEW2_OK',pixel:p,input:i.dataset.hit,"
-            L"audio:(b.getChannelData(0)[0]===0.5?'audio-ok':'audio-bad')};"
-            L"})()",
-            handler);
+        hr = webview->ExecuteScript(renderer_script, handler);
         handler->Release();
         if (FAILED(hr)) fail("ExecuteScript", hr);
+        else
+        {
+            puts("WEBVIEW2_RENDERER_SCRIPT_STARTED");
+            SetTimer(window_handle, 3, 30000, nullptr);
+        }
         return S_OK;
     }
 };
@@ -205,21 +259,28 @@ public:
         controller->put_IsVisible(TRUE);
         HRESULT hr = controller->get_CoreWebView2(&webview);
         if (FAILED(hr)) { fail("get_CoreWebView2", hr); return S_OK; }
+        EventRegistrationToken navigation_token;
+        auto navigation_handler = new NavigationHandler();
+        hr = webview->add_NavigationCompleted(navigation_handler,
+                                              &navigation_token);
+        navigation_handler->Release();
+        if (FAILED(hr))
+        {
+            fail("add_NavigationCompleted", hr);
+            return S_OK;
+        }
         hr = prove_https(https_url);
         if (FAILED(hr)) { fail("host HTTPS transport", hr); return S_OK; }
         puts("WEBVIEW2_HTTPS_TRANSPORT_OK");
         hr = webview->NavigateToString(
-            L"<!doctype html><canvas id=c width=4 height=4></canvas><input id=i>"
+            L"<!doctype html><body style='margin:0;background:#112233;"
+            L"width:100vw;height:100vh;overflow:hidden'><input id=i>"
             L"<script>"
-            L"const x=c.getContext('2d');x.fillStyle='#112233';x.fillRect(0,0,4,4);"
             L"i.addEventListener('input',()=>i.dataset.hit='input-ok');"
             L"</script>");
         if (FAILED(hr)) fail("NavigateToString", hr);
         else
-        {
             puts("WEBVIEW2_RENDERER_NAVIGATION_STARTED");
-            SetTimer(window_handle, 2, 5000, nullptr);
-        }
         return S_OK;
     }
 };
@@ -255,12 +316,6 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam,
         GetClientRect(hwnd, &bounds);
         controller->put_Bounds(bounds);
     }
-    if (message == WM_TIMER && wparam == 2 && !finished)
-    {
-        KillTimer(hwnd, 2);
-        run_renderer_script();
-        return 0;
-    }
     if (message == WM_TIMER && wparam == 1 && !finished)
     {
         fail("timeout", HRESULT_FROM_WIN32(ERROR_TIMEOUT));
@@ -269,9 +324,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam,
     if (message == WM_TIMER && wparam == 3 && !finished)
     {
         KillTimer(hwnd, 3);
-        puts("WEBVIEW2_ENV_CONTROLLER_RENDERER_BOOTSTRAP_OK");
-        finished = true;
-        PostQuitMessage(0);
+        fail("ExecuteScript callback timeout",
+             HRESULT_FROM_WIN32(ERROR_TIMEOUT));
         return 0;
     }
     return DefWindowProcW(hwnd, message, wparam, lparam);

@@ -166,6 +166,42 @@ was stopped through its exact wineserver and removed; no Wine process remains.
 Run `scripts/verify-preservation.sh` before cleanup or release staging.  It is
 read-only and fails honestly while any requested runtime stage is absent.
 
+### 2026-07-31 — no-TSO Phase 5 child-process contract accepted
+
+- `scripts/probe-no-tso-phase5.sh` passes a fresh-prefix i386 root/service to
+  x86_64 client/helper chain with all three FEX TSO settings forced to zero.
+- Both provider families attach before guest execution. Environment, current
+  directory, standard pipes, inherited event/raw kernel handles, waits, exits,
+  and final signalling pass across both architecture transitions.
+- Exact i386 SteamService, i386 steamclient, and x86_64 steamclient probes pass;
+  the exact x86_64 Steam WebHelper image/import closure is valid.
+- Raw inherited socket handles intentionally produce `WSAENOTSOCK` until
+  transferred with `WSADuplicateSocket`/`WSASocket`, matching Windows. A
+  temporary incompatible `ws2_32` adoption change was fully reverted.
+- Evidence is
+  `docs/validation/no-tso-phase5-v8-20260731T041911Z/RESULTS.md`. The disposable
+  prefix was removed, no process remained, and canonical provider bytes were
+  restored. Phase 6 owns the valid real-parent WebHelper launch and clean Steam
+  UI acceptance.
+
+### 2026-07-31 — no-TSO Phase 1 accepted
+
+- `scripts/probe-no-tso-phase1.sh` forces every FEX TSO option off and proves
+  x86_64 plus i386 ordering, wait/wake races, condition variables, APCs,
+  repeated threads, 128 concurrent children, and eight concurrent WinHTTP
+  Steam-CDN range downloads in one fresh prefix.
+- The i386 HTTPS failure was a nested native-ntdll-to-PE-wow64 pointer
+  conversion during AFD send. Native ntdll now resolves its explicit mappings
+  and Darwin high-aperture guest memory locally, avoiding that unsafe re-entry.
+- Accepted evidence is
+  `docs/validation/no-tso-phase1-20260731T024459Z/RESULTS.md`; both architectures
+  matched the native 4-MiB payload hash eight out of eight. The exact prefix
+  server was stopped and the disposable run root was removed.
+- Do not enable `FEX_TSOENABLED`, `FEX_VECTORTSOENABLED`, or
+  `FEX_MEMCPYSETTSOENABLED` for diagnostics or acceptance. Phase 2 proceeds by
+  auditing and correcting explicit ARM64 ordering instructions with all three
+  options fixed at zero.
+
 ## Compatibility expansion after the accepted runtime baseline
 
 The post-baseline plan is `docs/COMPATIBILITY_EXPANSION_PLAN.md`. Its first
@@ -1173,3 +1209,258 @@ the candidate, Wine build-tree provider, and prefix provider are
 byte-identical. Probe logs are
 `/tmp/vkmt-steamwebhelper-clean-tso0.log` and
 `/tmp/vkmt-steamwebhelper-clean-tso1.log`.
+
+### 2026-07-30 — Steam bootstrap recovery made installer-safe
+
+The former Steam `RtlWaitOnAddress` workaround incorrectly applied to every
+`steam.exe`, including the client launched by `SteamSetup.exe`, and classified
+one second without a bootstrap-log write as a hang.  That could synthesize a
+wake during a legitimate package/network transition and produce Steam's
+spurious “must be online to install” failure.
+
+`dlls/ntdll/sync.c` now enables the recovery only when
+`VKMT_STEAM_BOOTSTRAP_WAKE_RECOVERY=1` is explicitly supplied.  The ordinary
+SteamSetup launcher never supplies that environment value.  The installed
+client launcher is `scripts/launch-steam-client-recovery.sh`; it is a one-shot
+launcher and uses the recovery only after `Steam.exe` exists.  It polls the
+specific `CHTTPClientThreadPool:0` infinite wait every ten seconds, requires
+twenty seconds without a `logs\\bootstrap_log.txt` write, and permits at most
+two spurious wakes per client process.
+
+The active installer launch is the user LaunchAgent
+`com.vkmt.steamsetup-one-shot`, explicitly `RunAtLoad=false` and
+`KeepAlive=false`; it has no relaunch-on-exit behavior.  The old inferred-
+KeepAlive `launchctl submit` job was removed.  `ntdll.so` was rebuilt only
+from the changed `sync.c` object and relinked at `wine/build-ec/dlls/ntdll/`.
+
+### 2026-07-30 — Direct Rosetta boundary comparison
+
+Direct probes of Apple's installed Rosetta runtime (without Wine or GPTK)
+passed eight concurrent Steam-CDN range downloads with 33,554,432 verified
+bytes, 128/128 translated child-process handoffs, one million acquire/release
+publications, and 200,000 pthread condition-variable ping-pong rounds per
+thread. The x86 acquire/release path contained only ordinary `movl`
+instructions, so Rosetta itself preserved the required x86 ordering.
+
+`vmmap` confirmed a complete translated-process environment: Rosetta runtime,
+per-thread context and return stack, a 128 MiB JIT arena, x86_64 dyld, and
+x86_64 libsystem kernel/pthread libraries. This differs structurally from
+VKMT's mixed FEX guest/native ARM64 Wine Unix boundary, where pointers,
+wait/wake state, exceptions, and child bootstrap must be explicitly bridged.
+Evidence and the reusable source probe are in
+`docs/validation/rosetta-boundary-20260730/RESULTS.md` and
+`test/rosetta_sync_probe.c`.
+
+### 2026-07-30 — No-TSO Rosetta-parity Phase 0 instrumentation complete
+
+Phase 0 of `docs/NO_TSO_ROSETTA_PARITY_PLAN.md` completed the instrumentation
+and no-TSO assertion work. The original runner staged provider candidates
+only inside the prefix, while x86_64 bootstrap actually loaded `xtajit64.dll`
+from `WINEBUILDDIR`. Consequently its x86_64 v12-candidate acceptance claim
+was invalid and is superseded by the correctly staged Phase 2 evidence below.
+The instrumentation-disabled silence gate and the i386 candidate checks remain
+valid.
+
+The Phase 0 candidates were
+`docs/validation/no-tso-phase0-20260731T013101Z/candidates/xtajit-authoritative-v12.dll`
+(SHA-256 `b2a24e4585b44119b1d8ff9a8907987036ab8ed7992d6dcb148600fbaba4422e`)
+and `xtajit64-authoritative-v12.dll` (SHA-256
+`455730fec28029be1c646147214f164164726f1ee5b542f2f69b409b11a07c86`).
+The established canonical provider files were deliberately preserved. The
+x86_64 v12 candidate hangs in `wineboot` when placed in the real bootstrap
+path and must not be promoted.
+
+Provider startup now checks the effective scalar, vector, and memcpy/set TSO
+settings and uses an unconditional release-build fail-fast trap if any is
+enabled. Three isolated negative controls enabled one setting at a time solely
+to prove rejection; all three failed before i386 guest execution and were
+cleaned. They are tests, not supported runtime modes, and must never be used by
+normal launchers.
+
+Wine has opt-in bounded counters for WaitOnAddress registration, early wakes,
+delivery/retention, timeout, and synthetic recovery, plus one provider-handoff
+record per emulated process. Steam-specific wake recovery remains separately
+identified from generic synchronization work. Only affected FEX providers,
+ARM64X `ntdll.dll`, and native ARM64 `wow64.dll` were rebuilt; there was no full
+Wine rebuild. Complete evidence is
+`docs/validation/no-tso-phase0-20260731T013101Z/RESULTS.md`. Phase 1 deterministic
+ordering/synchronization fixtures are next.
+
+### 2026-07-30 — No-TSO Rosetta-parity Phase 2 complete
+
+The software x86 memory-ordering contract now passes on both x86_64 and i386
+with `FEX_TSOENABLED=0`, `FEX_VECTORTSOENABLED=0`, and
+`FEX_MEMCPYSETTSOENABLED=0`. Ordinary guest loads end with `DMB ISHLD`;
+ordinary stores end with `DMB SY`; locked operations retain LSE acquire/release
+or `LDAXR`/`STLXR`; explicit fences use `DMB LD/ST/SY`. Syscall, Unix-thunk,
+callback, and ARM64EC guest/native boundaries now emit `DMB SY` before transfer
+and/or after native return as applicable. No hardware TSO or Rosetta process
+participates.
+
+The final candidate providers are
+`build/no-tso-phase2/providers/xtajit64-no-tso-final-v15.dll` (SHA-256
+`a0a586eb6687dd45bdb4818e44c64294f4cfed89dc5b5bafd806c3d402100513`)
+and `xtajit-no-tso-final-v15.dll` (SHA-256
+`67192836cb4eb15cb51ef5487a4ec30a3fa210bfac370e3193ede3760a4e4273`).
+The x86_64 candidate uses the preserved working FEX source/configuration
+lineage with no release optimization flags and LTO disabled. Both providers
+received the required two-site x18-to-x28 PE TLS fix.
+
+The corrected runners temporarily stage candidates in the real Wine build-tree
+bootstrap path, verify hashes, and restore the exact prior bytes after exact
+wineserver shutdown. The final one-prefix Store Buffering gate passed
+1,000,000 rounds per architecture with zero forbidden outcomes. The complete
+Phase 1 regression also passed: all ordering/wait/condition/APC/thread gates,
+128/128 children per architecture, and 8/8 verified 4 MiB CDN transfers per
+architecture. Steam-specific wake injection remained disabled. Evidence is
+`docs/validation/no-tso-phase2-final-v15-20260731T034214Z/RESULTS.md` and
+`docs/validation/no-tso-phase2-phase1-regression-v15-20260731T034241Z/RESULTS.md`.
+The canonical build-tree providers were restored byte-for-byte; Phase 3 is the
+active wait/wake bridge work.
+
+### 2026-07-30 — No-TSO Rosetta-parity Phase 3 complete
+
+Wine's WoW64 WaitOnAddress bridge now uses runtime `WowTebOffset` detection,
+queue-locked compare/registration, and per-waiter synchronization events. The
+waker removes and signals the entry while holding the queue lock; the waiter
+always reacquires that lock before examining its stack-backed entry and runs
+an explicit ARM64 acquire barrier after observing either wait transport.
+
+The former fixed 16-slot raw-pointer pending-wake cache was removed. A wake
+with no registered waiter is discarded according to WakeByAddress semantics,
+so overflow, eviction, and virtual-address reuse cannot deliver an old wake.
+The fixture now verifies both an unregistered stale wake and free/reallocate at
+the exact same virtual address.
+
+Only ntdll sync objects and the ARM64X, i386, and x86_64 PE ntdll outputs were
+rebuilt. Three consecutive fresh-prefix runs passed on x64 and i386: 20,000
+registration races, stale-address rejection, WakeSingle/WakeAll, 2,000 timeout
+races, conditions, APCs, repeated threads, 128/128 children, and 8/8 verified
+Steam-CDN transfers. Every TSO setting and Steam wake recovery remained off.
+Evidence is
+`docs/validation/no-tso-phase3-wait-final-20260731T034855Z/RESULTS.md`.
+Phase 4 asynchronous networking is active.
+
+### 2026-07-30 — No-TSO Rosetta-parity Phase 4 complete
+
+The new `scripts/probe-no-tso-phase4.sh` and
+`test/no_tso_phase4_network.c` pass asynchronous networking on x86_64 and
+i386 in one clean prefix. Each architecture completes eight simultaneous
+callback-driven WinHTTP HTTPS downloads over a shared connection. Slot zero
+performs a two-request 2 MiB + 2 MiB range restart; all other slots fetch the
+full 4 MiB range. Every output matches the native reference hash.
+
+The fixture traces request submission, callback queue/consumption, socket
+readability, byte receipt, and exact package commit. A loopback overlapped
+Winsock/IOCP subtest receives data, posts another receive, observes peer close
+as a zero-byte completion, and joins its worker. No HTTP 200 or zero-byte
+success is accepted. No Wine source change was needed after the Phase 2/3
+ordering and wait fixes.
+
+The accepted run used all FEX TSO options off and Steam wake recovery off.
+Exact shutdown and cleanup passed. Evidence is
+`docs/validation/no-tso-phase4-final-v5-20260731T040055Z/RESULTS.md`. Phase 5
+child-process lifecycle and architecture handoff is active.
+
+### 2026-07-30 — Phase 6 Steam two-cycle handoff notification staged
+
+The native ARM64 ntdll Unix `NtWriteFile` path now has an opt-in, exact-byte
+Steam bootstrap marker detector. With `VKMT_STEAM_HANDOFF_NOTIFY=1`, a
+successful write containing `Update complete, launching Steam...` sends one
+HTTP `POST /steam/handoff` to loopback port 9274 per process. The notification
+uses host sockets, never Winsock, and an acquire/release one-shot atomic; it
+does not require or enable TSO. `VKMT_STEAM_HANDOFF_PORT` exists only to route
+isolated tests away from the production backend.
+
+`tools/steam-handoff-backend` is a dependency-free native ARM64 Rust receiver
+bound to `127.0.0.1:9274`. It serializes handoffs, rejects concurrent requests,
+accepts exactly two cycles per backend lifetime, shuts down only the Phase 6
+prefix wineserver, and relaunches that prefix's installed Steam executable
+with all three FEX TSO settings zero. The production binary is
+`build/steam-handoff-backend`.
+
+An isolated Windows `NtWriteFile` probe sent the expected HTTP request to a
+mock listener on port 19274. The production backend remained at zero accepted
+handoffs, proving the test did not consume or execute a real cycle. Both the
+repository launcher and its staged LaunchAgent copy export the opt-in flag.
+Only `dlls/ntdll/ntdll.so` and the small Rust backend were rebuilt.
+
+### 2026-07-31 — Native media closure and Valve Wine comparison
+
+Every accepted prefix now depends on a verified, relocatable native ARM64
+GLib/GObject/GStreamer closure staged at
+`wine/build-ec/runtime/gstreamer-arm64`. `scripts/stage-gstreamer-runtime.sh`
+recursively closes non-system dylib dependencies, rewrites Homebrew and rpath
+references, ad-hoc signs the resulting Mach-O files, stages the required GI
+typelibs and plugin scanner, and rejects publication unless a clean full
+plugin scan loads `coreelements` with zero stderr. The final stage is 415 MiB,
+contains 733 manifest entries, and passes its integrated scan and manifest
+verification. GTK3/GTK4 display-only plugins are excluded because loading both
+registers duplicate Objective-C classes; Wine supplies its own display path.
+
+`scripts/stage-runtime-providers.sh` makes this closure mandatory and writes
+the exact manifest hash to `<prefix>/.vkmt/gstreamer-runtime.sha256`.
+`scripts/vkmt-runtime-env.sh`, the Phase 6 launcher, prefix preparation, and
+the Steam handoff backend now propagate the staged library, typelib, plugin,
+scanner, and per-prefix registry paths. The existing Phase 6 prefix receipt
+matches manifest SHA-256
+`d87273c176ebddaacb60091daec01737e6a8ae93048273955fb28fb44eccf8e3`.
+The currently running backend predates its rebuilt binary and must be
+restarted at the next controlled Steam restart before its new media-runtime
+environment takes effect.
+
+Valve's Wine fork is pinned for source comparison only at
+`third_party/valve-wine`, branch `proton_11.0`, commit
+`81d78e4f3ea8ce868d775021fdc9f90122dc1a6b`; provenance is in
+`third_party/VALVE_WINE_PIN.md`. Useful patches are to be adapted semantically
+to Wine 11.12 and compiled for VKMT's ARM64/ARM64EC and guest PE outputs as
+applicable. Version or host-architecture differences are adaptation work, not
+rejection criteria. Valve/Proton binaries and Linux-only helpers are not
+runtime dependencies.
+
+Valve commit `fadcf28ba2` exposed a generic WinHTTP TLS correctness issue that
+was still present locally. Its handshake finalization was adapted in
+`dlls/winhttp/net.c` and rebuilt only for the AArch64/ARM64X, x86_64, and i386
+PE outputs. Accepted hashes are
+`556fe14c13eada20cc04ec3b81590c890c64c86fce0dfd8a2ea126cc7617c955`
+(ARM64X),
+`06b5bbe50c51c61af60c8ac247e70f43671f152dc66abdc246097646c5b47c48`
+(x86_64), and
+`a8991ad83e1df27929594cb64446c69c826f36eb5fd2afa348ac0c84c1f0bf15`
+(i386). The live prefix still has the older mapped DLLs; stage these new bytes
+only after an exact controlled wineserver shutdown.
+
+Steam CEF dump analysis is now reproducible with
+`scripts/inspect-minidump.py` and the local native
+`build/minidump-tools/bin/minidump-stackwalk`. The repeated browser fatal is an
+intentional `int3` at `libcef.dll` RVA `0x691ad97` after nine GPU child exits,
+not a null-string assertion. Its call chain and referenced strings resolve to
+`gpu_process_host.cc` and `GPU process isn't usable. Goodbye.` CEF also
+restarts network-service children with the same outer `0xc0000409` failure, so
+SwiftShader/in-process-GPU and the Valve DirectComposition delay remain
+diagnostic containment options rather than a root fix. One distinct renderer
+dump is a read at address `0xba` in `libcef.dll` RVA `0x392160d`, with a full
+unwind through `cef_execute_process`. Evidence and the candidate classification
+are in `build/no-tso-phase6/minidump-analysis/RESULTS.md`.
+
+### 2026-07-31 — Steam rendered through the MetalSharp WebHelper contract
+
+Steam now renders its complete sign-in UI in the preserved all-architecture
+prefix with every FEX TSO setting disabled. The accepted layout uses
+MetalSharp's forwarding `steamwebhelper.exe` beside Steam's original helper as
+`steamwebhelper_real.exe`. The wrapper adds `--in-process-gpu --disable-gpu`;
+Steam is launched with `-no-cef-sandbox -cef-single-process -noverifyfiles
+-no-dwrite`. The decisive flag is `--in-process-gpu`: GPU disable alone still
+produced a black window, while the wrapper route rendered in about 28 seconds.
+
+`scripts/launch-steam-metalsharp-compatible.sh` preserves a freshly updated
+real helper before redeploying the hash-pinned wrapper, exports the complete
+VKMT runtime environment, enforces scalar/vector/memcpy no-TSO, and waits on
+the exact prefix wineserver. Evidence is
+`docs/validation/steam-render-metalsharp-wrapper-20260731/RESULTS.md`.
+
+The next phase is direct MetalSharp integration: make VKMT's packaged Wine
+layout match MetalSharp's runtime discovery contract, then drive its install
+wizard, Steam installation, and x86/x64 redistributable installers through
+that single authoritative layout. Preserve the working prefix and do not
+replace the accepted wrapper contract while implementing that phase.

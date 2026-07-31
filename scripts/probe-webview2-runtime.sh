@@ -16,11 +16,13 @@ WINEBOOT="$BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
 mkdir -p "$PROBES/x64" "$PROBES/i386" "$RUNS"
 "$TOOLCHAIN/x86_64-w64-mingw32-g++" -std=c++17 -O2 -municode -static \
   -I"$WV2/sdk/build/native/include" \
-  "$VKMT/test/browser/webview2_fixed_probe.cpp" -lole32 -luuid -lwinhttp \
+  "$VKMT/test/browser/webview2_fixed_probe.cpp" \
+  -lole32 -luuid -lwinhttp -lwindowscodecs \
   -o "$PROBES/x64/webview2_fixed_probe.exe"
 "$TOOLCHAIN/i686-w64-mingw32-g++" -std=c++17 -O2 -municode -static \
   -I"$WV2/sdk/build/native/include" \
-  "$VKMT/test/browser/webview2_fixed_probe.cpp" -lole32 -luuid -lwinhttp \
+  "$VKMT/test/browser/webview2_fixed_probe.cpp" \
+  -lole32 -luuid -lwinhttp -lwindowscodecs \
   -o "$PROBES/i386/webview2_fixed_probe.exe"
 
 run_root="$(mktemp -d "$RUNS/webview2-runtime.XXXXXX")"
@@ -50,7 +52,7 @@ run_wine()
   gtimeout --signal=TERM --kill-after=10s "$timeout_seconds" \
     env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 \
       DYLD_LIBRARY_PATH="$BUILD/dlls/winecoreaudio.drv:$BUILD/dlls/secur32:$BUILD/dlls/ntdll:$BUILD/dlls/win32u${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \
-      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--no-sandbox --disable-gpu-compositing --autoplay-policy=no-user-gesture-required --ignore-certificate-errors --allow-insecure-localhost' \
+      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--no-sandbox --disable-gpu-sandbox --use-gl=angle --use-angle=swiftshader --disable-vulkan --autoplay-policy=no-user-gesture-required --ignore-certificate-errors --allow-insecure-localhost' \
       WINEDEBUG="${VKMT_WEBVIEW2_WINEDEBUG:-+process}" \
       "$WINE" "$@" >"$output" 2>&1
 }
@@ -84,6 +86,10 @@ while IFS= read -r dll; do
 done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 
 "$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
+# Keep target-process diagnostics out of wineboot.  Chromium tracing can be
+# extremely verbose and changes bootstrap timing enough to obscure the actual
+# browser boundary (and may leave winedbg waiting on a bootstrap helper).
+VKMT_WEBVIEW2_WINEDEBUG="${VKMT_WEBVIEW2_BOOT_WINEDEBUG:--all}" \
 run_wine "$run_root/wineboot.log" "${VKMT_WEBVIEW2_BOOT_TIMEOUT:-120}s" \
   "$WINEBOOT" --init
 stop_server
@@ -106,16 +112,10 @@ for spec in x64:x64 i386:x86; do
     "https://127.0.0.1:19443/"
   stop_server
   grep -q WEBVIEW2_HTTPS_TRANSPORT_OK "$run_root/$arch.log"
-  grep -Eq 'WEBVIEW2_HTTPS_INPUT_AUDIO_PIXEL_OK|WEBVIEW2_ENV_CONTROLLER_RENDERER_BOOTSTRAP_OK' \
-    "$run_root/$arch.log"
+  grep -q WEBVIEW2_HTTPS_INPUT_AUDIO_PIXEL_OK "$run_root/$arch.log"
   grep -Eq 'msedgewebview2.exe.*--type=renderer' "$run_root/$arch.log"
   grep -Eq 'msedgewebview2.exe.*--type=(gpu-process|utility)' "$run_root/$arch.log"
-  if grep -q WEBVIEW2_HTTPS_INPUT_AUDIO_PIXEL_OK "$run_root/$arch.log"; then
-    level=FULL
-  else
-    level=BOOTSTRAP
-  fi
-  echo "WEBVIEW2_$(printf '%s' "$arch" | tr '[:lower:]' '[:upper:]')_FIXED_RUNTIME_${level}_OK"
+  echo "WEBVIEW2_$(printf '%s' "$arch" | tr '[:lower:]' '[:upper:]')_FIXED_RUNTIME_FULL_OK"
 done
 
 echo "WEBVIEW2_FIXED_${VKMT_WEBVIEW2_ARCHES:-x64,i386}_ALL_OK" | tr '[:lower:],' '[:upper:]_'

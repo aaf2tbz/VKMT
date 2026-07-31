@@ -59,6 +59,20 @@ cleanup()
   test -z "$wine_pid" || kill -TERM "$wine_pid" 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -k 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -w 2>/dev/null || true
+  if test -n "${VKMT_P6_EVIDENCE_DIR:-}"; then
+    case "$VKMT_P6_EVIDENCE_DIR" in
+      "$VKMT"/*)
+        mkdir -p "$VKMT_P6_EVIDENCE_DIR"
+        find "$run_root" -maxdepth 1 -type f -name '*.log' \
+          -exec cp {} "$VKMT_P6_EVIDENCE_DIR"/ \;
+        find "$prefix" -type f -name 'fex-*.log' -exec sh -c '
+          for log do cp "$log" "$1/fex-$(basename "$(dirname "$log")")-$(basename "$log")"; done
+        ' sh "$VKMT_P6_EVIDENCE_DIR" {} +
+        printf 'status=%s\n' "$status" >"$VKMT_P6_EVIDENCE_DIR/status.txt"
+        ;;
+      *) echo "Refusing non-VKMT evidence directory: $VKMT_P6_EVIDENCE_DIR" >&2 ;;
+    esac
+  fi
   case "$run_root" in
     "$RUNS"/*)
       if test "${VKMT_KEEP_P6_RUN:-0}" = 1; then
@@ -77,7 +91,7 @@ run_wine()
   output=$1
   shift
   "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" \
-    WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG=-all \
+    WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG="${VKMT_P6_WINEDEBUG:--all}" \
     "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!
   if wait "$wine_pid"; then code=0; else code=$?; fi

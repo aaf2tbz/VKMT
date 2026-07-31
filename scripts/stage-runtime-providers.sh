@@ -10,7 +10,7 @@ XTAJIT_SOURCE="${VKMT_XTAJIT_SOURCE:-$SOURCE/xtajit-arm64-known-good.dll}"
 XTAJIT64_STAGE="$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll"
 XTAJIT_STAGE="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
 XTAJIT64_SHA256="${VKMT_XTAJIT64_SHA256:-7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6}"
-XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073}"
+XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-7d2ac83d2c0935e04d033d609c42d8307294225dcb4cb16b88af849e95c694ab}"
 CANONICAL_XTAJIT64_SOURCE="$SOURCE/xtajit64-arm64ec-known-good.dll"
 CANONICAL_XTAJIT_SOURCE="$SOURCE/xtajit-arm64-known-good.dll"
 mode=stage
@@ -78,6 +78,23 @@ fi
 if test "$mode" = prefix || test "$mode" = verify-prefix; then
   check "$XTAJIT64_SHA256" "$prefix/drive_c/windows/system32/xtajit64.dll"
   check "$XTAJIT_SHA256" "$prefix/drive_c/windows/system32/xtajit.dll"
+fi
+
+# A prefix is accepted only against a verified, relocatable native media
+# runtime. Store the exact closure manifest hash in the prefix so later
+# verification catches missing/replaced host dependencies.
+"$VKMT/scripts/stage-gstreamer-runtime.sh" --ensure
+gst_manifest="$BUILD/runtime/gstreamer-arm64/MANIFEST.sha256"
+gst_manifest_sha="$(shasum -a 256 "$gst_manifest" | awk '{print $1}')"
+if test "$mode" = prefix; then
+  mkdir -p "$prefix/.vkmt"
+  printf '%s\n' "$gst_manifest_sha" >"$prefix/.vkmt/gstreamer-runtime.sha256"
+fi
+if test "$mode" = prefix || test "$mode" = verify-prefix; then
+  test "$(cat "$prefix/.vkmt/gstreamer-runtime.sha256")" = "$gst_manifest_sha" || {
+    echo "Prefix GStreamer runtime receipt does not match the staged closure" >&2
+    exit 1
+  }
 fi
 
 marker="$(printf '%s' "$mode" | tr '[:lower:]-' '[:upper:]_')"

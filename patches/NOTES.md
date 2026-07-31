@@ -11,6 +11,12 @@
   translation, synchronous divide faults, context/call-return handling, and
   safepoint code-cache invalidation. Apply with `git apply` to FEX commit
   `a745bebae8c65025869288be1b50275928702338`.
+- `fex-2607-no-tso-steam-runtime.patch` — the final software-ordering,
+  invalidation, callback, and Steam child-handoff delta committed as
+  `18a20dc8d` in the local FEX tree.
+- `wine-11.12-no-tso-steam-runtime.patch` — the final Wine WoW64, networking,
+  browser, loader, and Winemac cross-process presentation delta committed as
+  `03cd2bd` in the local Wine tree.
 - `wine-11.12-arm64-mono-fusion.patch` — native ARM64 `mscoree` fallback
   plus the same-bitness PE32+ IL-only process/loader/server contract.
   `scripts/build-wine-mono-arm64.sh` applies it and rebuilds only ARM64X

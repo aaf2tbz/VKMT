@@ -1,0 +1,3 @@
+LIBRARY arm64ec_rpc_varargs.dll
+EXPORTS
+    capture_cross_arch_varargs
