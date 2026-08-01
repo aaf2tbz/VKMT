@@ -8,8 +8,30 @@ It is not only a graphics wrapper. The project combines a heavily customized
 Wine 11.12, ARM64EC/ARM64X support, native ARM64 x86 translators, a canonical
 i386 guest-memory manager, Direct3D and OpenGL translation to Metal, MSync,
 multimedia and controller runtimes, browser engines, installers, Wine Mono,
-and native plus Windows Java runtimes. The source, patches, build scripts,
-runtime providers, probes, and release-snapshot tooling are retained in-tree.
+and native plus Windows Java runtimes. The development workspace retains the
+source, patches, build scripts, runtime providers, probes, and
+release-snapshot tooling needed to reproduce and validate that stack.
+
+> [!IMPORTANT]
+> VKMT is an active research and development project, not a turnkey Wine
+> distribution. The public repository contains the project-owned patches,
+> build/staging scripts, probes, contracts, and validation evidence. Large
+> upstream working trees, generated build outputs, cross-toolchains, and
+> separately licensed runtime payloads are intentionally not committed.
+
+The accepted baseline is Wine 11.12. A newer upstream Wine release is not a
+drop-in replacement: the patch series and the complete architecture gate must
+be rebased and rerun before support is claimed.
+
+## Start here
+
+- [Current status](#current-status)
+- [Architecture and runtime components](#what-vkmt-contains)
+- [Graphics and Metal translation](#graphics-and-metal-translation)
+- [Public-clone bootstrap](#public-clone-bootstrap)
+- [Build and verification](#build-and-verification)
+- [Accepted boundaries](#accepted-boundaries-and-deliberate-exclusions)
+- [Documentation index](#documentation)
 
 ## Current status
 
@@ -560,7 +582,7 @@ until the complete promotion regression passes.
 
 ## Reproducibility and recovery
 
-VKMT retains:
+The complete development workspace retains:
 
 - pinned third-party source revisions;
 - custom Wine, FEX, MoltenVK, DXVK, vkd3d-proton and DXMT patches;
@@ -573,22 +595,91 @@ VKMT retains:
 - reproducible `.tar.zst` snapshot creation without an uncompressed
   intermediate.
 
-The latest verified recovery image is:
-
-```text
-/Volumes/AverySSD/VKMT_snapshots/VKMT-runtime-j6-20260729-1738.tar.zst
-SHA-256: be5f656e857f3fb1d3b8a9ec528655e22947372dfa1651244b1d2bc9d49a2298
-```
-
-Its 322,137-entry manifest is stored beside the archive. The archive passed
-`zstd -t` and required-manifest checks for Wine, both canonical providers,
-the Java/FEX/Wine patches, the unified runner and the Java/WoW64 plan.
+Recovery images contain generated and separately licensed runtime material,
+so they are not part of this Git repository. Local snapshots are integrity
+checked with `zstd -t`, a complete file manifest, and SHA-256 before being
+accepted.
 
 Create future snapshots only with:
 
 ```sh
 scripts/create-runtime-snapshot.sh
 ```
+
+## Public-clone bootstrap
+
+### Requirements
+
+A full build currently requires:
+
+- an Apple Silicon Mac;
+- a case-sensitive build volume with substantial free space;
+- full Xcode with the Metal toolchain installed;
+- CMake, Meson, Ninja, GNU Make, Python 3, Bison, Flex and pkg-config;
+- ARM64 Homebrew development inputs including FreeType, Fontconfig, GnuTLS,
+  GStreamer, libpng and LLVM 15 where required by DXMT;
+- the pinned universal LLVM-MinGW toolchain named by the scripts.
+
+The accepted workspace was validated on Apple M4 hardware. Other Apple
+Silicon generations should be treated as unvalidated until the same gates
+pass.
+
+### Clone and fetch pinned upstream sources
+
+```sh
+git clone https://github.com/aaf2tbz/VKMT.git
+cd VKMT
+scripts/fetch.sh
+```
+
+`scripts/fetch.sh` obtains the pinned MoltenVK, vkd3d-proton, DXVK, DXMT and
+FEX trees and applies the corresponding project patches. It does not download
+or redistribute proprietary runtime payloads.
+
+### Prepare Wine 11.12
+
+The canonical Wine delta is `patches/wine-11.12-vkmt.patch`. Apply it to a
+pristine Wine 11.12 source tree before configuring the multi-architecture
+build:
+
+```sh
+mkdir -p wine
+curl -L https://dl.winehq.org/wine/source/11.x/wine-11.12.tar.xz \
+  | tar xJ -C wine
+(cd wine && patch -p1 < ../patches/wine-11.12-vkmt.patch)
+```
+
+Later milestone patches and their exact bases are documented in
+[`patches/NOTES.md`](patches/NOTES.md). Do not stack every snapshot patch
+blindly: several files represent cumulative milestone states rather than an
+independent linear series.
+
+### Prepare the PE toolchain
+
+Place the pinned LLVM-MinGW distribution at:
+
+```text
+toolchains/llvm-mingw-20260616-ucrt-macos-universal/
+```
+
+Then rebuild the AArch64 and ARM64EC CRT/C++ runtime around VKMT's reserved
+`x18`/`x28` ABI before linking Wine or a CPU/graphics provider:
+
+```sh
+scripts/rebuild-mingw-crt.sh aarch64 cxx
+scripts/rebuild-mingw-crt.sh arm64ec cxx
+```
+
+Some diagnostic and historical scripts still contain the original
+`/Volumes/AverySSD/VKMT` development path as a default or retained evidence.
+Relocatable build scripts derive the repository root from their own location;
+for the remaining scripts, set the documented `VKMT`, `VKMT_ROOT`,
+`WINEBUILDDIR`, or component-specific override rather than copying the
+original author's directory layout.
+
+There is not yet a supported one-command clean bootstrap. The focused scripts
+and validation evidence are public so this gap can be closed without hiding
+the current state of reproducibility.
 
 ## Build and verification
 
@@ -641,14 +732,14 @@ internal storage.
 
 ## Repository layout
 
-- `wine/wine-11.12/` — custom Wine source.
-- `wine/build-ec/` — active multi-architecture Wine build and staged runtime.
-- `third_party/` — pinned component source and runtime inputs.
-- `runtime/` — architecture-specific graphics and runtime stages.
-- `runtime-providers/` — canonical and candidate CPU providers.
+- `wine/wine-11.12/` — generated local patched Wine source (gitignored).
+- `wine/build-ec/` — generated multi-architecture build/runtime (gitignored).
+- `third_party/` — mostly gitignored upstream source and runtime inputs; only
+  explicitly redistributable fixtures and manifests are tracked.
+- `build/` — generated candidate and component builds (gitignored).
 - `patches/` — reproducible Wine, FEX and third-party patches.
 - `scripts/` — fetch, focused build, stage, probe and snapshot commands.
-- `test/` — source and binaries for deterministic fixtures.
+- `test/` — source and selected redistributable binaries for deterministic fixtures.
 - `docs/` — architecture plans, audits, contracts and validation evidence.
 - `AGENTS.md` — preservation rules and authoritative implementation journal.
 
@@ -683,3 +774,33 @@ VKMT is broad, but its claims remain gate-specific:
 - [MoltenVK/vkd3d gap audit](docs/GAPS.md)
 - [transform-feedback design](docs/TRANSFORM_FEEDBACK.md)
 - [Windows Java/WoW64 plan](docs/WINDOWS_JAVA_WOW64_PLAN.md)
+
+## Contributing
+
+Contributions are welcome, especially for reproducible bootstrap work,
+removing remaining machine-specific path defaults, focused regression probes,
+and fixes that preserve all four execution modes.
+
+Before submitting a change:
+
+1. Read [`AGENTS.md`](AGENTS.md) for the preservation and focused-build rules.
+2. Keep host code ARM64; x86_64 and i386 are Windows guest architectures.
+3. Build the smallest affected Wine/provider targets.
+4. Run the narrow probe first, followed by the relevant architecture
+   regression gate.
+5. State exactly which gate passed and which boundaries were not tested.
+
+Do not submit proprietary SDKs, commercial runtime payloads, user prefixes,
+credentials, or generated build trees.
+
+## Licensing and redistribution
+
+VKMT combines patches and integration work for projects with different
+licenses. Each upstream component remains governed by its own license and
+redistribution terms. Some optional validation inputs, including commercial
+or separately downloadable runtimes, are intentionally excluded from Git.
+
+This repository does not currently provide a single project-wide license for
+all original material. Public visibility alone does not grant redistribution
+rights. Review the relevant upstream license and file provenance before
+shipping source or binary bundles.
