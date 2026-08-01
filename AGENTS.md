@@ -46,6 +46,21 @@ do not reopen or replace the accepted providers without a focused regression.
   `status=0`; evidence is in
   `docs/validation/perf-p3-defer-moltenvk-20260801/RESULTS.md`.
 
+### 2026-08-01 — P0 correlated CPU startup baseline
+
+- `scripts/benchmark-perf-p0.sh` runs two independent 20-sample sessions in
+  four cold/warm Wine states, enforces `rc=0`, records macOS child resource
+  usage, and requires correlated Wine/FEX lifecycle traces for every sample.
+- The launcher, native Wine loader/NTDLL, wineserver connection, ARM64EC or
+  WoW64 FEX provider, and exact teardown now share `VKMT_PERF_RUN_ID`.
+- x86_64 warm persistent-session p95 is 25.819 ms; i386/WoW64 is 110.282 ms.
+  Both complete baselines passed the 5% median/p95 repeatability gate. The
+  i386 value is a measured optimization target and does not meet the final
+  75-ms P3 gate yet.
+- P0 remains active for graphics/shader/first-present and real Steam child
+  lifecycle milestones. Current results are documented in
+  `docs/validation/perf-p0-cpu-baseline-20260801/RESULTS.md`.
+
 ## Required preservation inventory
 
 Before deleting any historical workspace or cache, verify that current VKMT
