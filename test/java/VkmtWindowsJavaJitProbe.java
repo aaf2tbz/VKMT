@@ -112,8 +112,17 @@ public final class VkmtWindowsJavaJitProbe {
         }
         for (URLClassLoader loader : loaders) loader.close();
         loaders.clear();
-        System.gc();
-        System.runFinalization();
+        String cleanup = System.getProperty("vkmt.j3.cleanup", "both");
+        if (!"finalization".equals(cleanup) && !"none".equals(cleanup)) {
+            System.out.println("VKMT_J3_GC_BEGIN wave=" + wave);
+            System.gc();
+            System.out.println("VKMT_J3_GC_END wave=" + wave);
+        }
+        if (!"gc".equals(cleanup) && !"none".equals(cleanup)) {
+            System.out.println("VKMT_J3_FINALIZATION_BEGIN wave=" + wave);
+            System.runFinalization();
+            System.out.println("VKMT_J3_FINALIZATION_END wave=" + wave);
+        }
         return checksum;
     }
 

@@ -1701,3 +1701,38 @@ provider alike. This is not a P2 differential regression. Failed-run logs are
 now preserved before exact disposable-prefix deletion, and the harness exposes
 its software-ordering mode explicitly so the separate final no-TSO Java work
 can be completed under P5.
+
+### 2026-08-01 — P5 i386/WoW64 safepoint and teardown acceptance
+
+P5 is accepted for the i386/WoW64 provider. The Windows control-word protocol
+now uses ARM acquire/release ordering for JIT ownership, suspension, context
+publication, and dirty-state transfer while every FEX TSO mode remains zero.
+HotSpot writable-executable subregions are swept individually so embedded-oop
+patches cannot escape translation invalidation. Externally supplied WoW64
+contexts invalidate superseded call-return continuations, and imported Wine CPU
+state is published before JIT re-entry.
+
+The decisive exception-teardown repair pins the JIT code-buffer generation for
+every active simulation, including the outermost simulation. Native return
+addresses used by Wine's exception/unwind path therefore remain executable
+until that simulation exits; the previous freed-code execute fault and
+non-progressing `RtlUnwindEx` loop are eliminated. Temporary exception,
+same-PC-context, and SMC tracing was removed from the promoted build.
+
+The accepted clean i386 provider is SHA-256
+`e8d4c6694b456d9ecaa5d79e7461d6e0981a7080d14f3fe1b74732554a4b12a0`.
+Its source boundary is FEX commit `22b3110d0` on the preserved
+`phase5-fex-stable` branch.
+The last accepted P4 i386 provider remains at
+`runtime-providers/xtajit-arm64-pre-p5-ed9eac24.dll` with SHA-256
+`ed9eac240a87cebd2bff5b4384105410a00ae0215b08c1a6f43e8b7d77ae7d98`.
+The P4 x86_64/ARM64EC provider remains unchanged at SHA-256
+`0c5e7b85049d2d078a55e014cdecabe767c765d382ee2f0e6c7a92d2f3149a4f`.
+
+In one fresh disposable prefix, the clean P5 provider passed both OpenJDK 8
+i386 modes: C1 compiled 28 fixture methods and Xcomp compiled 23, both emitted
+their complete GC, code-cache, executable-memory, deoptimization, and exception
+markers, returned status 0, and completed exact wineserver shutdown. Evidence
+is in `docs/validation/perf-p5-i386-java-final-20260801/`. Five preceding
+instrumented C1 runs also passed; their 2.4-GiB retained diagnostic prefix was
+deleted after the compact evidence was extracted.

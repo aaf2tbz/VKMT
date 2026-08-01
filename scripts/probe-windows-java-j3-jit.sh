@@ -14,14 +14,14 @@ NATIVE_JAVA="$VKMT/third_party/private/oracle-jre-8u501-arm64/Home/bin/java"
 JAVA_SOURCE="$VKMT/test/java/VkmtWindowsJavaJitProbe.java"
 DYNAMIC_SOURCE="$VKMT/test/java/vkmt/dynamic/JitPayload.java"
 JNI_SOURCE="$VKMT/test/java/windows_java_jit_execmem.c"
-I386_PROVIDER="${VKMT_XTAJIT_SOURCE:-$VKMT/build/fex-wow64-java-final/provider/xtajit.dll}"
-I386_PROVIDER_SHA="${VKMT_XTAJIT_SHA256:-}"
-X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$VKMT/build/xtajit64-java-j3-final/provider/xtajit64.dll}"
-X64_PROVIDER_SHA="${VKMT_XTAJIT64_SHA256:-}"
 I386_GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll"
-I386_GOLDEN_SHA=ed9eac240a87cebd2bff5b4384105410a00ae0215b08c1a6f43e8b7d77ae7d98
+I386_GOLDEN_SHA=e8d4c6694b456d9ecaa5d79e7461d6e0981a7080d14f3fe1b74732554a4b12a0
 X64_GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll"
 X64_GOLDEN_SHA=0c5e7b85049d2d078a55e014cdecabe767c765d382ee2f0e6c7a92d2f3149a4f
+I386_PROVIDER="${VKMT_XTAJIT_SOURCE:-$VKMT/build/fex-wow64-java-final/provider/xtajit.dll}"
+I386_PROVIDER_SHA="${VKMT_XTAJIT_SHA256:-}"
+X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$X64_GOLDEN}"
+X64_PROVIDER_SHA="${VKMT_XTAJIT64_SHA256:-$X64_GOLDEN_SHA}"
 EVIDENCE="${VKMT_JAVA_J3_EVIDENCE_DIR:-$VKMT/docs/validation/windows-java-j3-20260729}"
 
 for required in "$WINE" "$WINESERVER" "$WINEBOOT" "$NATIVE_JAVA" \
@@ -89,10 +89,19 @@ run_wine()
 {
   output=$1
   shift
+  startup_sleep=0
+  case "$output" in
+    */x86_64-tiered.log)
+      startup_sleep="${VKMT_JAVA_J3_X64_STARTUPSLEEP:-0}"
+      ;;
+  esac
   "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" \
-    WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG=-all \
-    FEX_TSOENABLED="${VKMT_JAVA_J3_TSO:-1}" \
+    WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 \
+    WINEDEBUG="${VKMT_JAVA_J3_WINEDEBUG:--all}" \
+    FEX_TSOENABLED="${VKMT_JAVA_J3_TSO:-0}" \
     FEX_VECTORTSOENABLED=0 FEX_MEMCPYSETTSOENABLED=0 \
+    FEX_SILENTLOG="${VKMT_JAVA_J3_FEX_SILENTLOG:-1}" FEX_OUTPUTLOG=stderr \
+    FEX_STARTUPSLEEP="$startup_sleep" \
     VKMT_X64_TIER0="${VKMT_X64_TIER0:-0}" \
     MVK_CONFIG_LOG_LEVEL=0 \
     "$WINE" "$@" >"$output" 2>&1 &
@@ -182,6 +191,12 @@ classes_win='C:\vkmt\probe\classes'
 jar_win='C:\vkmt\probe\vkmt-windows-java-j3.jar'
 telemetry=(-XX:+UnlockDiagnosticVMOptions -XX:+PrintCompilation
   -XX:+PrintCodeCache -XX:+TraceClassUnloading)
+case "${VKMT_JAVA_J3_GC:-default}" in
+  default) gc_flags=(-XX:+UseParallelGC) ;;
+  serial) gc_flags=(-XX:+UseSerialGC) ;;
+  parallel) gc_flags=(-XX:+UseParallelGC) ;;
+  *) echo "Unknown VKMT_JAVA_J3_GC value: ${VKMT_JAVA_J3_GC}" >&2; exit 1 ;;
+esac
 compile_only=(-XX:CompileCommand=compileonly,VkmtWindowsJavaJitProbe.*
   -XX:CompileCommand=compileonly,vkmt/dynamic/JitPayload.*)
 xcomp_scope=("${compile_only[@]}"
@@ -198,7 +213,8 @@ run_lane()
   jni_path=$5
   shift 5
   output="$run_root/$name.log"
-  run_wine "$output" "$java_exe" "$@" \
+  run_wine "$output" "$java_exe" "${gc_flags[@]}" "$@" \
+    "-Dvkmt.j3.cleanup=${VKMT_JAVA_J3_CLEANUP:-both}" \
     "-Dvkmt.jni=$jni_path" "-Dvkmt.probe.jar=$jar_win" \
     -cp "$classes_win" VkmtWindowsJavaJitProbe \
     "$model" "$vm_kind" "$name" || {
@@ -223,23 +239,40 @@ run_lane()
   printf '%s=%s\n' "$name" "$compiled" >>"$run_root/compiled-counts.txt"
 }
 
+selected_lanes="${VKMT_JAVA_J3_LANES:-x86_64-tiered x86_64-xcomp i386-c1 i386-xcomp}"
+lane_selected()
+{
+  case " $selected_lanes " in
+    *" $1 "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # x86_64 control lane first: normal Server tiering, then forced compilation.
-run_lane x86_64-tiered 64 Server "$x64_java" \
-  'C:\vkmt\probe\vkmt-java-jit-x86_64.dll' \
-  -server -XX:CompileThreshold=100 "${telemetry[@]}" "${compile_only[@]}"
-run_lane x86_64-xcomp 64 Server "$x64_java" \
-  'C:\vkmt\probe\vkmt-java-jit-x86_64.dll' \
-  -server -Xcomp "${telemetry[@]}" "${xcomp_scope[@]}"
+if lane_selected x86_64-tiered; then
+  run_lane x86_64-tiered 64 Server "$x64_java" \
+    'C:\vkmt\probe\vkmt-java-jit-x86_64.dll' \
+    -server -XX:CompileThreshold=100 "${telemetry[@]}" "${compile_only[@]}"
+fi
+if lane_selected x86_64-xcomp; then
+  run_lane x86_64-xcomp 64 Server "$x64_java" \
+    'C:\vkmt\probe\vkmt-java-jit-x86_64.dll' \
+    -server -Xcomp "${telemetry[@]}" "${xcomp_scope[@]}"
+fi
 
 # i386/WoW64 lane: low-threshold Client/C1, then forced compilation.
-run_lane i386-c1 32 Client "$i386_java" \
-  'C:\vkmt\probe\vkmt-java-jit-i386.dll' \
-  -client -XX:-TieredCompilation -XX:CompileThreshold=100 \
-  "${telemetry[@]}" "${compile_only[@]}"
-run_lane i386-xcomp 32 Client "$i386_java" \
-  'C:\vkmt\probe\vkmt-java-jit-i386.dll' \
-  -client -Xcomp -XX:-TieredCompilation "${telemetry[@]}" \
-  "${xcomp_scope[@]}"
+if lane_selected i386-c1; then
+  run_lane i386-c1 32 Client "$i386_java" \
+    'C:\vkmt\probe\vkmt-java-jit-i386.dll' \
+    -client -XX:-TieredCompilation -XX:CompileThreshold=100 \
+    "${telemetry[@]}" "${compile_only[@]}"
+fi
+if lane_selected i386-xcomp; then
+  run_lane i386-xcomp 32 Client "$i386_java" \
+    'C:\vkmt\probe\vkmt-java-jit-i386.dll' \
+    -client -Xcomp -XX:-TieredCompilation "${telemetry[@]}" \
+    "${xcomp_scope[@]}"
+fi
 
 WINEPREFIX="$prefix" "$WINESERVER" -k
 WINEPREFIX="$prefix" "$WINESERVER" -w
@@ -258,12 +291,12 @@ mkdir -p "$EVIDENCE"
   printf 'jni_i386_sha256=%s\n' \
     "$(shasum -a 256 "$run_root/vkmt-java-jit-i386.dll" | awk '{print $1}')"
   cat "$run_root/compiled-counts.txt"
-  for name in x86_64-tiered x86_64-xcomp i386-c1 i386-xcomp; do
+  for name in $selected_lanes; do
     grep -F 'VKMT_WINDOWS_JAVA_J3_OK' "$run_root/$name.log"
   done
   printf 'exact_shutdown=1\n'
 } >"$EVIDENCE/RESULTS.txt"
-for name in x86_64-tiered x86_64-xcomp i386-c1 i386-xcomp; do
+for name in $selected_lanes; do
   grep -E '(^[[:space:]]*[0-9]+.*(VkmtWindowsJavaJitProbe|vkmt.dynamic.JitPayload)::)|CodeCache:|CodeHeap |VKMT_J3_' \
     "$run_root/$name.log" >"$EVIDENCE/$name-telemetry.txt"
 done

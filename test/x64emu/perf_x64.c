@@ -1,12 +1,25 @@
 /* M3 perf probe: tight integer loop, reports wall time. */
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-int main( void )
+int main( int argc, char **argv )
 {
     volatile unsigned long long x = 0x9e3779b97f4a7c15ull;
     unsigned long long i, t0, t1;
-    const unsigned long long iters = 30000000ull;
+    unsigned long long iters = 30000000ull;
+
+    if (argc == 2)
+    {
+        char *end;
+        unsigned long long requested = strtoull( argv[1], &end, 10 );
+        if (!requested || *end)
+        {
+            fprintf( stderr, "usage: perf_x64.exe [positive-iteration-count]\n" );
+            return 2;
+        }
+        iters = requested;
+    }
 
     t0 = GetTickCount64();
     for (i = 0; i < iters; i++)
