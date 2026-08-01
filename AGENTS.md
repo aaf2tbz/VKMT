@@ -27,12 +27,24 @@ discard custom work.
 
 ## Active acceptance goal
 
-Correctness precedes performance work. The active gate requires ARM64/AArch64,
-ARM64EC, x86_64, and i386/WoW64 to execute and tear down with conventional
-status `0` in one fresh prefix built from the current source providers. All
-three FEX TSO settings remain zero and Rosetta must not participate. The
-performance roadmap in `docs/PERFORMANCE_OPTIMIZATION_PLAN.md` is deferred
-until this matrix is reproducible and preserved.
+The all-architecture correctness baseline is accepted and performance work is
+active under `docs/PERFORMANCE_OPTIMIZATION_PLAN.md`. Every optimization must
+preserve conventional status `0` for ARM64/AArch64, ARM64EC, x86_64, and
+i386/WoW64 in one fresh prefix. All three FEX TSO settings remain zero and
+Rosetta must not participate. Rebuild only the affected Wine/FEX components;
+do not reopen or replace the accepted providers without a focused regression.
+
+### 2026-08-01 — headless cold-start MoltenVK deferral accepted
+
+- `WINE_NO_EXPLORER=1` now skips the desktop-integration `RunServices` pass
+  while retaining `services.exe`. This prevents `winemenubuilder.exe -a -r`
+  from loading shell32/win32u and creating a MoltenVK Vulkan instance for a
+  trivial console guest.
+- Five cold-wineserver x86_64 runs returned `0`, emitted no MoltenVK records,
+  and measured 0.58-0.71 seconds versus the prior 0.88-0.92 second baseline.
+- The fresh single-prefix ARM64, ARM64EC, x86_64, and i386 matrix passed with
+  `status=0`; evidence is in
+  `docs/validation/perf-p3-defer-moltenvk-20260801/RESULTS.md`.
 
 ## Required preservation inventory
 
