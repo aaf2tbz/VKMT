@@ -34,6 +34,41 @@ i386/WoW64 in one fresh prefix. All three FEX TSO settings remain zero and
 Rosetta must not participate. Rebuild only the affected Wine/FEX components;
 do not reopen or replace the accepted providers without a focused regression.
 
+### 2026-08-01 — P3 Wine loader/session optimization accepted
+
+- FEX commit `90afdb42bbec564c8a8c468588b4218dba27599c` persists
+  translated blocks for the main image plus the graphics-qualified fixed
+  runtime set `ntdll.dll`, `kernelbase.dll`, and `kernel32.dll`. UCRT/MSVCRT
+  are deliberately excluded because their process-mutated dispatch state made
+  cached i386 D3D12 fail; the safe set passes x64 DXVK/D3D11 and i386
+  DXGI/D3D12/D3D11 readback.
+- Accepted providers are now `xtajit64.dll`
+  `0c5e7b85049d2d078a55e014cdecabe767c765d382ee2f0e6c7a92d2f3149a4f`
+  and `xtajit.dll`
+  `ed9eac240a87cebd2bff5b4384105410a00ae0215b08c1a6f43e8b7d77ae7d98`.
+  The prior P2 pair remains in `runtime-providers` as the named `pre-p3`
+  rollbacks.
+- Wine commit `04a6027` retains the native ARM64 wrapper instead of re-execing
+  an equivalent loader, adds a bounded generation-keyed builtin path cache,
+  searches `.exe` modules in `programs` first, and stops treating the external
+  FEX ABI identity as a missing Wine builtin. Three paired production traces
+  reduced initial failed dyld probes from 10 to 5 and warm Wine builtin probe
+  failures from 3 to 0.
+- `scripts/vkmt-warm-session.sh` owns the prefix-scoped, 1-600 second bounded
+  wineserver policy. Its receipt binds Wine, wineserver, NTDLL, both providers,
+  GStreamer, and MSync mode; provider replacement or a mode/generation change
+  performs exact prefix shutdown before reuse.
+- `scripts/vkmt-runtime-env.sh` enables the accepted FEX cache, forces all
+  three TSO settings to zero, and uses only the bundled host dependency paths.
+- Two independent 20-sample sessions passed the warm <75 ms p95 gate with all
+  164 correlated launches per architecture at `rc=0`: x64 p95 was
+  21.661-21.986 ms and i386 p95 was 68.672-69.112 ms. Default P2 cache
+  acceptance reports 100% eligible repeat-JIT reduction; the fresh P6 prefix
+  passes ARM64, ARM64EC, x86_64, and i386.
+- Evidence is in `docs/validation/perf-p3-loader-20260801/` and
+  `docs/validation/perf-p3-latency-20260801/`. P4 cross-architecture transition
+  reduction is next.
+
 ### 2026-08-01 — headless cold-start MoltenVK deferral accepted
 
 - `WINE_NO_EXPLORER=1` now skips the desktop-integration `RunServices` pass

@@ -19,9 +19,9 @@ I386_PROVIDER_SHA="${VKMT_XTAJIT_SHA256:-}"
 X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$VKMT/build/xtajit64-java-j3-final/provider/xtajit64.dll}"
 X64_PROVIDER_SHA="${VKMT_XTAJIT64_SHA256:-}"
 I386_GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll"
-I386_GOLDEN_SHA=a74775b45db0952e2d70657888b445ebc4bdee7fb331b927429c027aed0d76e2
+I386_GOLDEN_SHA=ed9eac240a87cebd2bff5b4384105410a00ae0215b08c1a6f43e8b7d77ae7d98
 X64_GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll"
-X64_GOLDEN_SHA=73a00af3ce734a48af43c1be31536bfa40cffc11fe7913353ea8d5d3d0dcfca7
+X64_GOLDEN_SHA=0c5e7b85049d2d078a55e014cdecabe767c765d382ee2f0e6c7a92d2f3149a4f
 EVIDENCE="${VKMT_JAVA_J3_EVIDENCE_DIR:-$VKMT/docs/validation/windows-java-j3-20260729}"
 
 for required in "$WINE" "$WINESERVER" "$WINEBOOT" "$NATIVE_JAVA" \

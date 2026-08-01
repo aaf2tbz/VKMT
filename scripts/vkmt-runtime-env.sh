@@ -9,12 +9,23 @@ test -s "$VKMT_GST_ROOT/MANIFEST.sha256" || {
   return 1 2>/dev/null || exit 1
 }
 
-export DYLD_LIBRARY_PATH="$VKMT_GST_ROOT/lib:$VKMT_WINE_BUILD/dlls/winecoreaudio.drv:$VKMT_WINE_BUILD/dlls/secur32:$VKMT_WINE_BUILD/dlls/ntdll:$VKMT_WINE_BUILD/dlls/win32u${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
-export GI_TYPELIB_PATH="$VKMT_GST_ROOT/girepository-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
+# Keep host resolution hermetic and generation-stable.  Inheriting arbitrary
+# Homebrew or user search paths both invalidates warm lookups and can silently
+# replace the bundled dependency closure.
+export DYLD_LIBRARY_PATH="$VKMT_GST_ROOT/lib:$VKMT_WINE_BUILD/dlls/winecoreaudio.drv:$VKMT_WINE_BUILD/dlls/secur32:$VKMT_WINE_BUILD/dlls/ntdll:$VKMT_WINE_BUILD/dlls/win32u"
+export GI_TYPELIB_PATH="$VKMT_GST_ROOT/girepository-1.0"
 export GST_PLUGIN_PATH_1_0="$VKMT_GST_ROOT/lib/gstreamer-1.0"
 export GST_PLUGIN_SYSTEM_PATH_1_0="$VKMT_GST_ROOT/lib/gstreamer-1.0"
 export GST_PLUGIN_SCANNER_1_0="$VKMT_GST_ROOT/libexec/gstreamer-1.0/gst-plugin-scanner"
 export GST_REGISTRY="${WINEPREFIX:?WINEPREFIX must be set}/.vkmt/gstreamer-registry.bin"
+
+# Persistent translated-code caches are part of the accepted runtime.  The
+# provider itself rejects every TSO mode, but export the production contract
+# explicitly so launchers cannot inherit stale user/session values.
+export FEX_ENABLECODECACHINGWIP="${FEX_ENABLECODECACHINGWIP:-1}"
+export FEX_TSOENABLED=0
+export FEX_VECTORTSOENABLED=0
+export FEX_MEMCPYSETTSOENABLED=0
 
 # Chromium's sampling profiler repeatedly suspends translated ARM64EC threads
 # and can starve Steam's initial renderer/Mojo handoff.  Wine scopes this to

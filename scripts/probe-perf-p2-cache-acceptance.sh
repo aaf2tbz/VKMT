@@ -9,8 +9,8 @@ RUNS="$VKMT/build/probe-runs"
 WINE="$BUILD/wine"
 WINESERVER="$BUILD/server/wineserver"
 WINEBOOT="$BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
-X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$VKMT/build/fex-arm64ec-steam-probe/Bin/libarm64ecfex.dll}"
-I386_PROVIDER="${VKMT_XTAJIT_SOURCE:-$VKMT/build/fex-wow64-java/Bin/libwow64fex.dll}"
+X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll}"
+I386_PROVIDER="${VKMT_XTAJIT_SOURCE:-$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll}"
 X64_SHA="${VKMT_XTAJIT64_SHA256:-$(shasum -a 256 "$X64_PROVIDER" | awk '{print $1}')}"
 I386_SHA="${VKMT_XTAJIT_SHA256:-$(shasum -a 256 "$I386_PROVIDER" | awk '{print $1}')}"
 WARM_RUNS="${VKMT_P2_WARM_RUNS:-3}"
@@ -90,6 +90,15 @@ cache_detail()
     "$trace_dir"/*.tsv
 }
 
+cache_enabled_for_id()
+{
+  run_id=$1
+  cache_id=$2
+  awk -F '\t' -v run_id="$run_id" -v expected="id=$cache_id " \
+    '$1 == "VKMT_PERF_V1" && $5 == run_id && $8 == "cache_enabled" && index($9, expected) == 1 { found = 1 }
+     END { exit !found }' "$trace_dir"/*.tsv
+}
+
 provider_env=(
   VKMT_XTAJIT64_SOURCE="$X64_PROVIDER" VKMT_XTAJIT64_SHA256="$X64_SHA"
   VKMT_XTAJIT_SOURCE="$I386_PROVIDER" VKMT_XTAJIT_SHA256="$I386_SHA"
@@ -161,7 +170,7 @@ for arch in x86_64 i386; do
   run_wine "p2-$arch-corrupt" "$run_root/$arch-corrupt.log" "${args[@]}"
   corrupt_blocks="$(summary_value "p2-$arch-corrupt" eligible_blocks)"
   test "$corrupt_blocks" -gt 0
-  if cache_detail "p2-$arch-corrupt" | grep -q .; then
+  if cache_enabled_for_id "p2-$arch-corrupt" "$cache_id"; then
     echo "$arch corrupt cache was unexpectedly enabled" >&2
     exit 1
   fi

@@ -13,10 +13,12 @@ ARCH=x86_64
 PREFIX=
 FIXTURE=
 OUTPUT=
+EXPECT_OUTPUT=
+GATE_STATES=all
 
 usage()
 {
-  echo "usage: $0 --prefix PREFIX [--arch x86_64|i386] [--fixture EXE] [--runs N] [--sessions N] [--output DIR]" >&2
+  echo "usage: $0 --prefix PREFIX [--arch x86_64|i386] [--fixture EXE] [--expect-output TEXT] [--runs N] [--sessions N] [--gate-states all|STATE,...] [--output DIR]" >&2
   exit 2
 }
 
@@ -25,6 +27,8 @@ while test $# -gt 0; do
     --prefix) test $# -ge 2 || usage; PREFIX=$2; shift 2 ;;
     --arch) test $# -ge 2 || usage; ARCH=$2; shift 2 ;;
     --fixture) test $# -ge 2 || usage; FIXTURE=$2; shift 2 ;;
+    --expect-output) test $# -ge 2 || usage; EXPECT_OUTPUT=$2; shift 2 ;;
+    --gate-states) test $# -ge 2 || usage; GATE_STATES=$2; shift 2 ;;
     --runs) test $# -ge 2 || usage; RUNS=$2; shift 2 ;;
     --sessions) test $# -ge 2 || usage; SESSIONS=$2; shift 2 ;;
     --output) test $# -ge 2 || usage; OUTPUT=$2; shift 2 ;;
@@ -35,6 +39,20 @@ done
 test -n "$PREFIX" || usage
 case "$ARCH" in x86_64|i386) ;; *) usage ;; esac
 case "$RUNS:$SESSIONS" in *[!0-9:]*|0:*|*:0) usage ;; esac
+case ",$GATE_STATES," in
+  *,all,*) GATE_STATES=all ;;
+  *)
+    old_ifs=$IFS
+    IFS=,
+    for gate_state in $GATE_STATES; do
+      case "$gate_state" in
+        cold_process_cold_server|warm_files_cold_server|persistent_server|persistent_session_warm_guest) ;;
+        *) usage ;;
+      esac
+    done
+    IFS=$old_ifs
+    ;;
+esac
 test -d "$PREFIX" || { echo "Missing prefix: $PREFIX" >&2; exit 1; }
 test -x "$WINE" && test -x "$WINESERVER" || { echo "Missing Wine runtime" >&2; exit 1; }
 test "$(/usr/bin/lipo -archs "$WINE")" = arm64 || { echo "Wine host is not ARM64" >&2; exit 1; }
@@ -94,7 +112,9 @@ run_one()
     "$WINE" "${args[@]}" >"$OUTPUT/$run_id.log" 2>&1
   rc=$?
   test "$rc" = 0 || { echo "$run_id failed with rc=$rc" >&2; return "$rc"; }
-  if test "$ARCH" = i386; then
+  if test -n "$EXPECT_OUTPUT"; then
+    grep -Fq "$EXPECT_OUTPUT" "$OUTPUT/$run_id.log"
+  elif test "$ARCH" = i386; then
     grep -q 'VKMT i386 WoW64 execution contract passed' "$marker"
   else
     grep -q 'VKMT entry_x64: hello from x86-64 guest' "$OUTPUT/$run_id.log"
@@ -118,12 +138,12 @@ for session in $(seq 1 "$SESSIONS"); do
     case "$state" in
       warm_files_cold_server) prewarm_files ;;
       persistent_server)
-        WINEPREFIX="$PREFIX" "$WINESERVER" -p120
+        "$VKMT/scripts/vkmt-warm-session.sh" start --prefix "$PREFIX" --reason perf-persistent-server >/dev/null
         run_one "$session" "${state}_primer" 0
         ;;
       persistent_session_warm_guest)
         prewarm_files
-        WINEPREFIX="$PREFIX" "$WINESERVER" -p120
+        "$VKMT/scripts/vkmt-warm-session.sh" start --prefix "$PREFIX" --reason perf-warm-guest >/dev/null
         run_one "$session" "${state}_primer" 0
         ;;
     esac
@@ -160,6 +180,9 @@ EOF
   p95_spread=$(awk -v low="$p95_min" -v high="$p95_max" 'BEGIN { printf "%.2f", low ? (high - low) * 100 / low : 0 }')
   gate=PASS
   awk -v median="$median_spread" -v p95="$p95_spread" 'BEGIN { exit !(median <= 5.0 && p95 <= 5.0) }' || gate=FAIL
+  if test "$GATE_STATES" != all; then
+    case ",$GATE_STATES," in *,$state,*) ;; *) gate=OBSERVE ;; esac
+  fi
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$state" "$median_min" "$median_max" \
     "$median_spread" "$p95_min" "$p95_max" "$p95_spread" "$gate" >>"$repeatability"
 done

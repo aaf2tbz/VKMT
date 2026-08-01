@@ -9,8 +9,8 @@ XTAJIT64_SOURCE="${VKMT_XTAJIT64_SOURCE:-$SOURCE/xtajit64-arm64ec-known-good.dll
 XTAJIT_SOURCE="${VKMT_XTAJIT_SOURCE:-$SOURCE/xtajit-arm64-known-good.dll}"
 XTAJIT64_STAGE="$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll"
 XTAJIT_STAGE="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
-XTAJIT64_SHA256="${VKMT_XTAJIT64_SHA256:-73a00af3ce734a48af43c1be31536bfa40cffc11fe7913353ea8d5d3d0dcfca7}"
-XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-a74775b45db0952e2d70657888b445ebc4bdee7fb331b927429c027aed0d76e2}"
+XTAJIT64_SHA256="${VKMT_XTAJIT64_SHA256:-0c5e7b85049d2d078a55e014cdecabe767c765d382ee2f0e6c7a92d2f3149a4f}"
+XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-ed9eac240a87cebd2bff5b4384105410a00ae0215b08c1a6f43e8b7d77ae7d98}"
 CANONICAL_XTAJIT64_SOURCE="$SOURCE/xtajit64-arm64ec-known-good.dll"
 CANONICAL_XTAJIT_SOURCE="$SOURCE/xtajit-arm64-known-good.dll"
 mode=stage
@@ -71,6 +71,12 @@ fi
 if test "$mode" = prefix; then
   system32="$prefix/drive_c/windows/system32"
   mkdir -p "$system32"
+  if { test -f "$system32/xtajit64.dll" &&
+       test "$(shasum -a 256 "$system32/xtajit64.dll" | awk '{print $1}')" != "$XTAJIT64_SHA256"; } ||
+     { test -f "$system32/xtajit.dll" &&
+       test "$(shasum -a 256 "$system32/xtajit.dll" | awk '{print $1}')" != "$XTAJIT_SHA256"; }; then
+    "$VKMT/scripts/vkmt-warm-session.sh" invalidate --prefix "$prefix" --reason provider-replacement
+  fi
   install -m 0644 "$XTAJIT64_SOURCE" "$system32/xtajit64.dll"
   install -m 0644 "$XTAJIT_SOURCE" "$system32/xtajit.dll"
 fi
