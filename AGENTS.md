@@ -1760,3 +1760,30 @@ new single-prefix ARM64, ARM64EC, x86_64, and i386/WoW64 matrix also passed all
 four conventional status-0 gates and emitted
 `P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`; its logs and status are in
 `docs/validation/perf-p5-all-architecture-after-x64-java-fix-20260801/`.
+
+### 2026-08-01 — P6 versioned GPU translation-cache acceptance
+
+P6 is accepted without changing either P5 FEX provider. Prefix initialization
+now stages a private, versioned graphics-cache generation and every normal
+runtime launch exports the same DXVK, vkd3d-proton, DXMT, MetalSharp/OpenGL,
+Metal, and XDG cache roots. Generation schema 2 hashes the complete shipped
+graphics binaries and includes the macOS version/build, hardware model, GPU
+chipset, and Metal generation. Only two generations are retained; manifest
+publication is atomic and incompatible identities are rejected before use.
+
+DXVK commit `398baae` fixes two short-process persistence defects: completed
+writer bursts are flushed without waiting for 32 shaders, and the zero-user
+cache singleton is actually destroyed so its writer is joined and drained.
+The rebuilt i386 D3D11 DLL is the exact artifact exercised by
+`scripts/probe-perf-p6-gpu-cache.sh`.
+
+In a fresh disposable no-TSO prefix, deterministic compute DXBC produced one
+cold translation and a persisted cache record. The warm run loaded that record
+with one cache hit, zero repeat translations, a 100% hit rate, and 100% shader
+translation reduction. Warm compute pipeline creation/submission/readback was
+43,209,300 ns, below the 100-ms gate, and returned the expected `0x504b3656`
+value. A deliberately incompatible manifest was rejected and repaired. The
+i386 VKMT DXGI/D3D12/D3D11 ladder then passed, including explicit
+vkd3d-proton cache remapping, and the canonical ARM64, ARM64EC, x86_64, and
+i386 single-prefix gate passed with four status-0 results. Evidence is in
+`docs/validation/perf-p6-gpu-cache-20260801/`.

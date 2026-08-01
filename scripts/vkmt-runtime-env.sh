@@ -27,6 +27,11 @@ export FEX_TSOENABLED=0
 export FEX_VECTORTSOENABLED=0
 export FEX_MEMCPYSETTSOENABLED=0
 
+# Keep every graphics translator in one versioned, per-prefix cache generation.
+# The manifest is created during prefix staging; a previously unseen prefix is
+# initialized lazily once and subsequent launches only source this small file.
+source "$VKMT_RUNTIME_ROOT/scripts/vkmt-gpu-cache-env.sh"
+
 # Chromium's sampling profiler repeatedly suspends translated ARM64EC threads
 # and can starve Steam's initial renderer/Mojo handoff.  Wine scopes this to
 # steamwebhelper.exe and removes only the optional telemetry switch.

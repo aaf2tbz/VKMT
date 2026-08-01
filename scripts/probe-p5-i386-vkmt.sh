@@ -58,6 +58,7 @@ done
 mkdir -p "$RUNS"
 run_root="$(mktemp -d "$RUNS/p5-i386-vkmt.XXXXXX")"
 prefix="$run_root/prefix"
+vkd3d_log_win="Z:${run_root//\//\\}\\vkd3d.log"
 wine_pid=""
 timeout_cmd=()
 if command -v gtimeout >/dev/null 2>&1; then
@@ -112,8 +113,13 @@ run_wine()
       VK_ICD_FILENAMES="$run_root/vkmt_icd.json"
       WINEDLLOVERRIDES='dxgi,d3d11,d3d12,d3d12core=n'
       DXVK_LOG_LEVEL=info DXVK_LOG_PATH="$run_root" VKD3D_DEBUG=info
+      VKD3D_LOG_FILE="$vkd3d_log_win"
       VKMT_ALLOW_NON_SINGLE_TEXEL_ALIGNMENT=1
     )
+    test -z "${DXVK_SHADER_CACHE_PATH:-}" ||
+      runtime_env+=(DXVK_SHADER_CACHE_PATH="$DXVK_SHADER_CACHE_PATH")
+    test -z "${VKD3D_SHADER_CACHE_PATH:-}" ||
+      runtime_env+=(VKD3D_SHADER_CACHE_PATH="$VKD3D_SHADER_CACHE_PATH")
   fi
   "${timeout_cmd[@]}" env "${runtime_env[@]}" "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!
@@ -151,6 +157,8 @@ run_wine "$run_root/wineboot.log" -all cpu "$WINEBOOT" --init || {
 }
 "$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
+export WINEPREFIX="$prefix" VKMT_RUNTIME_ROOT="$VKMT"
+source "$VKMT/scripts/vkmt-gpu-cache-env.sh"
 run_wine "$run_root/substrate.log" "${VKMT_P5_SUBSTRATE_WINEDEBUG:--all}" cpu \
   "$run_root/substrate.exe" "Z:$run_root/substrate.marker" || {
   substrate_code=$?
@@ -204,6 +212,8 @@ run_wine "$run_root/d3d12-repeat.log" -all graphics "$run_root/d3d12.exe" || {
 grep -q 'PROBE OK' "$run_root/d3d12-repeat.log"
 grep -q 'Readback expected=0x4b4d5456 actual=0x4b4d5456' "$run_root/d3d12-repeat.log"
 grep -q '\[mvk-info\]' "$run_root/d3d12-repeat.log"
+grep -Fq 'Remapping VKD3D_SHADER_CACHE to:' "$run_root/vkd3d.log"
+grep -Fq 'vkd3d-proton.d3d12.exe.cache' "$run_root/vkd3d.log"
 
 run_wine "$run_root/d3d11.log" -all graphics "$run_root/d3d11.exe" || {
   echo "P5 D3D11 gate failed" >&2; tail -n 200 "$run_root/d3d11.log" >&2; exit 1;

@@ -103,5 +103,11 @@ if test "$mode" = prefix || test "$mode" = verify-prefix; then
   }
 fi
 
+if test "$mode" = prefix; then
+  "$VKMT/scripts/stage-gpu-cache-runtime.sh" --prefix "$prefix"
+elif test "$mode" = verify-prefix; then
+  "$VKMT/scripts/stage-gpu-cache-runtime.sh" --verify-prefix "$prefix"
+fi
+
 marker="$(printf '%s' "$mode" | tr '[:lower:]-' '[:upper:]_')"
 echo "VKMT_RUNTIME_PROVIDERS_${marker}_OK"
