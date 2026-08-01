@@ -1,0 +1,148 @@
+    805    1     n 0       VkmtWindowsJavaJitProbe::nativeExecutableMemory (native)   (static)
+VKMT_J3_EXECMEM_OK transitions=257 flushes=257 patches=128
+    812    2    b  3       VkmtWindowsJavaJitProbe::hotLoop (34 bytes)
+    864    3    b  4       VkmtWindowsJavaJitProbe::hotLoop (34 bytes)
+    923    2       3       VkmtWindowsJavaJitProbe::hotLoop (34 bytes)   made not entrant
+    998    4    b  2       VkmtWindowsJavaJitProbe::arithmetic (35 bytes)
+VKMT_J3_HOT_OK checksum=64bba351d3
+VKMT_J3_XCOMP_CONTROL_OK checksum=339a29d2bc
+VKMT_J3_DEOPT_OK mode=tiered-covered checksum=339a29d2bc
+   1175    5    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1177    6    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1181    5       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1185    6       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1188    7    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1190    8    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1198    7       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1203    9    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1204   10    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1206    9       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1207   10       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1207   11    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1209   12    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1213   11       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1218   13    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1219   14    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1221   13       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1222   14       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1222   15    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1223   16    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1228   15       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1233   17    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1234   18    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1236   17       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1236   18       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+   1237   19    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1238   20    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+   1242   19       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+VKMT_J3_GC_BEGIN wave=0
+VKMT_J3_GC_END wave=0
+VKMT_J3_FINALIZATION_BEGIN wave=0
+VKMT_J3_FINALIZATION_END wave=0
+VKMT_J3_CODECACHE_WAVE_OK wave=0
+  11194   21    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11196   22    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11198   21       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11199   22       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11199   23    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11201   24    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11205   23       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11210   25    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11211   26    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11213   25       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11214   26       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11214   27    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11215   28    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11220   27       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11224   29    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11226   30    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11228   29       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11228   30       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11229   31    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11230   32    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11234   31       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11239   33    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11240   34    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11242   33       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11242   34       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  11243   35    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11244   36    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  11248   35       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+VKMT_J3_GC_BEGIN wave=1
+VKMT_J3_GC_END wave=1
+VKMT_J3_FINALIZATION_BEGIN wave=1
+VKMT_J3_FINALIZATION_END wave=1
+VKMT_J3_CODECACHE_WAVE_OK wave=1
+  19105   37    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19107   38    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19109   37       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19110   38       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19110   39    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19112   40    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19116   39       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19121   41    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19123   42    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19125   41       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19125   42       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19126   43    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19127   44    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19131   43       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19136   45    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19137   46    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19139   45       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19140   46       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19140   47    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19142   48    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19146   47       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19150   49    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19151   50    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19153   49       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19154   50       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  19154   51    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19155   52    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  19159   51       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+VKMT_J3_GC_BEGIN wave=2
+VKMT_J3_GC_END wave=2
+VKMT_J3_FINALIZATION_BEGIN wave=2
+VKMT_J3_FINALIZATION_END wave=2
+VKMT_J3_CODECACHE_WAVE_OK wave=2
+  28172   53    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28174   54    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28176   53       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28176   54       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28177   55    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28178   56    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28183   55       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28187   57    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28189   58    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28191   57       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28191   58       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28191   59    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28193   60    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28197   59       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28202   61    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28203   62    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28205   61       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28206   62       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28206   63    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28208   64    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28212   63       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28216   65    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28218   66    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28219   65       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28220   66       4       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+  28220   67    b  3       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28222   68    b  4       vkmt.dynamic.JitPayload::compute (37 bytes)
+  28226   67       3       vkmt.dynamic.JitPayload::compute (37 bytes)   made not entrant
+VKMT_J3_GC_BEGIN wave=3
+VKMT_J3_GC_END wave=3
+VKMT_J3_FINALIZATION_BEGIN wave=3
+VKMT_J3_FINALIZATION_END wave=3
+VKMT_J3_CODECACHE_WAVE_OK wave=3
+  36687   69    b  3       VkmtWindowsJavaJitProbe::warmExceptionSites (48 bytes)
+  36705    2       3       VkmtWindowsJavaJitProbe::hotLoop (34 bytes)   made zombie
+  36705   70    b  4       VkmtWindowsJavaJitProbe::warmExceptionSites (48 bytes)
+  36736   69       3       VkmtWindowsJavaJitProbe::warmExceptionSites (48 bytes)   made not entrant
+VKMT_J3_EXCEPTION_WARMUP_OK checksum=4c573b0d3
+VKMT_WINDOWS_JAVA_J3_OK model=64 vm=OpenJDK 64-Bit Server VM mode=x86_64-xcomp compilationTimeMs=301 loaderChecksum=2660e76fe0 exceptions=VKMT_J3_EXCEPTIONS_OK
+CodeCache: size=245760Kb used=1141Kb max_used=1152Kb free=244619Kb

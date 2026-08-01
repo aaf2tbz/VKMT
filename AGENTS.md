@@ -1736,3 +1736,27 @@ markers, returned status 0, and completed exact wineserver shutdown. Evidence
 is in `docs/validation/perf-p5-i386-java-final-20260801/`. Five preceding
 instrumented C1 runs also passed; their 2.4-GiB retained diagnostic prefix was
 deleted after the compact evidence was extracted.
+
+### 2026-08-01 — x86_64 Java provider repair after P5
+
+The P4 ARM64EC/x86_64 provider remained valid for the single-prefix smoke gate
+but could stall before HotSpot emitted its first line. The source-built provider
+from FEX commit `22b3110d0` resolves that startup and teardown path without TSO.
+Its SHA-256 is
+`0dde3c54ff286553b0592d58057e99f9ef4aca0d86436d1c1fa2e38d3fc14330`.
+The prior all-architecture baseline remains available as
+`runtime-providers/xtajit64-arm64ec-pre-java-fix-0c5e7b85.dll`, SHA-256
+`0c5e7b85049d2d078a55e014cdecabe767c765d382ee2f0e6c7a92d2f3149a4f`.
+
+The repaired x86_64 provider first passed tiered and Xcomp alone, then passed a
+fresh four-lane Java matrix alongside the accepted P5 i386 provider. The lanes
+compiled 34 x86_64 tiered, 125 x86_64 Xcomp, 28 i386 C1, and 23 i386 Xcomp
+fixture methods; all emitted their complete execution, GC, code-cache,
+deoptimization, and exception markers and completed exact wineserver shutdown.
+Evidence is in `docs/validation/perf-p5-java-all-lanes-x64-fix-20260801/`.
+That directory contains the final no-override rerun, where candidate and golden
+hashes are identical to the promoted canonical providers. After promotion, a
+new single-prefix ARM64, ARM64EC, x86_64, and i386/WoW64 matrix also passed all
+four conventional status-0 gates and emitted
+`P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`; its logs and status are in
+`docs/validation/perf-p5-all-architecture-after-x64-java-fix-20260801/`.

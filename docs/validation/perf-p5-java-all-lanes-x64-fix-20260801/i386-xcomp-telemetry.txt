@@ -1,0 +1,46 @@
+    826    1     n       VkmtWindowsJavaJitProbe::nativeExecutableMemory (native)   (static)
+VKMT_J3_EXECMEM_OK transitions=257 flushes=257 patches=128
+    838    2    b        VkmtWindowsJavaJitProbe::hotLoop (34 bytes)
+VKMT_J3_HOT_OK checksum=64bba351d3
+VKMT_J3_XCOMP_CONTROL_OK checksum=339a29d2bc
+VKMT_J3_DEOPT_OK mode=tiered-covered checksum=339a29d2bc
+    935    3    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+    941    4    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+    946    5    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+    951    6    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_GC_BEGIN wave=0
+VKMT_J3_GC_END wave=0
+VKMT_J3_FINALIZATION_BEGIN wave=0
+VKMT_J3_FINALIZATION_END wave=0
+VKMT_J3_CODECACHE_WAVE_OK wave=0
+   3931    7    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   3936    8    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   3941    9    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   3946   10    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_GC_BEGIN wave=1
+VKMT_J3_GC_END wave=1
+VKMT_J3_FINALIZATION_BEGIN wave=1
+VKMT_J3_FINALIZATION_END wave=1
+VKMT_J3_CODECACHE_WAVE_OK wave=1
+   4963   11    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   4968   12    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   4973   13    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   4978   14    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_GC_BEGIN wave=2
+VKMT_J3_GC_END wave=2
+VKMT_J3_FINALIZATION_BEGIN wave=2
+VKMT_J3_FINALIZATION_END wave=2
+VKMT_J3_CODECACHE_WAVE_OK wave=2
+   6286   15    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   6291   16    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   6296   17    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+   6300   18    b        vkmt.dynamic.JitPayload::compute (37 bytes)
+VKMT_J3_GC_BEGIN wave=3
+VKMT_J3_GC_END wave=3
+VKMT_J3_FINALIZATION_BEGIN wave=3
+VKMT_J3_FINALIZATION_END wave=3
+VKMT_J3_CODECACHE_WAVE_OK wave=3
+   7203   19    b        VkmtWindowsJavaJitProbe::warmExceptionSites (48 bytes)
+VKMT_J3_EXCEPTION_WARMUP_OK checksum=4c573b0d3
+VKMT_WINDOWS_JAVA_J3_OK model=32 vm=OpenJDK Client VM mode=i386-xcomp compilationTimeMs=45 loaderChecksum=2660e76fe0 exceptions=VKMT_J3_EXCEPTIONS_OK
+CodeCache: size=32768Kb used=663Kb max_used=663Kb free=32104Kb
