@@ -21,6 +21,7 @@ mkdir -p "$RUNS"
 run_root="$(mktemp -d "$RUNS/cef-runtime.XXXXXX")"
 prefix="$run_root/prefix"
 https_pid=
+evidence_dir="${VKMT_CEF_EVIDENCE_DIR:-}"
 
 cleanup()
 {
@@ -29,9 +30,14 @@ cleanup()
   test -z "$https_pid" || wait "$https_pid" 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -k 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -w 2>/dev/null || true
+  if test -n "$evidence_dir"; then
+    mkdir -p "$evidence_dir"
+    find "$run_root" -maxdepth 1 -type f -exec cp -p {} "$evidence_dir/" \;
+    test ! -d "$run_root/https" || cp -R "$run_root/https" "$evidence_dir/"
+  fi
   case "$run_root" in "$RUNS"/*)
     test "${VKMT_KEEP_PROBE_RUN:-0}" = 1 ||
-      /usr/bin/trash "$run_root" 2>/dev/null || true
+      find "$run_root" -depth -delete 2>/dev/null || true
   esac
   exit "$status"
 }
@@ -49,6 +55,11 @@ run_wine()
     DYLD_LIBRARY_PATH="$BUILD/dlls/winecoreaudio.drv:$BUILD/dlls/secur32:$BUILD/dlls/ntdll:$BUILD/dlls/win32u${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
     WINEDLLOVERRIDES="${VKMT_CEF_WINEDLLOVERRIDES:-}"
     WINEDEBUG="${VKMT_CEF_WINEDEBUG:--all}"
+    FEX_TSOENABLED=0
+    FEX_VECTORTSOENABLED=0
+    FEX_MEMCPYSETTSOENABLED=0
+    FEX_MULTIBLOCK=1
+    FEX_MAXINST=5000
   )
   test "${VKMT_CEF_WINE_NO_EXPLORER:-0}" != 1 ||
     env_args+=(WINE_NO_EXPLORER=1)
@@ -91,6 +102,9 @@ VKMT_CEF_WINE_NO_EXPLORER=1 VKMT_CEF_WINEDEBUG=-all \
   run_wine "$run_root/wineboot.log" "${VKMT_CEF_BOOT_TIMEOUT:-120}s" \
     "$WINEBOOT" --init
 stop_server
+# wineboot populates system32 from the build tree, so restore the pinned
+# candidate/runtime provider before verifying or executing a guest.
+"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
 
 for spec in \

@@ -1568,3 +1568,30 @@ results and `P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`. Evidence is in
 The promoted, default hash-pinned path then repeated the same four status-0
 gates without overrides; that final canonical evidence is in
 `docs/validation/perf-p2-canonical-all-arch-rc0-20260801/`.
+
+### 2026-08-01 — P1 precise ARM64EC synchronous-exception state
+
+FEX commit `19a09617e` removes the need for single-instruction translation at
+synchronous-fault boundaries. The frontend materializes guest EFLAGS only at
+instructions capable of side effects, while the ARM64EC JIT publishes exact
+guest RIP and RSP. Exception re-entry preserves those values across native
+context reconstruction before Wine receives its packed x64 context. This is a
+compact boundary commit, not `MaxInst=1`, TSO, or a full per-instruction state
+spill.
+
+The post-commit ARM64EC/x86_64 provider is canonical at SHA-256
+`4e43c95c64a0c12f8f64c9c5c18d3839ce1345f55c58411a77c657bcbdf6a35b`.
+The prior cache-capable provider is preserved as
+`xtajit64-arm64ec-pre-precise-f0cf686e.dll`. Five consecutive x64 processes in
+one clean prefix validated exact RIP, all 15 GPRs, RSP, EFLAGS, AV metadata,
+and continuation through a faulting multiblock with `FEX_MAXINST=5000`.
+Evidence is in `docs/validation/perf-p1-postcommit-5x-20260801/`. The same
+post-commit bytes passed ARM64, ARM64EC, x86_64, and i386/WoW64 with status 0
+in `docs/validation/perf-p1-postcommit-all-arch-rc0-20260801/`.
+
+The broader CEF CDP harness currently times out before its DevTools endpoint
+with both the previous canonical provider and the P1 candidate, even with the
+persistent translated-code cache disabled. It is therefore not a differential
+P1 regression. Both providers reach three Vulkan-backed CEF processes under
+normal multiblock execution; the harness must be repaired independently before
+it can be used as a browser-rendering performance gate.
