@@ -1595,3 +1595,53 @@ persistent translated-code cache disabled. It is therefore not a differential
 P1 regression. Both providers reach three Vulkan-backed CEF processes under
 normal multiblock execution; the harness must be repaired independently before
 it can be used as a browser-rendering performance gate.
+
+### 2026-08-01 — P2 quantitative persistent-code-cache acceptance
+
+FEX commit `db4a8262d` adds opt-in, process-local JIT accounting to both
+Windows providers. When a correlated VKMT performance trace is active it
+records total and main-image-eligible compile blocks and nanoseconds; the
+normal untraced path retains only one predictable disabled branch at a compile
+miss. The main-image range is published atomically for multithreaded guests.
+Cache-enable trace records now include the exact cache identity and mapped
+block count.
+
+`scripts/probe-perf-p2-cache-acceptance.sh` creates one fresh disposable
+prefix, forces normal multiblock execution (`FEX_MAXINST=5000`) with scalar,
+vector, and memcpy/set TSO all disabled, and runs cold plus three warm
+processes for x86_64 and i386. It then corrupts each exact cache header and
+requires a successful live-JIT fallback without enabling the corrupt cache.
+The accepted post-commit measurements were:
+
+- x86_64: 39 eligible cold blocks to 0 warm blocks, 10,306,800 ns to 0 ns,
+  100% coverage and measured eligible-JIT reduction, 90 cached blocks.
+- i386: 39 eligible cold blocks to 0 warm blocks, 486,400 ns to 0 ns,
+  100% coverage and measured eligible-JIT reduction, 134 cached blocks.
+
+Both exceed the P2 gates of 80% eligible-block coverage and 70% eligible JIT
+reduction. Evidence is in
+`docs/validation/perf-p2-cache-acceptance-db4a8262-20260801/`.
+
+The exact promoted canonical providers are:
+
+- ARM64EC/x86_64: SHA-256
+  `73a00af3ce734a48af43c1be31536bfa40cffc11fe7913353ea8d5d3d0dcfca7`
+- ARM64/i386-WoW64: SHA-256
+  `a74775b45db0952e2d70657888b445ebc4bdee7fb331b927429c027aed0d76e2`
+
+The prior P1 x86_64 provider and prior i386 provider are retained as
+`xtajit64-arm64ec-pre-p2-4e43c95c.dll` and
+`xtajit-arm64-pre-p2-c387cc42.dll`. The default staging contract pins the new
+hashes. Those default-promoted bytes repeated the precise multiblock exception
+gate and the single-prefix ARM64, ARM64EC, x86_64, and i386 status-0 gate. The
+same post-commit bytes also passed x64 DXVK D3D11 readback and i386 DXGI,
+D3D12, and D3D11 readback with all TSO modes zero. The x64 graphics runner was
+repaired to use the current Wine launcher, bounded execution, post-wineboot
+provider restaging, and the fixture's actual status-0 contract.
+
+The Windows Java J3 harness currently exits before HotSpot emits output with
+the P2 candidate, the P1 canonical provider, and the historical Java-specific
+provider alike. This is not a P2 differential regression. Failed-run logs are
+now preserved before exact disposable-prefix deletion, and the harness exposes
+its software-ordering mode explicitly so the separate final no-TSO Java work
+can be completed under P5.

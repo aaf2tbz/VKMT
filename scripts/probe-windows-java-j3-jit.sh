@@ -19,10 +19,10 @@ I386_PROVIDER_SHA="${VKMT_XTAJIT_SHA256:-}"
 X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$VKMT/build/xtajit64-java-j3-final/provider/xtajit64.dll}"
 X64_PROVIDER_SHA="${VKMT_XTAJIT64_SHA256:-}"
 I386_GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll"
-I386_GOLDEN_SHA=fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073
+I386_GOLDEN_SHA=a74775b45db0952e2d70657888b445ebc4bdee7fb331b927429c027aed0d76e2
 X64_GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll"
-X64_GOLDEN_SHA=7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6
-EVIDENCE="$VKMT/docs/validation/windows-java-j3-20260729"
+X64_GOLDEN_SHA=73a00af3ce734a48af43c1be31536bfa40cffc11fe7913353ea8d5d3d0dcfca7
+EVIDENCE="${VKMT_JAVA_J3_EVIDENCE_DIR:-$VKMT/docs/validation/windows-java-j3-20260729}"
 
 for required in "$WINE" "$WINESERVER" "$WINEBOOT" "$NATIVE_JAVA" \
     "$JAVA_SOURCE" "$DYNAMIC_SOURCE" "$JNI_SOURCE" "$I386_PROVIDER" \
@@ -67,12 +67,17 @@ cleanup()
   test -z "$wine_pid" || kill -TERM "$wine_pid" 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -k 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -w 2>/dev/null || true
+  if test "$status" -ne 0; then
+    mkdir -p "$EVIDENCE"
+    find "$run_root" -maxdepth 1 -type f -name '*.log' -exec cp -p {} "$EVIDENCE/" \;
+    printf 'status=%s\n' "$status" >"$EVIDENCE/status.txt"
+  fi
   case "$run_root" in
     "$RUNS"/*)
       if test "${VKMT_KEEP_JAVA_J3_RUN:-0}" = 1; then
         echo "Retained Windows Java J3 run: $run_root" >&2
       else
-        /usr/bin/trash "$run_root" 2>/dev/null || true
+        find "$run_root" -depth -delete 2>/dev/null || true
       fi
       ;;
   esac
@@ -86,7 +91,9 @@ run_wine()
   shift
   "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" \
     WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG=-all \
-    FEX_TSOENABLED=1 VKMT_X64_TIER0="${VKMT_X64_TIER0:-0}" \
+    FEX_TSOENABLED="${VKMT_JAVA_J3_TSO:-1}" \
+    FEX_VECTORTSOENABLED=0 FEX_MEMCPYSETTSOENABLED=0 \
+    VKMT_X64_TIER0="${VKMT_X64_TIER0:-0}" \
     MVK_CONFIG_LOG_LEVEL=0 \
     "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!
