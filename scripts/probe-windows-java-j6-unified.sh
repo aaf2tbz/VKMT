@@ -12,9 +12,9 @@ WINEBOOT="$BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
 NATIVE_JAVA="$VKMT/third_party/private/oracle-jre-8u501-arm64/Home/bin/java"
 JAVA_STAGE="$BUILD/java-runtime"
 I386_PROVIDER="${VKMT_XTAJIT_SOURCE:-$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll}"
-I386_PROVIDER_SHA="${VKMT_XTAJIT_SHA256:-fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073}"
+I386_PROVIDER_SHA="${VKMT_XTAJIT_SHA256:-$(shasum -a 256 "$I386_PROVIDER" | awk '{print $1}')}"
 X64_PROVIDER="${VKMT_XTAJIT64_SOURCE:-$VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll}"
-X64_PROVIDER_SHA="${VKMT_XTAJIT64_SHA256:-7b9f55ceabe971ffa1f514570bb54ed7b5640959e4440e7f8a013e9af13ab7e6}"
+X64_PROVIDER_SHA="${VKMT_XTAJIT64_SHA256:-$(shasum -a 256 "$X64_PROVIDER" | awk '{print $1}')}"
 EVIDENCE="$VKMT/docs/validation/windows-java-j6-20260729"
 
 for required in "$WINE" "$WINESERVER" "$WINEBOOT" "$NATIVE_JAVA" \

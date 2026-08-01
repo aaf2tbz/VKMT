@@ -1787,3 +1787,42 @@ i386 VKMT DXGI/D3D12/D3D11 ladder then passed, including explicit
 vkd3d-proton cache remapping, and the canonical ARM64, ARM64EC, x86_64, and
 i386 single-prefix gate passed with four status-0 results. Evidence is in
 `docs/validation/perf-p6-gpu-cache-20260801/`.
+
+### 2026-08-01 — P7 executable-memory maintenance acceptance
+
+P7 is accepted without TSO or Rosetta. The WoW64 implementations of
+`BTCpuFlushInstructionCache2` and `BTCpuFlushInstructionCacheHeavy` previously
+invalidated the identical guest range twice: first through
+`InvalidationTracker::InvalidateAlignedInterval`, then again through the
+provider's host-to-guest invalidation helper. The common tracker already owns
+the canonical host-to-guest conversion, code-buffer invalidation, and every
+thread lookup eviction, so the second pass was redundant.
+
+FEX now exposes correlated, opt-in executable-memory metrics for flush
+requests/passes/bytes, tracker invalidations/bytes, thread lookup evictions,
+RWX write faults, and protection calls. Atomic counter updates occur only when
+`VKMT_PERF_RUN_ID` activates tracing. `scripts/probe-perf-p7-executable-memory.sh`
+builds and executes the i386 SMC fixture in separate disposable baseline and
+candidate prefixes, shuts each wineserver down exactly, retains compact trace
+evidence, and removes each prefix even on failure. Two guest flush requests
+produced four baseline passes and two candidate passes: an exact 50.00%
+reduction, while both executions returned status 0 and observed the rewritten
+code.
+
+The promoted i386/WoW64 provider is SHA-256
+`e030b4d33909d6158bf1a8521f948a4ddde85da8368e2d605ced301ff14ffee1`.
+The accepted P6 provider is retained separately as
+`runtime-providers/xtajit-arm64-p6-known-good-e8d4c669.dll`, SHA-256
+`e8d4c6694b456d9ecaa5d79e7461d6e0981a7080d14f3fe1b74732554a4b12a0`.
+The ARM64EC/x86_64 provider was not changed because its flush boundary already
+uses a single tracker pass.
+
+The candidate and then the promoted canonical path passed: i386 SMC; i386 C1
+and Xcomp Java JIT/executable-memory fixtures; the complete WoW64 LoadLibrary,
+syscall, TLS, context, SEH, APC, callback, and thread-lifecycle contract; 128
+x86_64 and 128 i386 child-process launches plus their no-TSO synchronization
+and CDN gates; i386 DXGI, D3D11, and D3D12 deterministic readback; and the
+single-prefix ARM64, ARM64EC, x86_64, and i386 matrix with four conventional
+status-0 results. Compact current evidence is under
+`build/evidence/perf-p7/`; the reproducible result summary is in
+`docs/validation/perf-p7-executable-memory-20260801/RESULTS.md`.

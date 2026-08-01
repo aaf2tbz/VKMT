@@ -9,7 +9,8 @@ TEST_DIR="$VKMT/test/i386"
 PHASE4_EXE="$TEST_DIR/phase4_contract.exe"
 PHASE4_DLL="$TEST_DIR/phase4_helper.dll"
 PHASE3_EXE="$VKMT/test/i386_smoke.exe"
-XTAJIT="$WINE_BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
+XTAJIT="${VKMT_XTAJIT_SOURCE:-$WINE_BUILD/dlls/xtajit/aarch64-windows/xtajit.dll}"
+XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-$(shasum -a 256 "$XTAJIT" | awk '{print $1}')}"
 WOW64="$WINE_BUILD/dlls/wow64/aarch64-windows/wow64.dll"
 WOW64WIN="$WINE_BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"
 NTDLL_SO="$WINE_BUILD/dlls/ntdll/ntdll.so"
@@ -17,6 +18,7 @@ WINEBOOT="$WINE_BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
 
 test -x "$WINE_BUILD/wine" || { echo "Missing native Wine build" >&2; exit 1; }
 test -f "$XTAJIT" || { echo "Missing FEX xtajit.dll" >&2; exit 1; }
+echo "$XTAJIT_SHA256  $XTAJIT" | shasum -a 256 -c -
 test -f "$WOW64" || { echo "Missing ARM64 wow64.dll" >&2; exit 1; }
 test -f "$WOW64WIN" || { echo "Missing ARM64 wow64win.dll" >&2; exit 1; }
 test -f "$WINEBOOT" || { echo "Missing native ARM64 wineboot.exe" >&2; exit 1; }

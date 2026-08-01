@@ -251,6 +251,14 @@ Gate:
 
 ## P7 - Executable memory and cache maintenance
 
+Status: completed 2026-08-01. The WoW64 instruction-cache flush boundary no
+longer repeats the same guest-range invalidation through both the common
+tracker and a second host-to-guest path. Correlated baseline/candidate traces
+prove a 50.00% reduction in flush invalidation passes. The trace-only metrics
+cover flush ranges, general invalidation passes/bytes, thread lookup eviction,
+RWX write faults, and protection calls; their atomic accounting is disabled
+outside an active VKMT performance trace.
+
 Measure JIT code-buffer allocation, RW/RX transitions, instruction-cache
 maintenance, invalidation ranges, lookup eviction, page faults, and
 self-modifying-code behavior.
@@ -323,4 +331,3 @@ reported as the core optimization project.
 - Warm graphics pipeline-cache hit rate exceeds 90%, with at least 50% lower
   first-frame latency in deterministic graphics fixtures.
 - No Rosetta process or x86 Mach-O host dependency participates.
-

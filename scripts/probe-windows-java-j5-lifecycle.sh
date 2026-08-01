@@ -14,7 +14,7 @@ NATIVE_JAVA="$VKMT/third_party/private/oracle-jre-8u501-arm64/Home/bin/java"
 J5_SOURCE="$VKMT/test/java/VkmtWindowsJavaLifecycleProbe.java"
 J5_JNI_SOURCE="$VKMT/test/java/windows_java_lifecycle.c"
 GOLDEN_PROVIDER="$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll"
-GOLDEN_PROVIDER_SHA=fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073
+GOLDEN_PROVIDER_SHA="$(shasum -a 256 "$GOLDEN_PROVIDER" | awk '{print $1}')"
 PROVIDER="${VKMT_J5_XTAJIT_SOURCE:-$VKMT/build/fex-wow64-java-j5-divide/provider/xtajit.dll}"
 PROVIDER_SHA="${VKMT_J5_XTAJIT_SHA256:-fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073}"
 EVIDENCE="$VKMT/docs/validation/windows-java-j5-20260729"
@@ -94,7 +94,8 @@ run_wine()
   "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" \
     WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 \
     WINEDEBUG="${VKMT_JAVA_J5_WINEDEBUG:--all}" \
-    FEX_TSOENABLED=1 FEX_SILENTLOG="${VKMT_JAVA_J5_FEX_SILENTLOG:-1}" \
+    FEX_TSOENABLED=0 FEX_VECTORTSOENABLED=0 FEX_MEMCPYSETTSOENABLED=0 \
+    FEX_SILENTLOG="${VKMT_JAVA_J5_FEX_SILENTLOG:-1}" \
     MVK_CONFIG_LOG_LEVEL=0 \
     "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!

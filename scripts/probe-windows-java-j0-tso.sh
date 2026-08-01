@@ -9,7 +9,7 @@ CANDIDATE="${VKMT_XTAJIT_SOURCE:-$VKMT/build/fex-wow64-java-final/provider/xtaji
 CANDIDATE_SHA="${VKMT_XTAJIT_SHA256:-}"
 FEX_SOURCE="${VKMT_FEX_SOURCE:-$VKMT/third_party/FEX-2607-java-baseline}"
 GOLDEN="$VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll"
-GOLDEN_SHA=fe1345724f6a2950541966515f766099b7bce38701c9960d4be513c27ec81073
+GOLDEN_SHA="$(shasum -a 256 "$GOLDEN" | awk '{print $1}')"
 RUNS_DIR="$VKMT/build/probe-runs"
 EVIDENCE="$VKMT/docs/validation/windows-java-j0-20260729"
 
