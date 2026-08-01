@@ -1530,3 +1530,41 @@ x86_64, and i386/WoW64 with all four exact `rc=0` gates and the final
 `P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK` marker, without candidate overrides.
 This is the correctness baseline required before performance optimization
 resumes.
+
+### 2026-08-01 — persistent Windows FEX cache and strict rc=0 repair
+
+The Windows FEX providers now persist translated code across processes for
+both ARM64EC/x86_64 and WoW64/i386 without TSO or Rosetta. The repair moves
+relocation ownership out of teardown-dead thread state, saves at normal
+`ProcessTerm`, uses checked sequential Win32 I/O and atomic publication, and
+loads executable storage with the correct ARM64EC versus ARM64 mapping. Cache
+identity is deterministic and includes the complete PE content hash. WoW64
+image tracking now keeps host pointers separate from 32-bit guest addresses,
+so cache discovery never depends on low-4-GiB host mappings. Runtime cache
+loading is independent of the offline compiler, and incomplete `.new` cache
+publications are never executable.
+
+Fresh two-pass probes proved save then load for both translated architectures:
+x86_64 loaded a 1,041,192-byte cache and i386 loaded a 10,327,160-byte cache.
+Truncated 64-byte cache fixtures fell back to live JIT with status 0, published
+validated `.repaired` images, and loaded those repaired images on the next
+process. Evidence is recorded under `build/perf-p2/` in the `x64-cache-v36-*`,
+`i386-cache-v35-*`, `corrupt-*-v38`, and `repaired-*-v38` runs.
+
+The final providers, including rejection of incomplete `.new` files, are:
+
+- ARM64EC/x86_64: SHA-256
+  `f0cf686e340a74d46e73549abfadc58aa08d2c7859b42bea2460631ced99c51d`
+- ARM64/i386-WoW64: SHA-256
+  `c387cc42aeb3dd8857bc1045ed8890b8b1f449f73cc1756cd5be46055f249db3`
+
+The previous cache-capable providers are retained as
+`xtajit64-arm64ec-pre-published-only-88b735f3.dll` and
+`xtajit-arm64-pre-published-only-895fb779.dll`; the earlier pre-cache providers
+remain retained separately. A fresh single prefix using the final exact bytes
+passed ARM64, ARM64EC, x86_64, and i386/WoW64 with four conventional status-0
+results and `P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK`. Evidence is in
+`docs/validation/perf-p2-published-only-all-arch-rc0-20260801/`.
+The promoted, default hash-pinned path then repeated the same four status-0
+gates without overrides; that final canonical evidence is in
+`docs/validation/perf-p2-canonical-all-arch-rc0-20260801/`.
