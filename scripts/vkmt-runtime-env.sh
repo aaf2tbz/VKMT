@@ -32,6 +32,11 @@ export FEX_MEMCPYSETTSOENABLED=0
 # initialized lazily once and subsequent launches only source this small file.
 source "$VKMT_RUNTIME_ROOT/scripts/vkmt-gpu-cache-env.sh"
 
+# Start a bounded, prefix-scoped read-ahead request without delaying Wine.
+# The helper enforces a 30-second cooldown and a one-request lock; set
+# VKMT_HOTSET_PREFETCH=0 for diagnostics or storage-constrained launches.
+"$VKMT_RUNTIME_ROOT/scripts/vkmt-hotset-prefetch.sh" >/dev/null
+
 # Chromium's sampling profiler repeatedly suspends translated ARM64EC threads
 # and can starve Steam's initial renderer/Mojo handoff.  Wine scopes this to
 # steamwebhelper.exe and removes only the optional telemetry switch.

@@ -109,5 +109,13 @@ elif test "$mode" = verify-prefix; then
   "$VKMT/scripts/stage-gpu-cache-runtime.sh" --verify-prefix "$prefix"
 fi
 
+if test "$mode" = prefix; then
+  "$VKMT/scripts/stage-runtime-hotset.sh" --prefix "$prefix"
+elif test "$mode" = verify-prefix; then
+  "$VKMT/scripts/stage-runtime-hotset.sh" --verify-prefix "$prefix"
+else
+  "$VKMT/scripts/stage-runtime-hotset.sh" --ensure
+fi
+
 marker="$(printf '%s' "$mode" | tr '[:lower:]-' '[:upper:]_')"
 echo "VKMT_RUNTIME_PROVIDERS_${marker}_OK"

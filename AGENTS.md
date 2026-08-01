@@ -1826,3 +1826,50 @@ single-prefix ARM64, ARM64EC, x86_64, and i386 matrix with four conventional
 status-0 results. Compact current evidence is under
 `build/evidence/perf-p7/`; the reproducible result summary is in
 `docs/validation/perf-p7-executable-memory-20260801/RESULTS.md`.
+
+### 2026-08-01 — P8 measured runtime hot-set acceptance
+
+P8 is accepted. `tools/vkmt-hotset-snapshot.c` is a native ARM64 supervisor
+which follows Wine's child-process tree and samples file-backed VM regions and
+open vnode descriptors every 50 ms for the first five seconds. This avoids the
+root-only `fs_usage` dependency and records resident bytes, mapping offsets,
+and real paths without Wine or FEX tracing overhead. The representative
+x86_64 and i386 workloads each loaded the same fifteen UI, network, crypto,
+audio, DirectX, and OpenGL surfaces; the resulting manifest naturally includes
+Winemetal, Wine graphics builtins, FreeType, libpng, GnuTLS, fonts, NLS data,
+and the actually mapped core runtime rather than every file in the tree.
+
+`runtime/hotsets/all-arch-default.tsv` contains 222 validated ranges totaling
+211,225,570 bytes (201.44 MiB), below the hard 256-MiB quota. Paths are stored
+relative to the VKMT runtime or prefix, and every row carries its file size and
+mtime identity. `tools/vkmt-hotset-prefetch.c` rejects changed rows and uses
+native `F_RDAHEAD` plus asynchronous `F_RDADVISE`; it never concatenates the
+runtime in production or retains a second RAM copy. macOS owns clean-page LRU
+eviction. The prefix launcher adds a 30-second cooldown and atomic one-request
+lock, and `VKMT_HOTSET_PREFETCH=0` disables the feature.
+
+Five independent cold pairs were built with no-cache source reads and
+no-cache writes so baseline and candidate used distinct, unwarmed vnodes. The
+median 211,225,570-byte results were:
+
+- physical demand-read stall: 266,715,000 ns, **0.791952 GB/s**;
+- prefetch request setup: 2,588,000 ns;
+- post-prefetch blocking stall: 110,655,000 ns, **1.908866 GB/s** effective;
+- total delivery including setup and the explicit 100-ms overlap window:
+  **0.990010 GB/s**; and
+- blocking physical-read stall reduction: **58.41%**, exceeding the 25% gate.
+
+The GB/s formula is decimal bytes divided by nanoseconds: because one byte per
+nanosecond equals one GB/s, `211225570 / 266715000 = 0.791952 GB/s` and
+`211225570 / 110655000 = 1.908866 GB/s`. Cached reads had a 10,159,000-ns
+median before advice and 10,109,000 ns after it, a `-0.49%` regression
+(slightly faster). An intentionally mismatched identity was rejected while
+the remaining valid rows continued normally.
+
+Prefix staging now builds and verifies the native ARM64 helper, copies the
+manifest atomically, and records its exact hashes and quota in the prefix.
+The integrated runtime launch returned status 0. A fresh canonical prefix then
+passed ARM64, ARM64EC, x86_64, and i386 with four conventional status-0
+results after hot-set staging and receipt verification. Reproducible evidence
+is in `docs/validation/perf-p8-hotset-20260801/RESULTS.md`; compact run logs are
+under `build/evidence/perf-p8/`.

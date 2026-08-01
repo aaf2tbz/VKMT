@@ -274,6 +274,15 @@ Gate: protection/cache-maintenance operations during startup fall by at least
 
 ## P8 - Runtime hot-set and storage support
 
+Status: completed 2026-08-01. A native ARM64 sampler records the file-backed
+resident mappings and short-lived open files of Wine plus its descendant
+processes during the first five seconds. The resulting relocatable manifest is
+identity-checked, capped at 256 MiB, and consumed through asynchronous
+`F_RDADVISE`/`F_RDAHEAD`. Requests are prefix-scoped, serialized, rate-limited,
+toggleable, and fall back to ordinary demand paging when an entry changes.
+No duplicate runtime archive or RAM copy is retained; macOS remains the LRU
+owner of the advised clean pages.
+
 Storage is supporting work, not the primary optimization target. Trace the
 actual PE, Mach-O, registry, font, media, shader, and cache pages consumed in
 the first five seconds.
