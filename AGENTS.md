@@ -1873,3 +1873,37 @@ passed ARM64, ARM64EC, x86_64, and i386 with four conventional status-0
 results after hot-set staging and receipt verification. Reproducible evidence
 is in `docs/validation/perf-p8-hotset-20260801/RESULTS.md`; compact run logs are
 under `build/evidence/perf-p8/`.
+
+### 2026-08-01 — 0.60.0 self-contained runtime release published
+
+The authoritative P8-integrated runtime is published as
+`v0.60.0-dependency-bundles` in both VKMT and MetalSharp. VKMT is the default
+download origin; MetalSharp carries an exact asset mirror for its 0.60.0
+dependency contract. Both releases contain the same eleven assets and GitHub
+reports identical SHA-256 digests for every asset.
+
+The reconstructed runtime is 3,058,560,880 bytes, contains 45,892 archive
+entries, and has SHA-256
+`9210991e4249d8dd647fba1bb7e8dcfe808f760c638eeebbf55752f560ad8f0c`.
+Its four 764,640,220-byte parts have these ordered hashes:
+
+- `b855ca1a5f6a84e3cbc256dad89c8af12fa8ceb974c2cbf92bef5bc6ceb742dd`;
+- `5130129b2747bcceed9384ab2b374dff6a11b00b2db32fc7fd299f313fbab8e8`;
+- `2464d5ec890a56407d62c44aa6c4ac788b0c434cc67bcd0865214ab19a2d4ea6`;
+- `64a373161f9165da64f0395460df4584943f9ead4a86d37be1bcf22e77bbf81e`.
+
+The runtime includes the complete Wine build and four PE architectures,
+canonical x86_64/i386 providers, graphics and Metal stacks, SDL2/SDL3, Java,
+Mono, Gecko, GStreamer, GnuTLS, FreeType/fonts, GOG support, all runtime
+scripts, public source/licenses, and the compiled/source P8 helper plus its
+222-entry manifest. The package audit found 812 Mach-O host files, zero
+non-ARM64 host binaries, zero absolute symlinks, and zero non-relocatable load
+commands. A release-compatible zstd window is used; no special decoder flag
+is required.
+
+Before publication, the release installer performed a full transactional
+extraction and verified all 38,920 payload hashes. The extracted Wine launcher,
+canonical provider staging, relocated GStreamer closure, P6 versioned graphics
+cache, P8 hot-set staging, no-TSO environment, and native ARM64 GOG tool all
+passed. The canonical local release set is retained at
+`/Volumes/AverySSD/MetalSharp-Wine-Runtime-COMPLETE-release-parts/`.
