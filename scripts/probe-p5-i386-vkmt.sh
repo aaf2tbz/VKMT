@@ -12,7 +12,7 @@ RUNS="$VKMT/build/probe-runs"
 WINE="$BUILD/wine"
 WINESERVER="$BUILD/server/wineserver"
 WINEBOOT="$BUILD/programs/wineboot/aarch64-windows/wineboot.exe"
-XTAJIT="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
+XTAJIT="${VKMT_XTAJIT_SOURCE:-$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll}"
 WOW64="$BUILD/dlls/wow64/aarch64-windows/wow64.dll"
 WOW64WIN="$BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"
 FREETYPE="$BUILD/dlls/win32u/libfreetype.6.dylib"
@@ -72,6 +72,17 @@ cleanup()
   test -z "$wine_pid" || kill -TERM "$wine_pid" 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -k 2>/dev/null || true
   WINEPREFIX="$prefix" "$WINESERVER" -w 2>/dev/null || true
+  if test -n "${VKMT_P5_EVIDENCE_DIR:-}"; then
+    case "$VKMT_P5_EVIDENCE_DIR" in
+      "$VKMT"/*)
+        mkdir -p "$VKMT_P5_EVIDENCE_DIR"
+        find "$run_root" -maxdepth 1 -type f \( -name '*.log' -o -name '*.marker' \) \
+          -exec cp {} "$VKMT_P5_EVIDENCE_DIR"/ \;
+        printf 'status=%s\n' "$status" >"$VKMT_P5_EVIDENCE_DIR/status.txt"
+        ;;
+      *) echo "Refusing non-VKMT evidence directory: $VKMT_P5_EVIDENCE_DIR" >&2 ;;
+    esac
+  fi
   case "$run_root" in
     "$RUNS"/*)
       if test "${VKMT_KEEP_P5_RUN:-0}" = 1; then
@@ -89,13 +100,22 @@ run_wine()
 {
   output=$1
   debug=$2
-  shift 2
-  "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1 \
-    WINE_NO_EXPLORER=1 WINEDEBUG="$debug" VK_ICD_FILENAMES="$run_root/vkmt_icd.json" \
-    WINEDLLOVERRIDES='dxgi,d3d11,d3d12,d3d12core=n' \
-    DXVK_LOG_LEVEL=info DXVK_LOG_PATH="$run_root" VKD3D_DEBUG=info \
-    VKMT_ALLOW_NON_SINGLE_TEXEL_ALIGNMENT=1 \
-    "$WINE" "$@" >"$output" 2>&1 &
+  graphics=$3
+  shift 3
+  runtime_env=(
+    WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" WINEBOOTSTRAPMODE=1
+    WINE_NO_EXPLORER=1 WINEDEBUG="$debug"
+    FEX_TSOENABLED=0 FEX_VECTORTSOENABLED=0 FEX_MEMCPYSETTSOENABLED=0
+  )
+  if test "$graphics" = graphics; then
+    runtime_env+=(
+      VK_ICD_FILENAMES="$run_root/vkmt_icd.json"
+      WINEDLLOVERRIDES='dxgi,d3d11,d3d12,d3d12core=n'
+      DXVK_LOG_LEVEL=info DXVK_LOG_PATH="$run_root" VKD3D_DEBUG=info
+      VKMT_ALLOW_NON_SINGLE_TEXEL_ALIGNMENT=1
+    )
+  fi
+  "${timeout_cmd[@]}" env "${runtime_env[@]}" "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!
   if wait "$wine_pid"; then code=0; else code=$?; fi
   wine_pid=""
@@ -126,13 +146,17 @@ for pe in "$run_root"/*.exe; do
 done
 
 "$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
-run_wine "$run_root/wineboot.log" -all "$WINEBOOT" --init || {
+run_wine "$run_root/wineboot.log" -all cpu "$WINEBOOT" --init || {
   echo "P5 native ARM64 wineboot failed" >&2; tail -n 100 "$run_root/wineboot.log" >&2; exit 1;
 }
 "$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
 "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
-run_wine "$run_root/substrate.log" -all "$run_root/substrate.exe" "Z:$run_root/substrate.marker" || {
-  echo "P5 i386 substrate regression failed" >&2; tail -n 120 "$run_root/substrate.log" >&2; exit 1;
+run_wine "$run_root/substrate.log" "${VKMT_P5_SUBSTRATE_WINEDEBUG:--all}" cpu \
+  "$run_root/substrate.exe" "Z:$run_root/substrate.marker" || {
+  substrate_code=$?
+  echo "P5 i386 substrate regression failed rc=$substrate_code" >&2
+  tail -n 120 "$run_root/substrate.log" >&2
+  exit 1
 }
 for _ in $(seq 1 "${VKMT_P5_MARKER_WAIT:-60}"); do
   test -f "$run_root/substrate.marker" && break
@@ -143,7 +167,7 @@ install -m 0644 "$DXVK/dxgi.dll" "$DXVK/d3d11.dll" "$VKD3D/d3d12.dll" \
   "$VKD3D/d3d12core.dll" "$prefix/drive_c/windows/syswow64/"
 
 load_marker="$run_root/load.marker"
-run_wine "$run_root/load.log" "${VKMT_P5_LOAD_WINEDEBUG:--all}" "$run_root/load.exe" "Z:$load_marker" || {
+run_wine "$run_root/load.log" "${VKMT_P5_LOAD_WINEDEBUG:--all}" cpu "$run_root/load.exe" "Z:$load_marker" || {
   echo "P5 DLL/export load gate failed" >&2; tail -n 120 "$run_root/load.log" >&2; exit 1;
 }
 for _ in $(seq 1 "${VKMT_P5_MARKER_WAIT:-60}"); do
@@ -161,18 +185,18 @@ for marker in P5_I386_DXGI_DLL_LOAD_OK P5_I386_D3D11_DLL_LOAD_OK \
   grep -q "$marker" "$load_marker" || { echo "Missing $marker" >&2; exit 1; }
 done
 
-run_wine "$run_root/dxgi.log" -all "$run_root/dxgi.exe" || {
+run_wine "$run_root/dxgi.log" -all graphics "$run_root/dxgi.exe" || {
   echo "P5 DXGI gate failed" >&2; tail -n 160 "$run_root/dxgi.log" >&2; exit 1;
 }
 grep -q P5_I386_DXGI_FACTORY_OK "$run_root/dxgi.log"
 grep -q P5_I386_DXGI_ADAPTER_OK "$run_root/dxgi.log"
 
-run_wine "$run_root/d3d12.log" -all "$run_root/d3d12.exe" || {
+run_wine "$run_root/d3d12.log" -all graphics "$run_root/d3d12.exe" || {
   echo "P5 D3D12 gate failed" >&2; tail -n 200 "$run_root/d3d12.log" >&2; exit 1;
 }
 grep -q 'PROBE OK' "$run_root/d3d12.log"
 grep -q '\[mvk-info\]' "$run_root/d3d12.log"
-run_wine "$run_root/d3d12-repeat.log" -all "$run_root/d3d12.exe" || {
+run_wine "$run_root/d3d12-repeat.log" -all graphics "$run_root/d3d12.exe" || {
   echo "P5 repeated D3D12 gate failed" >&2
   tail -n 200 "$run_root/d3d12-repeat.log" >&2
   exit 1
@@ -181,7 +205,7 @@ grep -q 'PROBE OK' "$run_root/d3d12-repeat.log"
 grep -q 'Readback expected=0x4b4d5456 actual=0x4b4d5456' "$run_root/d3d12-repeat.log"
 grep -q '\[mvk-info\]' "$run_root/d3d12-repeat.log"
 
-run_wine "$run_root/d3d11.log" -all "$run_root/d3d11.exe" || {
+run_wine "$run_root/d3d11.log" -all graphics "$run_root/d3d11.exe" || {
   echo "P5 D3D11 gate failed" >&2; tail -n 200 "$run_root/d3d11.log" >&2; exit 1;
 }
 grep -q VKMT_D3D11_PROBE_OK "$run_root/d3d11.log"

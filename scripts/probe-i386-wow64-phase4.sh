@@ -99,6 +99,7 @@ run_wine() {
   shift
   "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$WINE_BUILD" WINEBOOTSTRAPMODE=1 \
     WINEDEBUG="${VKMT_I386_WINEDEBUG:--all}" WINE_NO_EXPLORER=1 \
+    FEX_TSOENABLED=0 FEX_VECTORTSOENABLED=0 FEX_MEMCPYSETTSOENABLED=0 \
     "$WINE_BUILD/wine" "$@" >"$output" 2>&1 &
   wine_pid=$!
   if wait "$wine_pid"; then run_code=0; else run_code=$?; fi

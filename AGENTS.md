@@ -69,6 +69,27 @@ do not reopen or replace the accepted providers without a focused regression.
   `docs/validation/perf-p3-latency-20260801/`. P4 cross-architecture transition
   reduction is next.
 
+### 2026-08-01 — P4 cross-architecture transition reduction accepted
+
+- FEX commit `f30858e15` adds opt-in ARM64EC and i386/WoW64 transition
+  classification plus syscall and Unix-call histograms. Ordinary runs do not
+  update the counters; correlated runs set `VKMT_PERF_RUN_ID`.
+- The measured hot boundary was WineVulkan procedure discovery. Wine commit
+  `f989b1f` snapshots host instance/device function availability once and lets
+  generated PE thunks answer subsequent procedure queries locally, with an
+  allocation-failure fallback to the prior individual host-query path.
+- i386 Unix-call counts fell from 72 to 37 for DXGI (48.6%), 1,271 to 933 for
+  D3D12 (26.6%), and 767 to 462 for D3D11 (39.8%). Both deterministic D3D12
+  runs produced the same count and retained their readback result.
+- The original P5 substrate failure was caused by that runner omitting the
+  explicit no-TSO environment. `probe-p5-i386-vkmt.sh` and the full WoW64
+  system-contract runner now pin all three FEX TSO settings to zero.
+- Post-change status-0 gates cover canonical i386 DXGI/D3D12/D3D11, x64 DXVK
+  D3D11, the complete WoW64 system contract, and ARM64, ARM64EC, x86_64, and
+  i386 together in one fresh prefix. Evidence is in
+  `docs/validation/perf-p4-transitions-20260801/`. P5 CPU/JIT throughput and
+  cache locality is next.
+
 ### 2026-08-01 — headless cold-start MoltenVK deferral accepted
 
 - `WINE_NO_EXPLORER=1` now skips the desktop-integration `RunServices` pass
