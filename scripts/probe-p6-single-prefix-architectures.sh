@@ -92,6 +92,7 @@ run_wine()
   shift
   "${timeout_cmd[@]}" env WINEPREFIX="$prefix" WINEBUILDDIR="$BUILD" \
     WINEBOOTSTRAPMODE=1 WINE_NO_EXPLORER=1 WINEDEBUG="${VKMT_P6_WINEDEBUG:--all}" \
+    FEX_TSOENABLED=0 FEX_VECTORTSOENABLED=0 FEX_MEMCPYSETTSOENABLED=0 \
     "$WINE" "$@" >"$output" 2>&1 &
   wine_pid=$!
   if wait "$wine_pid"; then code=0; else code=$?; fi
@@ -151,26 +152,18 @@ run_wine "$run_root/arm64.log" "$run_root/arm64.exe" || {
 grep -q 'VKMT native AArch64 smoke passed' "$run_root/arm64.log"
 echo P6_SINGLE_PREFIX_ARM64_OK
 
-if run_wine "$run_root/arm64ec.log" "$run_root/arm64ec.exe"; then
-  arm64ec_code=0
-else
+run_wine "$run_root/arm64ec.log" "$run_root/arm64ec.exe" || {
   arm64ec_code=$?
-fi
-test "$arm64ec_code" = 42 || {
-  echo "Phase 6 ARM64EC baseline failed with status $arm64ec_code" >&2
+  echo "Phase 6 ARM64EC rc=0 baseline failed with status $arm64ec_code" >&2
   tail -n 120 "$run_root/arm64ec.log" >&2
   exit 1
 }
 grep -q 'hello from arm64ec' "$run_root/arm64ec.log"
 echo P6_SINGLE_PREFIX_ARM64EC_OK
 
-if run_wine "$run_root/x86_64.log" "$run_root/x86_64.exe"; then
-  x64_code=0
-else
+run_wine "$run_root/x86_64.log" "$run_root/x86_64.exe" || {
   x64_code=$?
-fi
-test "$x64_code" = 7 || {
-  echo "Phase 6 x86_64 baseline failed with status $x64_code" >&2
+  echo "Phase 6 x86_64 rc=0 baseline failed with status $x64_code" >&2
   tail -n 120 "$run_root/x86_64.log" >&2
   exit 1
 }

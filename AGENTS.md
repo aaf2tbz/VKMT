@@ -25,6 +25,15 @@ Do not run a full Wine rebuild unless the configuration or generated build
 files genuinely require it.  Never use destructive Git reset/checkout to
 discard custom work.
 
+## Active acceptance goal
+
+Correctness precedes performance work. The active gate requires ARM64/AArch64,
+ARM64EC, x86_64, and i386/WoW64 to execute and tear down with conventional
+status `0` in one fresh prefix built from the current source providers. All
+three FEX TSO settings remain zero and Rosetta must not participate. The
+performance roadmap in `docs/PERFORMANCE_OPTIMIZATION_PLAN.md` is deferred
+until this matrix is reproducible and preserved.
+
 ## Required preservation inventory
 
 Before deleting any historical workspace or cache, verify that current VKMT
@@ -1464,3 +1473,33 @@ layout match MetalSharp's runtime discovery contract, then drive its install
 wizard, Steam installation, and x86/x64 redistributable installers through
 that single authoritative layout. Preserve the working prefix and do not
 replace the accepted wrapper contract while implementing that phase.
+
+### 2026-07-31 — strict all-architecture rc=0 acceptance
+
+The Phase 6 architecture fixtures now use conventional success status `0`
+for ARM64EC and x86_64, and the runner explicitly disables scalar, vector, and
+memcpy/set FEX TSO modes for every Wine invocation. A source-built x86_64
+provider regression was isolated to the new ARM64EC callback-frame shortcut:
+the CRT `exit()` callback could resume the impossible guest return address
+`exit()+5`, overwrite `ContextImpl::SyscallHandler` with that RIP, and enter a
+recursive exception storm. ARM64EC callbacks now retain the established
+shared-stack contract: guest RET reaches the native continuation through the
+EC bitmap and `ExitFunctionEC`. Generated callback and EnterEC boundaries also
+reload the authoritative `CpuStateFrame` from Wine's CHPE CPU area.
+
+The current source-built providers are:
+
+- x86_64/ARM64EC: `build/fex-arm64ec-steam-probe/Bin/libarm64ecfex.dll`,
+  SHA-256 `317160d7343328a119cfc72a86c0895fe880ee804f9f8ca1a552b89ea736debc`
+- i386/WoW64: `build/fex-wow64-java/Bin/libwow64fex.dll`, SHA-256
+  `87053cad6be68ff5b8e2cdbeb47da7b8f91702cffa921d6ad8242a64a3c5801d`
+
+Each translated provider passed its focused fixture five consecutive times
+with its guest marker present and process status `0`. Those exact bytes are
+now the canonical runtime providers and the staging script pins their hashes.
+A final fresh, default-configured single prefix at
+`build/probe-runs/p6-single-prefix.KGua3y` then passed native ARM64, ARM64EC,
+x86_64, and i386/WoW64 with all four exact `rc=0` gates and the final
+`P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK` marker, without candidate overrides.
+This is the correctness baseline required before performance optimization
+resumes.
