@@ -62,3 +62,9 @@ No candidate may replace a Wine source file until it has:
 The optimizer's own benchmark claims are not VKMT evidence. Current setup
 evidence is retained in
 `docs/validation/c-ai-optimizer-vkmt-setup-20260803/RESULTS.md`.
+
+The first file-level loader candidate was evaluated against paired control
+measurements and rejected as `PROFILED_NO_PROMOTION`; its receipt is
+`docs/validation/ai-optimization-candidate-loader-hash-20260803/RESULTS.md`.
+The installed Wine tree was restored to the pre-candidate source after the
+measurement.

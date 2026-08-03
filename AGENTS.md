@@ -1932,3 +1932,9 @@ Its targeted build and canonical-prefix receipts are retained in
 The nested Wine remote is currently configured to an unavailable local archive
 path, so the commit is retained locally while the VKMT root receipt is pushed
 to `origin/main`.
+
+The first AI file candidate, a hashed NTDLL builtin-path cache, is explicitly
+rejected and is not installed. Its paired control/candidate evidence is
+`docs/validation/ai-optimization-candidate-loader-hash-20260803/RESULTS.md`.
+Do not promote it without a larger repeatable control and workload-specific
+loader measurement.

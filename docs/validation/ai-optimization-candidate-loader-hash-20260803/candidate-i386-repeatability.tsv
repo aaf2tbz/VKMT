@@ -1,0 +1,2 @@
+state	median_min_ms	median_max_ms	median_spread_pct	p95_min_ms	p95_max_ms	p95_spread_pct	gate
+persistent_session_warm_guest	364.807	371.540	1.85	377.574	407.538	7.94	FAIL

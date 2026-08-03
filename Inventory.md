@@ -287,3 +287,10 @@ executable reuse, and i386 FEX invalidation. MSync passed manual/auto pulse,
 WaitAll rollback, stale-port recovery, and invalid-destination fallback.
 These are functional source promotions; no AI-generated performance candidate
 has been promoted yet.
+
+The first loader candidate evaluation is retained at
+`docs/validation/ai-optimization-candidate-loader-hash-20260803/RESULTS.md`.
+It passed the functional gates but was rejected for promotion because its
+paired startup measurements did not establish a repeatable improvement and
+the i386 tail became noisy. The candidate source is not in the installed Wine
+tree or canonical prefix.

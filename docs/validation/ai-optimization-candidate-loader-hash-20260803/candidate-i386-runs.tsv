@@ -1,0 +1,13 @@
+session	state	run	run_id	rc	elapsed_ms	user_s	system_s	max_rss	minor_faults	major_faults	block_in	block_out	voluntary_cs	involuntary_cs
+1	persistent_session_warm_guest_primer	0	p0-i386-s1-persistent_session_warm_guest_primer-r0	0	1315.455	0.031094	0.096397	25575424	3810	4	0	0	7840	91
+1	persistent_session_warm_guest	1	p0-i386-s1-persistent_session_warm_guest-r1	0	365.828	0.032199	0.095460	25526272	3569	1	0	0	7816	242
+1	persistent_session_warm_guest	2	p0-i386-s1-persistent_session_warm_guest-r2	0	376.753	0.030274	0.090918	25608192	3577	1	0	0	7815	252
+1	persistent_session_warm_guest	3	p0-i386-s1-persistent_session_warm_guest-r3	0	368.152	0.032746	0.093359	25591808	3573	1	0	0	7814	99
+1	persistent_session_warm_guest	4	p0-i386-s1-persistent_session_warm_guest-r4	0	371.540	0.032681	0.096319	25526272	3576	1	0	0	7816	346
+1	persistent_session_warm_guest	5	p0-i386-s1-persistent_session_warm_guest-r5	0	377.574	0.031382	0.093863	25575424	3578	1	0	0	7815	193
+2	persistent_session_warm_guest_primer	0	p0-i386-s2-persistent_session_warm_guest_primer-r0	0	1352.974	0.031042	0.092366	25591808	3815	1	0	0	7840	116
+2	persistent_session_warm_guest	1	p0-i386-s2-persistent_session_warm_guest-r1	0	363.088	0.030372	0.091513	25591808	3574	1	0	0	7816	123
+2	persistent_session_warm_guest	2	p0-i386-s2-persistent_session_warm_guest-r2	0	373.137	0.030601	0.092016	25493504	3567	1	0	0	7815	126
+2	persistent_session_warm_guest	3	p0-i386-s2-persistent_session_warm_guest-r3	0	361.487	0.031559	0.096188	25575424	3570	1	0	0	7815	110
+2	persistent_session_warm_guest	4	p0-i386-s2-persistent_session_warm_guest-r4	0	364.807	0.029803	0.089227	25640960	3582	1	0	0	7816	288
+2	persistent_session_warm_guest	5	p0-i386-s2-persistent_session_warm_guest-r5	0	407.538	0.034163	0.110312	25493504	3567	1	0	0	7815	474
