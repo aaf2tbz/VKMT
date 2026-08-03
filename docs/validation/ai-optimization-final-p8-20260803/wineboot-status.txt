@@ -1,0 +1,1 @@
+wineboot_rc=0

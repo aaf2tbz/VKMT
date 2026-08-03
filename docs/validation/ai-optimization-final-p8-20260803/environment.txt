@@ -1,0 +1,1 @@
+command=/Volumes/AverySSD/VKMT/scripts/probe-p8-single-prefix-architectures.shprepared_prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefixhost_arch=arm64FEX_TSOENABLED=0FEX_VECTORTSOENABLED=0FEX_MEMCPYSETTSOENABLED=0

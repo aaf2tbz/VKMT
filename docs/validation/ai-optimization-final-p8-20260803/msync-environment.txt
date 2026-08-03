@@ -1,0 +1,6 @@
+prepared_prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix
+host_arch=arm64
+FEX_TSOENABLED=0
+FEX_VECTORTSOENABLED=0
+FEX_MEMCPYSETTSOENABLED=0
+status=0

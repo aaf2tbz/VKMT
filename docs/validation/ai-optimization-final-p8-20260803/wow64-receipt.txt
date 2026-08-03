@@ -1,0 +1,10 @@
+schema=1
+prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix
+fex_tsoenabled=0
+fex_vectortsoenabled=0
+fex_memcpysettsoenabled=0
+x64_marker=WOW64_VM_X64_CONTRACT_OK
+i386_marker=WOW64_VM_I386_CONTRACT_OK
+executable_reuse_marker=WOW64_VM_EXECUTABLE_REUSE_OK
+x64_fex_trace=unavailable-provider-telemetry
+i386_fex_invalidation=correlated_maintenance_summary_nonzero

@@ -35,13 +35,26 @@ owned() {
 }
 atomic() { local d="$1" t="$1.tmp.$$"; cat >"$t"; mv -f "$t" "$d"; }
 stage_closure() {
-  local p="$1" s="$p/drive_c/windows/system32" w="$p/drive_c/windows/syswow64" f
+  local p="$1" s="$p/drive_c/windows/system32" w="$p/drive_c/windows/syswow64" f base known_names
   mkdir -p "$s" "$w"
+  # Wineboot can repopulate syswow64 with a DLL that is not part of the
+  # source-built i386 closure (for example an obsolete 16-bit compatibility
+  # module).  Remove only those prefix-owned stale closure files before
+  # rebuilding the manifest; never touch the source or unrelated prefix data.
+  known_names="$(mktemp)"
+  find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -exec basename {} \; | LC_ALL=C sort -u >"$known_names"
+  while IFS= read -r f; do
+    base="$(basename "$f")"
+    grep -Fqx "$base" "$known_names" || rm -f "$f"
+  done < <(find "$w" -type f -name '*.dll' -print)
+  rm -f "$known_names"
   for f in "$BUILD/dlls/wow64/aarch64-windows/wow64.dll" "$BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"; do test -f "$f" || die "missing $f"; install -m 0644 "$f" "$s/$(basename "$f")"; done
   while IFS= read -r f; do install -m 0644 "$f" "$w/$(basename "$f")"; done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
 }
 manifest() {
-  local p="$1" m="$(meta "$1")/staged-files.manifest" f rel src
+  local p="$1" m="$(meta "$1")/staged-files.manifest" f rel src known_sources base
+  known_sources="$(mktemp)"
+  find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort >"$known_sources"
   { printf 'schema\t1\n'
     while IFS= read -r f; do
       rel="${f#$p/}"; src=
@@ -66,9 +79,10 @@ manifest() {
        drive_c/windows/syswow64/*.dll)
          # Several Wine test/support DLLs share a basename.  Select the exact
          # copied source by hash rather than the first matching pathname.
+         base="$(basename "$f")"
          while IFS= read -r candidate; do
            if test "$(sha "$candidate")" = "$(sha "$f")"; then src="$candidate"; break; fi
-         done < <(find "$BUILD/dlls" -type f -path "*/i386-windows/$(basename "$f")" -print)
+         done < <(grep -F "/i386-windows/$base" "$known_sources")
          ;;
       esac
       test -n "$src" && test -f "$src" || die "no source mapping for $rel"
@@ -79,6 +93,7 @@ manifest() {
       find "$p/drive_c/windows/syswow64" -type f -name '*.dll' -print
     } | LC_ALL=C sort)
   } | atomic "$m"
+  rm -f "$known_sources"
 }
 write_meta() {
   local p="$1" q="$2" m="$(meta "$1")"

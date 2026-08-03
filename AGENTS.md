@@ -1951,3 +1951,11 @@ The current P8 hot-set measurement is 61.45% cold stall reduction with 0.15%
 warm regression; CEF x86_64 OSR remains status 0. These are acceptance results,
 not permission to rewrite FEX or host callback boundaries without a new paired
 candidate measurement.
+
+The final P8 one-prefix receipt is
+`docs/validation/ai-optimization-final-p8-20260803/RESULTS.md`. Wineboot
+update returned rc=0, all four architecture fixtures returned rc=0, and the
+WoW64, MSync, CEF x86_64 OSR, and P8 hot-set gates were retained. The final
+receipt must continue to distinguish accepted x86_64 CEF from the unresolved
+i386 CEF boundary and must not claim an AI source optimization that was not
+promoted.

@@ -1,0 +1,31 @@
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-p8-rendering-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-p8-wineconfig-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll: OK
+VKMT_PREFIX_SYNC_PROVIDERS_OK prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_GSTREAMER_RUNTIME_VERIFY_OK
+VKMT_GPU_CACHE_STAGE_OK generation=v2-aa3c4119e90f37e8 root=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/.vkmt/gpu-cache/v2-aa3c4119e90f37e8
+VKMT_HOTSET_RUNTIME_PREFIX_OK entries=222 bytes=211225570
+VKMT_RUNTIME_PROVIDERS_PREFIX_OK
+/Volumes/AverySSD/VKMT/build/provider-preservation/pre-dxmt-cross-process-allow-20260731/d3d11.dll: OK
+/Volumes/AverySSD/VKMT/build/provider-preservation/pre-dxmt-cross-process-allow-20260731/dxgi.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/d3d11.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/dxgi.dll: OK
+VKMT_DXMT_ARM64EC_PAIR_OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-p8-rendering-known-good.dll: OK
+/Volumes/AverySSD/VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-p8-wineconfig-known-good.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/xtajit64.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/xtajit.dll: OK
+VKMT_GSTREAMER_RUNTIME_VERIFY_OK
+VKMT_GPU_CACHE_VERIFY_OK generation=v2-aa3c4119e90f37e8
+VKMT_HOTSET_RUNTIME_VERIFY_OK entries=222 bytes=211225570
+VKMT_RUNTIME_PROVIDERS_VERIFY_PREFIX_OK
+/Volumes/AverySSD/VKMT/build/provider-preservation/pre-dxmt-cross-process-allow-20260731/d3d11.dll: OK
+/Volumes/AverySSD/VKMT/build/provider-preservation/pre-dxmt-cross-process-allow-20260731/dxgi.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/d3d11.dll: OK
+/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix/drive_c/windows/system32/dxgi.dll: OK
+VKMT_DXMT_ARM64EC_PAIR_OK
+VKMT_PREFIX_VERIFY_OK profile=graphics prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix
+VKMT_PREFIX_REFRESH_OK profile=graphics prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix

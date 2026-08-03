@@ -310,3 +310,13 @@ tree or canonical prefix.
 The complete 82-file candidate workspace preparation is recorded in
 `docs/validation/ai-optimization-corpus-20260803/RESULTS.md`. The workspace is
 ignored and contains no promoted binaries.
+
+### AI optimization final P8 gate receipt (2026-08-03)
+
+The final one-prefix receipt is
+`docs/validation/ai-optimization-final-p8-20260803/RESULTS.md`. It records the
+native ARM64 Wineboot update (`rc=0`), the P8 all-architecture fixture gate,
+WoW64 VM, MSync, CEF x86_64 OSR, and the final P8 hot-set measurement. The
+prefix was refreshed in place after Wineboot repopulated a stale i386 DLL;
+`scripts/vkmt-prefix` now prunes only stale prefix-owned i386 closure files
+that have no source-built counterpart before rebuilding the receipt.
