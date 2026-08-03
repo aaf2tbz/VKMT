@@ -90,7 +90,8 @@ Root commits pushed to origin/main during this pass:
 - 7e52568 — record P8 FEX and graphics gates;
 - ffdc891 — add full-corpus candidate preparation and P8 snapshot naming;
 - be7f0ff — finalize the one-prefix P8 receipt and staging closure fix;
-- d7c3c47, 7e87c47 — complete the final inventory and retained speed receipts.
+- d7c3c47, 7e87c47, 8afcc88 — complete the final inventory, speed, and P8
+  marker receipts.
 
 Nested Wine commits:
 
@@ -99,7 +100,7 @@ Nested Wine commits:
 
 The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
-It records 75 root paths and 15 nested-Wine paths relative to the start of
+It records 76 root paths and 15 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
 
 ## Candidate disposition and remaining boundary
