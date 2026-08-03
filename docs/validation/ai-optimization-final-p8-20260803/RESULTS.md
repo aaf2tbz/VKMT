@@ -100,7 +100,7 @@ Nested Wine commits:
 
 The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
-It records 76 root paths and 15 nested-Wine paths relative to the start of
+It records 93 root paths and 15 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
 The supplemental candidate disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records which remaining candidate
