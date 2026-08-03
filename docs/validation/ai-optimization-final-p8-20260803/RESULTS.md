@@ -69,6 +69,17 @@ The earlier accepted P8 hot-set receipt measured 61.45% reduction; both are
 well above the 25% gate. The current source candidate evaluation did not add a
 new production speed claim.
 
+Previously promoted runtime optimizations already present in this Wine tree
+also have retained measurements:
+
+- P3 loader/session caching reduced initial-process dyld resolutions from
+  1,140 to 590 and failed path probes from 10 to 5; warm p95 was 21.940/21.986
+  ms for x86_64 and 68.915/69.112 ms for i386.
+- P4 WineVulkan procedure-availability batching reduced representative i386
+  Unix calls by 48.6% for DXGI, 26.6% for D3D12, and 39.8% for D3D11.
+- P8 hot-set staging reduced cold blocking stall by 58.41% in its original
+  acceptance and 62.00% in the final retry.
+
 ## Source and documentation changes
 
 Root commits pushed to origin/main during this pass:
