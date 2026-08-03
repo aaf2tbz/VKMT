@@ -1,0 +1,33 @@
+# path<TAB>tier<TAB>mode<TAB>rationale
+#
+# mode is deliberately conservative:
+#   profile-only     collect evidence; do not generate a replacement yet
+#   candidate-only   function-level candidates may be prepared out-of-tree
+#   manual-only      ABI/SEH/lock/dispatcher code; no blind transformation
+dlls/ntdll/loader.c	P0	manual-only	ARM64EC import redirection and builtin loader ABI
+dlls/ntdll/unix/loader.c	P0	manual-only	provider attach, native wrapper, loader locks, startup ordering
+dlls/ntdll/exception.c	P0	manual-only	SEH, unwind, FastFail, and ABI-sensitive exception state
+dlls/ntdll/signal_arm64.c	P0	manual-only	FEX dispatcher and guest/native signal transitions
+dlls/ntdll/signal_arm64ec.c	P0	manual-only	ARM64EC exception and return boundary
+dlls/ntdll/unix/signal_arm64.c	P0	manual-only	Darwin signal translation and context restoration
+dlls/ntdll/unix/virtual.c	P0	manual-only	Darwin VM aperture, fixed i386 ranges, and host mappings
+dlls/ntdll/unix/process.c	P0	manual-only	process machine selection, termination, and managed launch
+dlls/ntdll/heap.c	P0	candidate-only	ARM64EC heap handle recovery; isolate pure hot helpers only
+dlls/ntdll/unix/thread.c	P0	manual-only	ARM64EC emulator stack and TEB lifecycle
+dlls/wow64/memory.c	P0	manual-only	guest-page registry, overlays, stale mapping prevention
+dlls/wow64/virtual.c	P0	manual-only	transactional reserve/commit/map/unmap lifecycle
+dlls/wow64/syscall.c	P0	manual-only	i386 syscall conversion and FEX provider boundary
+dlls/wow64/process.c	P0	manual-only	WoW64 process and thread handoff semantics
+dlls/wow64/sync.c	P0	manual-only	i386 synchronization conversion and wait ABI
+dlls/wow64win/user.c	P0	manual-only	guest pointer and user callback conversion
+dlls/xtajit64/cpu.c	P0	candidate-only	FEX CPU backend glue; only measured leaf helpers
+dlls/xtajit64/vkmt/context.c	P0	manual-only	FEX context ABI and generated-code state
+dlls/xtajit64/vkmt/dispatch.c	P0	manual-only	FEX dispatcher hot path and invalidation ordering
+dlls/xtajit64/vkmt/interp.c	P0	candidate-only	FEX interpreter leaf operations; preserve flags and aliasing
+dlls/xtajit64/vkmt/jit.c	P0	manual-only	FEX JIT code generation and executable-memory contract
+dlls/ntdll/unix/msync.c	P0	manual-only	MSync wait registration, pulse, and cancellation semantics
+server/msync.c	P0	manual-only	server-side MSync linearization and wake protocol
+dlls/winevulkan/loader.c	P1	manual-only	Vulkan procedure discovery and host transition batching
+dlls/winevulkan/vulkan.c	P1	manual-only	Vulkan object/dispatch translation across architectures
+dlls/win32u/driver.c	P1	manual-only	graphics driver loading and host callback boundary
+dlls/winemac.drv/opengl.c	P1	manual-only	Apple Metal/OpenGL presentation and readback boundary
