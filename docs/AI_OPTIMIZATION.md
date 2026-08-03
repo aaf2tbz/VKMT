@@ -23,6 +23,8 @@ scripts/vkmt-c-ai-optimizer.sh setup
 scripts/vkmt-c-ai-optimizer.sh inventory
 scripts/vkmt-c-ai-optimizer.sh smoke
 scripts/vkmt-c-ai-optimizer.sh prepare
+scripts/vkmt-c-ai-optimizer.sh inventory-all
+scripts/vkmt-c-ai-optimizer.sh prepare-all
 scripts/vkmt-c-ai-optimizer.sh verify
 ```
 
@@ -30,6 +32,10 @@ scripts/vkmt-c-ai-optimizer.sh verify
 `build/c-ai-optimizer-candidates/`. It copies the high-priority custom Wine
 inputs and records their SHA-256 values. It never writes to
 `wine/wine-11.12`.
+
+`inventory-all` and `prepare-all` operate on the complete 82-file ledger,
+including files marked manual-review or generated/no-rewrite. Preparing a
+file is not permission to transform or promote it.
 
 ## Why this is candidate-only
 

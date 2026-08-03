@@ -306,3 +306,7 @@ It passed the functional gates but was rejected for promotion because its
 paired startup measurements did not establish a repeatable improvement and
 the i386 tail became noisy. The candidate source is not in the installed Wine
 tree or canonical prefix.
+
+The complete 82-file candidate workspace preparation is recorded in
+`docs/validation/ai-optimization-corpus-20260803/RESULTS.md`. The workspace is
+ignored and contains no promoted binaries.

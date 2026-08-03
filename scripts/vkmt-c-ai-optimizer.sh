@@ -12,6 +12,7 @@ OPTIMIZER_URL="${VKMT_CAI_OPTIMIZER_URL:-https://github.com/sebyx07/c-ai-optimiz
 OPTIMIZER_COMMIT="${VKMT_CAI_OPTIMIZER_COMMIT:-c6f96df0ec9973a4cbdb7b015b1fd106c815ad89}"
 OPTIMIZER_DIR="${VKMT_CAI_OPTIMIZER_ROOT:-$VKMT/third_party/c-ai-optimizer}"
 TARGETS="${VKMT_CAI_TARGETS:-$VKMT/docs/c-ai-optimizer-vkmt-targets.tsv}"
+FULL_LEDGER="${VKMT_CAI_FULL_LEDGER:-$VKMT/docs/AI_OPTIMIZATION_LEDGER.tsv}"
 CANDIDATES="${VKMT_CAI_CANDIDATES:-$VKMT/build/c-ai-optimizer-candidates}"
 SMOKE_OUT="${VKMT_CAI_SMOKE_OUT:-$VKMT/build/c-ai-optimizer-vkmt-arm64-smoke}"
 
@@ -20,11 +21,13 @@ die() { echo "vkmt-c-ai-optimizer: $*" >&2; exit 1; }
 usage()
 {
     cat >&2 <<EOF
-usage: $0 {setup|inventory|prepare|smoke|verify}
+usage: $0 {setup|inventory|prepare|inventory-all|prepare-all|smoke|verify}
 
   setup       clone/fetch and pin c-ai-optimizer at the recorded commit
   inventory   hash the high-priority custom Wine source inputs
   prepare     copy immutable source inputs into a new candidate workspace
+  inventory-all hash all 82 ledger paths and emit a refreshed full ledger
+  prepare-all copy all ledger paths into an immutable candidate workspace
   smoke       run the upstream normal/optimized correctness suite without
               ARM64-incompatible -mavx flags
   verify      verify the pin and source inventory (no source mutation)
@@ -61,6 +64,18 @@ read_targets()
         esac
         printf '%s\t%s\t%s\t%s\n' "$path" "$tier" "$mode" "$rationale"
     done < "$TARGETS"
+}
+
+read_full_targets()
+{
+    require_file "$FULL_LEDGER"
+    while IFS=$'\t' read -r path state tier mode recorded_hash rationale; do
+        case "$path" in
+            ''|'#'|'path') continue ;;
+        esac
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+            "$path" "$state" "$tier" "$mode" "$recorded_hash" "$rationale"
+    done < "$FULL_LEDGER"
 }
 
 inventory()
@@ -104,6 +119,42 @@ prepare()
     printf '%s\n' \
         'No candidate was applied to the Wine tree. Review and benchmark each' \
         'function-level change before promotion.' >"$candidate/metadata/STATUS"
+}
+
+inventory_all()
+{
+    local path state tier mode recorded_hash rationale hash
+    test -d "$WINE_SOURCE" || die "missing Wine source tree: $WINE_SOURCE"
+    printf 'path\tstate\ttier\tmode\tsha256\trationale\n'
+    while IFS=$'\t' read -r path state tier mode recorded_hash rationale; do
+        require_file "$WINE_SOURCE/$path"
+        hash="$(shasum -a 256 "$WINE_SOURCE/$path" | awk '{print $1}')"
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+            "$path" "$state" "$tier" "$mode" "$hash" "$rationale"
+    done < <(read_full_targets)
+}
+
+prepare_all()
+{
+    local run path state tier mode recorded_hash rationale hash candidate
+    setup_optimizer >/dev/null
+    run="$(date +%Y%m%dT%H%M%S).$$"
+    candidate="$CANDIDATES/$run-all"
+    mkdir -p "$candidate/input" "$candidate/metadata"
+    printf 'optimizer_url\t%s\noptimizer_commit\t%s\nsource_root\t%s\nledger\t%s\n' \
+        "$OPTIMIZER_URL" "$OPTIMIZER_COMMIT" "$WINE_SOURCE" "$FULL_LEDGER" >"$candidate/metadata/run.tsv"
+    printf 'path\tstate\ttier\tmode\tsha256\trationale\n' >"$candidate/metadata/sources.tsv"
+    while IFS=$'\t' read -r path state tier mode recorded_hash rationale; do
+        require_file "$WINE_SOURCE/$path"
+        mkdir -p "$candidate/input/$(dirname "$path")"
+        cp -p "$WINE_SOURCE/$path" "$candidate/input/$path"
+        hash="$(shasum -a 256 "$WINE_SOURCE/$path" | awk '{print $1}')"
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+            "$path" "$state" "$tier" "$mode" "$hash" "$rationale" \
+            >>"$candidate/metadata/sources.tsv"
+    done < <(read_full_targets)
+    printf 'VKMT_CAI_FULL_CANDIDATE_READY path=%s files=%s\n' \
+        "$candidate" "$(tail -n +2 "$candidate/metadata/sources.tsv" | wc -l | tr -d ' ')"
 }
 
 smoke()
@@ -156,6 +207,8 @@ case "$1" in
     setup) setup_optimizer ;;
     inventory) inventory ;;
     prepare) prepare ;;
+    inventory-all) inventory_all ;;
+    prepare-all) prepare_all ;;
     smoke) smoke ;;
     verify) verify ;;
     *) usage ;;

@@ -1939,6 +1939,11 @@ rejected and is not installed. Its paired control/candidate evidence is
 Do not promote it without a larger repeatable control and workload-specific
 loader measurement.
 
+The complete 82-file candidate preparation is recorded in
+`docs/validation/ai-optimization-corpus-20260803/RESULTS.md`. Use
+`inventory-all` and `prepare-all` for corpus-wide work; they never mutate
+`wine/wine-11.12`.
+
 The FEX and graphics phase receipts are
 `docs/validation/ai-optimization-fex-phase4-20260803/RESULTS.md` and
 `docs/validation/ai-optimization-graphics-phase5-20260803/RESULTS.md`.
