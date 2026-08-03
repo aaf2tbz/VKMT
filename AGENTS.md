@@ -2079,7 +2079,10 @@ explicitly set.
 `dlls/dwrite/freetype.c` and `dlls/win32u/freetype.c` were audited but not
 modified or promoted. Hashes and disposition are in
 `docs/validation/ui-com-dwrite-contract-p8-20260803/font-source-audit.txt`.
-The optional BoringSSL diagnostic client now exercises split writes and
-multi-read draining, but remains outside acceptance because its x86_64 launch
-hits the known custom-FEX `0xc000001d` startup boundary before probe output;
-the WinHTTP/WinINet fragmented lanes are the authoritative TLS transport gate.
+The old BoringSSL diagnostic note about a custom-FEX `0xc000001d` before
+application output is superseded. Against the current P8 provider and the
+canonical prepared prefix, the x86_64 client returns `rc=0` and emits
+`VKMT_BORINGSSL_TLS_OK`; all four P8 startup lanes also pass. The compact
+receipt is `docs/validation/fex-startup-p8-20260803/RESULTS.md`. BoringSSL
+remains diagnostic-only for trust acceptance; the WinHTTP/WinINet fragmented
+lanes are the authoritative TLS transport gate.

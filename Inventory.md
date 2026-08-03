@@ -436,7 +436,11 @@ The DirectWrite source audit is
 `dlls/dwrite/freetype.c` and `dlls/win32u/freetype.c` were not modified or
 promoted in this phase; no optimization is claimed without a benchmark-backed
 source change and a passing contract gate.
-The optional BoringSSL diagnostic probe now drains fragmented TLS I/O and can
-enable CA verification, but its x86_64 process is still blocked before
-application output by the known custom-FEX `0xc000001d` startup boundary; this
-is recorded in `docs/validation/tls-trust-contract-p8-20260803/boringssl-diagnostic.txt`.
+The old BoringSSL diagnostic note about a custom-FEX `0xc000001d` before
+application output is superseded. The current P8 provider and canonical
+prepared prefix pass the x86_64 BoringSSL startup/TLS launch with `rc=0`, and
+the four-lane FEX startup receipt is
+`docs/validation/fex-startup-p8-20260803/RESULTS.md`. The probe remains
+diagnostic-only for trust acceptance; WinHTTP/WinINet fragmented lanes remain
+authoritative. The updated diagnostic details are in
+`docs/validation/tls-trust-contract-p8-20260803/boringssl-diagnostic.txt`.

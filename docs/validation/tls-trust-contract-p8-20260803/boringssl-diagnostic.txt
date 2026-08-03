@@ -3,9 +3,12 @@ split writes, drain multiple SSL_read results, and optionally enable CA
 verification when a CA path is supplied. It compiled successfully against
 the pinned Chromium-109 BoringSSL static libraries with LLVM-MinGW.
 
-It is not counted as a trust gate: the current x86_64 BoringSSL process hits
-the known custom-FEX `EXCEPTION_ILLEGAL_INSTRUCTION` (`0xc000001d`) in the
-xtajit64 startup boundary before application output. The authoritative TLS
-fragmentation proof therefore uses the all-architecture WinHTTP/WinINet
+The earlier x86_64 startup failure note is superseded. A repeat using the
+current P8 provider (`cccc70a4dd598371ed11c5a7979ca2ecff66a9849ba8086421a69054890c8c5f`)
+and the canonical prepared prefix returned `rc=0` and emitted
+`VKMT_BORINGSSL_TLS_OK protocol=TLSv1.3`; the all-architecture P8 startup
+receipt is `docs/validation/fex-startup-p8-20260803/RESULTS.md`. This probe
+remains diagnostic-only for trust acceptance: the authoritative TLS
+fragmentation proof uses the all-architecture WinHTTP/WinINet
 `valid-fragmented` lanes and the local CONNECT proxy, whose receipt is in
 `capability.tsv`.
