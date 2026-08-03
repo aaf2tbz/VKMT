@@ -1,0 +1,38 @@
+{
+  "build_root": "/Volumes/AverySSD/VKMT/wine/build-ec",
+  "components": {
+    "browser": {
+      "installed": false,
+      "status": "identity-only"
+    },
+    "fex": {
+      "revision": "a4128f01913d25d49f0d1cd1f62668327de1815e"
+    },
+    "managed": {
+      "installed": false,
+      "status": "identity-only"
+    },
+    "wine": {
+      "revision": "03ba1ecd8fac211eeef768c63b71358453b4a0d0"
+    }
+  },
+  "host": {
+    "rosetta": false,
+    "uname_machine": "arm64"
+  },
+  "installed_roots": [
+    "drive_c/windows/system32",
+    "drive_c/windows/syswow64",
+    ".vkmt"
+  ],
+  "metadata": {
+    "cache-state.json": "0742fa16a03af964d012f1d90d45b9034bdf2995e7e6de35f7c6b396a8b6a813",
+    "environment.sh": "478d0d39a56c6f7340e2dd4728b7f50c581629b735afdc81635954bae12be12d",
+    "staged-files.manifest": "98f89f3da6661a3d54ae22a467f1c38291dd85736dc3a5e46e73f0c790a969b9",
+    "wineboot.status": "b993407ab8b567e1fb17fb7f2b2a9c77c8230daa2c03de74d160ede6d49a29a2"
+  },
+  "prefix": "/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix",
+  "profile": "graphics",
+  "runtime_root": "/Volumes/AverySSD/VKMT",
+  "schema": 1
+}
