@@ -91,3 +91,4 @@ nested-wine	A	runtime-providers/xtajit-arm64-p8-wineconfig-known-good.dll
 nested-wine	A	runtime-providers/xtajit64-arm64ec-p8-rendering-known-good.dll
 nested-wine	M	server/msync.c
 root	A	docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md
+root	A	docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md

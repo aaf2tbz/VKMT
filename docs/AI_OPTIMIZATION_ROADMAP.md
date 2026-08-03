@@ -182,6 +182,20 @@ protection, allocation reuse, exceptions, signal return, and nested process
 loading. Do not alter dispatcher loops, executable-memory publication, JIT
 code generation, context save/restore, or invalidation ordering.
 
+### Phase 4 candidate pass A — interpreter width-mask helper
+
+The pure `sz_mask()` helper in `dlls/xtajit64/vkmt/interp.c` was evaluated
+out-of-tree with a constant mask table. Five direct x86_64 launches for the
+candidate and matched control were all `rc=0` with the expected guest marker,
+but the candidate median was 1.54% slower. The strict P0 wrapper also exposed
+the current provider lifecycle-telemetry gap and was not treated as a green
+performance result. The candidate was rejected, the canonical P8 provider was
+restored, and the prepared-prefix P8 gate passed all four architectures.
+
+Receipt: `docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md`.
+This pass does not authorize changes to FEX dispatch, JIT, context, mapping,
+invalidation, or executable-memory paths.
+
 ## Phase 5 — Graphics, Metal, Vulkan, OpenGL, and CEF
 
 Protected host-boundary files:

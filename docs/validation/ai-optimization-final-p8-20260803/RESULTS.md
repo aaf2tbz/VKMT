@@ -124,5 +124,10 @@ It compiled to the exact same `ntdll.so` as control and was rejected without
 promotion; the current final runtime hashes and P8 gate therefore remain
 unchanged.
 
+The first FEX Phase 4 candidate is recorded at
+`docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md`. It
+passed direct x86_64 functional checks but was 1.54% slower and was rejected;
+the canonical P8 provider and all-architecture gate remain unchanged.
+
 Therefore the functional/runtime P8 gate is green, but the stronger claim
 that every custom C file has been materially AI-optimized is not made.

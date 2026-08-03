@@ -334,3 +334,15 @@ restored exactly, and the prepared-prefix P8 gate returned status 0 for
 ARM64, ARM64EC, x86_64, and i386/WoW64. This receipt closes only this heap
 candidate pass; it does not claim that the remaining eligible C paths have
 been materially optimized.
+
+### AI optimization Phase 4 candidate pass A (2026-08-03)
+
+The FEX interpreter mask candidate receipt is
+`docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md`.
+It evaluated only the pure `sz_mask()` helper. Candidate and control direct
+x86_64 launches were all `rc=0` with the expected marker, but the candidate
+was 1.54% slower at the median and did not meet the promotion threshold. It
+was rejected without staging; the canonical P8 ARM64EC provider was restored,
+prefix verification passed, and the prepared-prefix P8 gate again passed
+ARM64, ARM64EC, x86_64, and i386/WoW64. The FEX dispatcher/JIT/context,
+invalidation, and executable-memory code remains protected and unchanged.

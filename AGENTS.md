@@ -1971,3 +1971,13 @@ source and runtime hashes match the pre-candidate values, and the canonical
 prepared-prefix P8 gate passed ARM64, ARM64EC, x86_64, and i386/WoW64 with
 status 0. This does not close the rest of Phase 2; continue to require a
 distinct, repeatable workload improvement before promoting any other helper.
+
+### 2026-08-03 — AI optimization Phase 4 FEX candidate audit
+
+The FEX interpreter candidate receipt is
+`docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md`.
+The `sz_mask()` table candidate passed five direct x86_64 launch/marker checks
+but measured 1.54% slower than the matched control and was rejected. The
+canonical P8 ARM64EC provider was restored and the all-architecture prepared
+prefix gate returned status 0. Do not infer FEX dispatcher or JIT optimization
+from this result; those paths remain protected.
