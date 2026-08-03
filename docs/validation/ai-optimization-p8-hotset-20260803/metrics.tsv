@@ -1,0 +1,13 @@
+metric	value
+hotset_bytes	199646258
+cold_physical_stall_ns_median	230321000
+cold_physical_gbps_median	0.866817
+prefetch_advice_ns_median	4980000
+prefetched_blocking_stall_ns_median	88743000
+prefetched_effective_gbps_median	2.249713
+prefetched_total_delivery_gbps_median	1.031470
+blocking_stall_reduction_pct_median	61.45
+warm_stall_ns_median	25300000
+warm_advised_stall_ns_median	25339000
+warm_regression_pct	0.15
+incompatible_rows_rejected	25

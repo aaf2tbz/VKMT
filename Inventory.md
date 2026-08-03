@@ -26,16 +26,16 @@ provenance_license, package_action`.
 
 ```tsv
 id	class	architectures	canonical_path	producer_or_stage_script	verification_source	acceptance_runner	provenance_license	package_action
-wine-host	required-runtime	arm64	wine/build-ec/wine	wine build	scripts/verify-preservation.sh	P8 hotset acceptance; P6 smoke	Wine LGPL	required
-wineserver	required-runtime	arm64	wine/build-ec/server/wineserver	wine build	scripts/verify-preservation.sh	P8 hotset acceptance; P6 smoke	Wine LGPL	required
+wine-host	required-runtime	arm64	wine/build-ec/wine	wine build	scripts/verify-preservation.sh	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
+wineserver	required-runtime	arm64	wine/build-ec/server/wineserver	wine build	scripts/verify-preservation.sh	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
 ntdll-host	required-runtime	arm64	wine/build-ec/dlls/ntdll/ntdll.so	wine build	scripts/verify-preservation.sh	scripts/probe-msync.sh	Wine LGPL	required
-xtajit64	required-runtime	arm64ec	wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll	scripts/stage-runtime-providers.sh	scripts/stage-runtime-providers.sh	P8 hotset acceptance; P6 smoke	project-pinned	provider-required
-xtajit	required-runtime	arm64	wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll	scripts/stage-runtime-providers.sh	scripts/stage-runtime-providers.sh	P8 hotset acceptance; P6 smoke	project-pinned	provider-required
-wow64-bridge	required-runtime	arm64	wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll	wine build	scripts/vkmt-prefix	P8 hotset acceptance; P6 smoke	Wine LGPL	required
-wow64win-bridge	required-runtime	arm64	wine/build-ec/dlls/wow64win/aarch64-windows/wow64win.dll	wine build	scripts/vkmt-prefix	P8 hotset acceptance; P6 smoke	Wine LGPL	required
-i386-pe-closure	required-runtime	i386	wine/build-ec/dlls	scripts/vkmt-prefix	scripts/vkmt-prefix	P8 hotset acceptance; P6 smoke	Wine LGPL	required
+xtajit64	required-runtime	arm64ec	wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll	scripts/stage-runtime-providers.sh	scripts/stage-runtime-providers.sh	P8 hotset acceptance; P8 provider smoke	project-pinned	provider-required
+xtajit	required-runtime	arm64	wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll	scripts/stage-runtime-providers.sh	scripts/stage-runtime-providers.sh	P8 hotset acceptance; P8 provider smoke	project-pinned	provider-required
+wow64-bridge	required-runtime	arm64	wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll	wine build	scripts/vkmt-prefix	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
+wow64win-bridge	required-runtime	arm64	wine/build-ec/dlls/wow64win/aarch64-windows/wow64win.dll	wine build	scripts/vkmt-prefix	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
+i386-pe-closure	required-runtime	i386	wine/build-ec/dlls	scripts/vkmt-prefix	scripts/vkmt-prefix	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
 host-libs	required-runtime	arm64	wine/build-ec/dlls/win32u	scripts/stage-wine-host-libs.sh	scripts/verify-preservation.sh	graphics probes	component licenses	required
-fex-source	required-source	arm64,x64,i386	third_party/FEX-2607	FEX checkout	git revision and status	P6/FEX probes	FEX license	source-required
+fex-source	required-source	arm64,x64,i386	third_party/FEX-2607	FEX checkout	git revision and status	P8/FEX probes	FEX license	source-required
 moltenvk-source	required-source	arm64	third_party/MoltenVK	MoltenVK checkout	scripts/verify-preservation.sh	graphics probes	MoltenVK license	source-required
 dxvk-source	required-source	x64,i386	third_party/dxvk	DXVK checkout	scripts/verify-preservation.sh	future DXVK gate	DXVK license	source-required
 vkd3d-source	required-source	x64,i386	third_party/vkd3d-proton	vkd3d-proton checkout	scripts/verify-preservation.sh	future vkd3d gate	vkd3d-proton license	source-required
@@ -67,7 +67,7 @@ candidate-providers	excluded	all	wine/wine-11.12/runtime-providers/*candidate*	r
    separately fetched or explicitly authorized for distribution.
 4. Run `scripts/vkmt-prefix verify --prefix PATH`, then run
    `scripts/probe-perf-p8-hotset.sh` with the release prefix and manifest.
-   P8 is final acceptance; P6 is a supporting smoke probe only.
+   P8 is final acceptance; legacy phase receipts are supporting historical diagnostics only.
 5. Reject a package containing an `excluded` path, stale prefix/caches,
    Rosetta/x86 host Mach-O content, unpinned provider bytes, or diagnostic
    logs masquerading as acceptance evidence.
@@ -287,6 +287,18 @@ executable reuse, and i386 FEX invalidation. MSync passed manual/auto pulse,
 WaitAll rollback, stale-port recovery, and invalid-destination fallback.
 These are functional source promotions; no AI-generated performance candidate
 has been promoted yet.
+
+### AI optimization FEX/graphics gates (2026-08-03)
+
+The FEX phase receipt is
+`docs/validation/ai-optimization-fex-phase4-20260803/RESULTS.md`. The graphics
+phase receipt is
+`docs/validation/ai-optimization-graphics-phase5-20260803/RESULTS.md`.
+The current P8 hot-set run measured `61.45%` cold blocking-stall reduction,
+`2.249713 GB/s` effective delivery, and `0.15%` warm regression. CEF x86_64
+OSR emitted the deterministic pixel marker with status 0. No FEX or graphics
+source candidate was promoted because no candidate passed a repeatable
+workload-specific speed gate.
 
 The first loader candidate evaluation is retained at
 `docs/validation/ai-optimization-candidate-loader-hash-20260803/RESULTS.md`.

@@ -1938,3 +1938,11 @@ rejected and is not installed. Its paired control/candidate evidence is
 `docs/validation/ai-optimization-candidate-loader-hash-20260803/RESULTS.md`.
 Do not promote it without a larger repeatable control and workload-specific
 loader measurement.
+
+The FEX and graphics phase receipts are
+`docs/validation/ai-optimization-fex-phase4-20260803/RESULTS.md` and
+`docs/validation/ai-optimization-graphics-phase5-20260803/RESULTS.md`.
+The current P8 hot-set measurement is 61.45% cold stall reduction with 0.15%
+warm regression; CEF x86_64 OSR remains status 0. These are acceptance results,
+not permission to rewrite FEX or host callback boundaries without a new paired
+candidate measurement.
