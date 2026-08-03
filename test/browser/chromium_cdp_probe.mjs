@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import zlib from "node:zlib";
 
-const [portText, screenshotPath, httpsUrl, transportMode] =
+const [portText, screenshotPath, httpsUrl, transportMode, expectedUrl] =
   process.argv.slice(2);
 const port = Number(portText);
 if (!port || !screenshotPath) {
@@ -78,12 +78,14 @@ socket.addEventListener("message", event => {
   const message = JSON.parse(event.data);
   if (!message.id || !pending.has(message.id)) return;
   const {resolve, reject} = pending.get(message.id);
+  clearTimeout(pending.get(message.id).timer);
   pending.delete(message.id);
   if (message.error) reject(new Error(JSON.stringify(message.error)));
   else resolve(message.result);
 });
 socket.addEventListener("close", () => {
-  for (const {reject} of pending.values()) {
+  for (const {reject, timer} of pending.values()) {
+    clearTimeout(timer);
     reject(new Error("Chromium DevTools WebSocket closed"));
   }
   pending.clear();
@@ -92,7 +94,12 @@ socket.addEventListener("close", () => {
 function call(method, params = {}) {
   const id = nextId++;
   return new Promise((resolve, reject) => {
-    pending.set(id, {resolve, reject});
+    const timeoutMs = Number(process.env.VKMT_CDP_CALL_TIMEOUT_MS || 15000);
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error(`${method} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    pending.set(id, {resolve, reject, timer});
     const message = {id, method, params};
     if (activeSessionId) message.sessionId = activeSessionId;
     socket.send(JSON.stringify(message));
@@ -137,43 +144,132 @@ if (!target) {
  * completes.  Neither Runtime.evaluate nor Page.captureScreenshot requires
  * domain-event subscription, so keep the functional probe on the direct
  * command path shared by x64 and i386. */
-for (let attempt = 0; attempt < 120; ++attempt) {
-  const state = await call("Runtime.evaluate", {
-    expression: "document.readyState",
-    returnByValue: true
-  });
-  if (state.result.value === "complete") break;
+console.log("CHROMIUM_CDP_RUNTIME_READY_BEGIN");
+const pageStateExpression = `(() => ({
+    href: location.href,
+    title: document.title,
+    readyState: document.readyState,
+    htmlLength: document.documentElement?.outerHTML.length || 0,
+    text: (document.body?.innerText || "").slice(0, 240),
+    width: document.documentElement?.clientWidth || 0,
+    height: document.documentElement?.clientHeight || 0,
+    userAgent: navigator.userAgent
+  }))()`;
+
+function navigationMatches(state, url) {
+  if (!url || !state?.href) return Boolean(state);
+  const expected = new URL(url);
+  const actual = new URL(state.href);
+  const normalizedPath = path => path.length > 1 && path.endsWith("/")
+    ? path.slice(0, -1)
+    : path;
+  return expected.protocol === "data:"
+    ? actual.protocol === "data:"
+    : actual.protocol === expected.protocol &&
+      actual.hostname === expected.hostname &&
+      normalizedPath(actual.pathname) === normalizedPath(expected.pathname);
+}
+
+let pageState;
+const navigationDeadline = Date.now() +
+  Number(process.env.VKMT_CDP_NAVIGATION_TIMEOUT_MS || 90000);
+let lastEvaluationError;
+do {
+  try {
+    const result = await call("Runtime.evaluate", {
+      expression: pageStateExpression,
+      returnByValue: true
+    });
+    pageState = result.result.value;
+    lastEvaluationError = undefined;
+    if (pageState?.readyState === "complete" &&
+        navigationMatches(pageState, expectedUrl) &&
+        pageState.htmlLength >= 40) break;
+  } catch (error) {
+    /* Renderer replacement temporarily removes the default execution context.
+     * The requested page may still be progressing in its successor renderer. */
+    lastEvaluationError = error;
+  }
   await pause(250);
+} while (Date.now() < navigationDeadline);
+if (!pageState && lastEvaluationError) throw lastEvaluationError;
+console.log("CHROMIUM_CDP_RUNTIME_READY_OK");
+console.log(`CHROMIUM_CDP_PAGE_STATE ${JSON.stringify(pageState)}`);
+
+if (expectedUrl) {
+  if (!navigationMatches(pageState, expectedUrl) || pageState.htmlLength < 40) {
+    throw new Error(
+      `initial navigation did not commit: expected=${expectedUrl} ` +
+      `actual=${pageState?.href || "unavailable"} ` +
+      `htmlLength=${pageState?.htmlLength || 0}`);
+  }
+  console.log(`CHROMIUM_CDP_NAVIGATION_OK ${pageState.href}`);
+}
+
+/* Preserve the page exactly as Chromium painted it before the deterministic
+ * fixture replaces its DOM. This makes a real-site/windowed gate auditable
+ * independently from the exact-pixel fixture below. */
+const pageScreenshotPath = screenshotPath.endsWith(".png")
+  ? `${screenshotPath.slice(0, -4)}-page.png`
+  : `${screenshotPath}-page.png`;
+if (process.env.VKMT_CDP_SKIP_PAGE_CAPTURE === "1") {
+  console.log("CHROMIUM_CDP_PAGE_CAPTURE_SKIPPED");
+} else {
+  const pageCapture = await call("Page.captureScreenshot", {
+    format: "png",
+    fromSurface: true,
+    captureBeyondViewport: false
+  });
+  fs.writeFileSync(
+    pageScreenshotPath, Buffer.from(pageCapture.data, "base64"));
+  console.log(`CHROMIUM_CDP_PAGE_PAINT_OK ${pageScreenshotPath}`);
 }
 
 const fixture = await call("Runtime.evaluate", {
   expression: `(async () => {
-    const httpsOk = location.protocol === "https:" ||
-      (${JSON.stringify(httpsUrl || "")} &&
-       (await fetch(${JSON.stringify(httpsUrl || "")})).ok);
-    document.documentElement.style.cssText =
-      "margin:0;width:100%;height:100%;background:#112233";
-    document.body.style.cssText =
-      "margin:0;width:100vw;height:100vh;background:#112233;overflow:hidden";
-    document.body.innerHTML =
-      "<input id=i style='position:absolute;left:32px;top:32px;width:80px;height:24px'>";
-    const input = document.getElementById("i");
-    input.addEventListener("input", () => input.dataset.input = "input-ok");
-    document.body.addEventListener("mousedown",
-      () => document.body.dataset.mouse = "mouse-ok");
-    const audio = new OfflineAudioContext(1, 8, 8000);
-    const buffer = audio.createBuffer(1, 8, 8000);
-    buffer.getChannelData(0)[0] = 0.5;
-    return {
-      protocol: location.protocol,
-      httpsOk,
-      audio: buffer.getChannelData(0)[0] === 0.5 ? "audio-ok" : "audio-bad"
-    };
+    try {
+      const httpsOk = location.protocol === "https:" ||
+        (${JSON.stringify(httpsUrl || "")} &&
+         (await fetch(${JSON.stringify(httpsUrl || "")})).ok);
+      if (!document.documentElement) {
+        document.appendChild(document.createElement("html"));
+      }
+      if (!document.body) {
+        document.documentElement.appendChild(document.createElement("body"));
+      }
+      document.documentElement.style.cssText =
+        "margin:0;width:100%;height:100%;background:#112233";
+      document.body.style.cssText =
+        "margin:0;width:100vw;height:100vh;background:#112233;overflow:hidden";
+      document.body.innerHTML =
+        "<input id=i style='position:absolute;left:32px;top:32px;width:80px;height:24px'>";
+      const input = document.getElementById("i");
+      input.addEventListener("input", () => input.dataset.input = "input-ok");
+      document.body.addEventListener("mousedown",
+        () => document.body.dataset.mouse = "mouse-ok");
+      const audio = new OfflineAudioContext(1, 8, 8000);
+      const buffer = audio.createBuffer(1, 8, 8000);
+      buffer.getChannelData(0)[0] = 0.5;
+      return {
+        protocol: location.protocol,
+        httpsOk,
+        audio: buffer.getChannelData(0)[0] === 0.5 ? "audio-ok" : "audio-bad"
+      };
+    } catch (error) {
+      return {
+        protocol: location.protocol,
+        httpsOk: location.protocol === "https:",
+        audio: "audio-error",
+        error: String(error),
+        offlineAudioType: typeof OfflineAudioContext
+      };
+    }
   })()`,
   awaitPromise: true,
   returnByValue: true
 });
 const fixtureValue = fixture.result.value;
+console.log(`CHROMIUM_CDP_FIXTURE ${JSON.stringify(fixtureValue)}`);
 if (!fixtureValue.httpsOk || fixtureValue.audio !== "audio-ok") {
   throw new Error(`bad Chromium fixture result ${JSON.stringify(fixtureValue)}`);
 }

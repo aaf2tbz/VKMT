@@ -13,11 +13,23 @@ XTAJIT64="${VKMT_XTAJIT64_SOURCE:-$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.
 XTAJIT="${VKMT_XTAJIT_SOURCE:-$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll}"
 WOW64="$BUILD/dlls/wow64/aarch64-windows/wow64.dll"
 WOW64WIN="$BUILD/dlls/wow64win/aarch64-windows/wow64win.dll"
+prepared_prefix=
+skip_i386=0
+while test "$#" -gt 0; do
+  case "$1" in
+    --prefix) test "$#" -ge 2 || { echo "--prefix needs a path" >&2; exit 2; }; prepared_prefix=$2; shift 2 ;;
+    --fresh) test -z "$prepared_prefix" || { echo "--fresh conflicts with --prefix" >&2; exit 2; }; shift ;;
+    --skip-i386) skip_i386=1; shift ;;
+    --evidence-dir) test "$#" -ge 2 || { echo "--evidence-dir needs a path" >&2; exit 2; }; VKMT_P6_EVIDENCE_DIR=$2; export VKMT_P6_EVIDENCE_DIR; shift 2 ;;
+    *) echo "usage: $0 [--fresh | --prefix PATH] [--skip-i386] [--evidence-dir PATH]" >&2; exit 2 ;;
+  esac
+done
 
-for required in "$WINE" "$WINESERVER" "$WINEBOOT" "$XTAJIT64" "$XTAJIT" \
-    "$WOW64" "$WOW64WIN" "$VKMT/test/aarch64_smoke.c" \
-    "$VKMT/test/x64emu/hello_ec.c" "$VKMT/test/x64emu/entry_x64.c" \
-    "$VKMT/test/i386_smoke.c"; do
+required_files=("$WINE" "$WINESERVER" "$WINEBOOT" "$XTAJIT64" "$XTAJIT" \
+  "$WOW64" "$WOW64WIN" "$VKMT/test/aarch64_smoke.c" \
+  "$VKMT/test/x64emu/hello_ec.c" "$VKMT/test/x64emu/entry_x64.c")
+test "$skip_i386" = 1 || required_files+=("$VKMT/test/i386_smoke.c")
+for required in "${required_files[@]}"; do
   test -e "$required" || { echo "Missing Phase 6 input: $required" >&2; exit 1; }
 done
 
@@ -44,7 +56,7 @@ done
 
 mkdir -p "$RUNS"
 run_root="$(mktemp -d "$RUNS/p6-single-prefix.XXXXXX")"
-prefix="$run_root/prefix"
+prefix="${prepared_prefix:-$run_root/prefix}"
 wine_pid=""
 timeout_cmd=()
 if command -v gtimeout >/dev/null 2>&1; then
@@ -63,6 +75,17 @@ cleanup()
     case "$VKMT_P6_EVIDENCE_DIR" in
       "$VKMT"/*)
         mkdir -p "$VKMT_P6_EVIDENCE_DIR"
+        if test -f "$prefix/.vkmt/receipt.json"; then
+          cp "$prefix/.vkmt/receipt.json" "$VKMT_P6_EVIDENCE_DIR/prefix-receipt.json"
+        fi
+        {
+          printf 'command=%q ' "$0" "$@"
+          printf '\nprepared_prefix=%s\n' "${prepared_prefix:-fresh}"
+          printf 'host_arch=%s\n' "$(uname -m)"
+          printf 'FEX_TSOENABLED=%s\n' "${FEX_TSOENABLED:-0}"
+          printf 'FEX_VECTORTSOENABLED=%s\n' "${FEX_VECTORTSOENABLED:-0}"
+          printf 'FEX_MEMCPYSETTSOENABLED=%s\n' "${FEX_MEMCPYSETTSOENABLED:-0}"
+        } >"$VKMT_P6_EVIDENCE_DIR/environment.txt"
         find "$run_root" -maxdepth 1 -type f -name '*.log' \
           -exec cp {} "$VKMT_P6_EVIDENCE_DIR"/ \;
         find "$prefix" -type f -name 'fex-*.log' -exec sh -c '
@@ -106,14 +129,16 @@ run_wine()
   -o "$run_root/arm64ec.exe" "$VKMT/test/x64emu/hello_ec.c"
 "$TOOL/x86_64-w64-mingw32-clang" -O2 \
   -o "$run_root/x86_64.exe" "$VKMT/test/x64emu/entry_x64.c"
-"$TOOL/i686-w64-mingw32-clang" -O2 \
-  -o "$run_root/i386.exe" "$VKMT/test/i386_smoke.c"
+if test "$skip_i386" = 0; then
+  "$TOOL/i686-w64-mingw32-clang" -O2 \
+    -o "$run_root/i386.exe" "$VKMT/test/i386_smoke.c"
+fi
 
-for spec in \
-    "arm64.exe:IMAGE_FILE_MACHINE_ARM64" \
-    "arm64ec.exe:IMAGE_FILE_MACHINE_ARM64EC" \
-    "x86_64.exe:IMAGE_FILE_MACHINE_AMD64" \
-    "i386.exe:IMAGE_FILE_MACHINE_I386"; do
+specs=("arm64.exe:IMAGE_FILE_MACHINE_ARM64" \
+  "arm64ec.exe:IMAGE_FILE_MACHINE_ARM64EC" \
+  "x86_64.exe:IMAGE_FILE_MACHINE_AMD64")
+test "$skip_i386" = 1 || specs+=("i386.exe:IMAGE_FILE_MACHINE_I386")
+for spec in "${specs[@]}"; do
   file=${spec%%:*}
   expected=${spec#*:}
   machine="$("$TOOL/llvm-readobj" --file-headers "$run_root/$file" |
@@ -124,25 +149,22 @@ for spec in \
   }
 done
 
-system32="$prefix/drive_c/windows/system32"
-syswow64="$prefix/drive_c/windows/syswow64"
-mkdir -p "$system32" "$syswow64"
-install -m 0644 "$XTAJIT64" "$system32/xtajit64.dll"
-install -m 0644 "$XTAJIT" "$system32/xtajit.dll"
-install -m 0644 "$WOW64" "$system32/wow64.dll"
-install -m 0644 "$WOW64WIN" "$system32/wow64win.dll"
-while IFS= read -r dll; do
-  install -m 0644 "$dll" "$syswow64/$(basename "$dll")"
-done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
-
-"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
-run_wine "$run_root/wineboot.log" "$WINEBOOT" --init || {
-  echo "Phase 6 wineboot failed" >&2
-  tail -n 120 "$run_root/wineboot.log" >&2
-  exit 1
-}
-"$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
-"$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
+if test -n "$prepared_prefix"; then
+  "$VKMT/scripts/vkmt-prefix" verify --prefix "$prefix"
+else
+  system32="$prefix/drive_c/windows/system32"
+  syswow64="$prefix/drive_c/windows/syswow64"
+  mkdir -p "$system32" "$syswow64"
+  install -m 0644 "$XTAJIT64" "$system32/xtajit64.dll"
+  install -m 0644 "$XTAJIT" "$system32/xtajit.dll"
+  install -m 0644 "$WOW64" "$system32/wow64.dll"
+  install -m 0644 "$WOW64WIN" "$system32/wow64win.dll"
+  while IFS= read -r dll; do install -m 0644 "$dll" "$syswow64/$(basename "$dll")"; done < <(find "$BUILD/dlls" -type f -path '*/i386-windows/*.dll' -print | LC_ALL=C sort)
+  "$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
+  run_wine "$run_root/wineboot.log" "$WINEBOOT" --init || { echo "Phase 6 wineboot failed" >&2; tail -n 120 "$run_root/wineboot.log" >&2; exit 1; }
+  "$VKMT/scripts/stage-runtime-providers.sh" --prefix "$prefix"
+  "$VKMT/scripts/stage-runtime-providers.sh" --verify-prefix "$prefix"
+fi
 
 run_wine "$run_root/arm64.log" "$run_root/arm64.exe" || {
   echo "Phase 6 ARM64 baseline failed" >&2
@@ -170,16 +192,24 @@ run_wine "$run_root/x86_64.log" "$run_root/x86_64.exe" || {
 grep -q 'VKMT entry_x64: hello from x86-64 guest' "$run_root/x86_64.log"
 echo P6_SINGLE_PREFIX_X86_64_OK
 
-run_wine "$run_root/i386.log" "$run_root/i386.exe" "Z:$run_root/i386.marker" || {
-  echo "Phase 6 i386 baseline failed" >&2
-  tail -n 120 "$run_root/i386.log" >&2
-  exit 1
-}
-for _ in $(seq 1 "${VKMT_P6_MARKER_WAIT:-60}"); do
-  test -f "$run_root/i386.marker" && break
-  sleep 1
-done
-grep -q 'VKMT i386 WoW64 execution contract passed' "$run_root/i386.marker"
-echo P6_SINGLE_PREFIX_I386_OK
+if test "$skip_i386" = 0; then
+  run_wine "$run_root/i386.log" "$run_root/i386.exe" "Z:$run_root/i386.marker" || {
+    echo "Phase 6 i386 baseline failed" >&2
+    tail -n 120 "$run_root/i386.log" >&2
+    exit 1
+  }
+  for _ in $(seq 1 "${VKMT_P6_MARKER_WAIT:-60}"); do
+    test -f "$run_root/i386.marker" && break
+    sleep 1
+  done
+  grep -q 'VKMT i386 WoW64 execution contract passed' "$run_root/i386.marker"
+  echo P6_SINGLE_PREFIX_I386_OK
+else
+  echo P6_SINGLE_PREFIX_I386_SKIPPED
+fi
 
-echo P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK
+if test "$skip_i386" = 0; then
+  echo P6_SINGLE_PREFIX_ALL_ARCHITECTURES_OK
+else
+  echo P6_SINGLE_PREFIX_NONWOW64_ARCHITECTURES_OK
+fi

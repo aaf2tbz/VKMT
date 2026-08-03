@@ -5,14 +5,19 @@ set -euo pipefail
 VKMT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD="${WINEBUILDDIR:-$VKMT/wine/build-ec}"
 SOURCE="$VKMT/wine/wine-11.12/runtime-providers"
-XTAJIT64_SOURCE="${VKMT_XTAJIT64_SOURCE:-$SOURCE/xtajit64-arm64ec-known-good.dll}"
-XTAJIT_SOURCE="${VKMT_XTAJIT_SOURCE:-$SOURCE/xtajit-arm64-known-good.dll}"
+# The P8 rendering provider is the accepted ARM64EC build for browser
+# renderer/native-boundary workloads.  Keep the former provider in the same
+# directory as a rollback artifact, but do not silently select it for a new
+# prefix: it passes the loader smoke gate while Electron's renderer boundary
+# can still enter the recursive SEH path.
+XTAJIT64_SOURCE="${VKMT_XTAJIT64_SOURCE:-$SOURCE/xtajit64-arm64ec-p8-rendering-known-good.dll}"
+XTAJIT_SOURCE="${VKMT_XTAJIT_SOURCE:-$SOURCE/xtajit-arm64-p8-wineconfig-known-good.dll}"
 XTAJIT64_STAGE="$BUILD/dlls/xtajit64/aarch64-windows/xtajit64.dll"
 XTAJIT_STAGE="$BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
-XTAJIT64_SHA256="${VKMT_XTAJIT64_SHA256:-0dde3c54ff286553b0592d58057e99f9ef4aca0d86436d1c1fa2e38d3fc14330}"
-XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-e030b4d33909d6158bf1a8521f948a4ddde85da8368e2d605ced301ff14ffee1}"
-CANONICAL_XTAJIT64_SOURCE="$SOURCE/xtajit64-arm64ec-known-good.dll"
-CANONICAL_XTAJIT_SOURCE="$SOURCE/xtajit-arm64-known-good.dll"
+XTAJIT64_SHA256="${VKMT_XTAJIT64_SHA256:-cccc70a4dd598371ed11c5a7979ca2ecff66a9849ba8086421a69054890c8c5f}"
+XTAJIT_SHA256="${VKMT_XTAJIT_SHA256:-ac512105b5feb85227f2814deb77de603d73ff4713ee60045b23e51c2276f386}"
+CANONICAL_XTAJIT64_SOURCE="$SOURCE/xtajit64-arm64ec-p8-rendering-known-good.dll"
+CANONICAL_XTAJIT_SOURCE="$SOURCE/xtajit-arm64-p8-wineconfig-known-good.dll"
 mode=stage
 prefix=
 
@@ -79,6 +84,11 @@ if test "$mode" = prefix; then
   fi
   install -m 0644 "$XTAJIT64_SOURCE" "$system32/xtajit64.dll"
   install -m 0644 "$XTAJIT_SOURCE" "$system32/xtajit.dll"
+  # Keep the existing prefix receipt aligned with the promoted provider. This
+  # is skipped during initial create before the receipt exists.
+  if test -f "$prefix/.vkmt/receipt.json" && test -f "$prefix/.vkmt/staged-files.manifest"; then
+    "$VKMT/scripts/vkmt-prefix" sync-providers --prefix "$prefix"
+  fi
 fi
 
 if test "$mode" = prefix || test "$mode" = verify-prefix; then

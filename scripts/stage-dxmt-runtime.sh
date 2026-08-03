@@ -5,7 +5,9 @@ set -euo pipefail
 
 VKMT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD="${WINEBUILDDIR:-$VKMT/wine/build-ec}"
-DXMT="$BUILD/dxmt-v0.80/aarch64-windows"
+# The build output may be regenerated locally.  Stage only the independently
+# preserved release-qualified pair until a replacement is promoted.
+DXMT="$VKMT/build/provider-preservation/pre-dxmt-cross-process-allow-20260731"
 D3D11_SHA256=f39bad475dca36678b2815a467f9ff2c78927c266976dabebd8c06e044fe1215
 DXGI_SHA256=55ecfb520d0c2a09435fda5c3b5c62026623486e813e5d42f78093e3af79f12a
 
@@ -43,11 +45,13 @@ if test "$mode" = stage; then
         echo "$D3D11_SHA256  d3d11.dll"
         echo "$DXGI_SHA256  dxgi.dll"
     } >"$receipt"
+    printf '%s\n' "$DXMT" >"$prefix/.vkmt/dxmt-arm64ec-source.txt"
 fi
 
 check "$D3D11_SHA256" "$system32/d3d11.dll"
 check "$DXGI_SHA256" "$system32/dxgi.dll"
 test "$(cat "$receipt")" = "$(printf '%s\n%s' \
     "$D3D11_SHA256  d3d11.dll" "$DXGI_SHA256  dxgi.dll")"
+test "$(cat "$prefix/.vkmt/dxmt-arm64ec-source.txt")" = "$DXMT"
 
 echo VKMT_DXMT_ARM64EC_PAIR_OK

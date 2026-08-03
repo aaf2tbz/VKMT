@@ -7,6 +7,16 @@ VKMT="$(cd "$(dirname "$0")/.." && pwd)"
 WINE_BUILD="$VKMT/wine/build-ec"
 TOOLCHAIN="$VKMT/toolchains/llvm-mingw-20260616-ucrt-macos-universal"
 missing=0
+inventory=0
+package_root=
+
+while test "$#" -gt 0; do
+  case "$1" in
+    --inventory) inventory=1; shift ;;
+    --package-root) test "$#" -ge 2 || { echo "--package-root needs a path" >&2; exit 2; }; package_root=$2; shift 2 ;;
+    *) echo "usage: $0 [--inventory] [--package-root PATH]" >&2; exit 2 ;;
+  esac
+done
 
 present() {
   if [ -e "$1" ]; then
@@ -17,7 +27,31 @@ present() {
   fi
 }
 
+verify_inventory() {
+  local id class arch path producer verifier runner license action seen=0
+  while IFS=$'\t' read -r id class arch path producer verifier runner license action; do
+    test "$id" = id && continue
+    seen=1
+    case "$class" in
+      required-runtime|required-source)
+        case "$path" in *'*'*) printf 'PENDING  inventory wildcard requires package-time expansion: %s\n' "$path" >&2 ;;
+          *) present "$VKMT/$path" ;;
+        esac ;;
+      excluded)
+        if test -n "$package_root" && test -e "$package_root/$path"; then
+          printf 'MISSING  excluded package asset present: %s\n' "$path" >&2
+          missing=1
+        fi ;;
+    esac
+  done < <(awk '/^```tsv$/{on=1;next} on && /^```$/{exit} on{print}' "$VKMT/Inventory.md")
+  test "$seen" = 1 || { echo "MISSING  Inventory.md TSV block" >&2; missing=1; }
+}
+
 printf '%s\n' 'VKMT preservation inventory'
+if test "$inventory" = 1; then
+  test -f "$VKMT/Inventory.md" || { echo "MISSING  Inventory.md" >&2; exit 1; }
+  verify_inventory
+fi
 present "$WINE_BUILD/wine"
 present "$WINE_BUILD/dlls/xtajit/aarch64-windows/xtajit.dll"
 present "$WINE_BUILD/dlls/win32u/libfreetype.6.dylib"

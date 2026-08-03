@@ -3,8 +3,44 @@ result=PASS
 default=PASS
 explicit_off=PASS
 enabled=PASS
+stale_port_recovery=PASS
+stale_port_recoveries=11
+invalid_destination_fallback=PASS
+invalid_destination_diagnostics=11
+invalid_destination_processes=11
+pulse_manual=PASS
+pulse_auto=PASS
+forced_waitall_rollback=PASS
 MSYNC_CHILD_OK
 MSYNC_SYNC_OK
+MSYNC_CHILD_OK
+MSYNC_SYNC_OK
+msync: bootstrapped mach port on <prefix>-msync.
+msync: up and running.
+MSYNC_CHILD_OK
+MSYNC_SYNC_OK
+msync: bootstrapped mach port on <prefix>-msync.
+msync: up and running.
+MSYNC_PULSE_LOCAL_OK mode=manual
+msync: bootstrapped mach port on <prefix>-msync.
+msync: up and running.
+MSYNC_PULSE_LOCAL_OK mode=auto
+msync: bootstrapped mach port on <prefix>-msync.
+msync: up and running.
+MSYNC_WAITALL_ROLLBACK_LOCAL_OK
+msync: bootstrapped mach port on <prefix>-msync.
+msync: up and running.
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
+VKMT_MSYNC_STALE_PORT_RECOVERED
 MSYNC_CHILD_OK
 MSYNC_SYNC_OK
 msync: bootstrapped mach port on <prefix>-msync.

@@ -5,7 +5,7 @@ set -euo pipefail
 VKMT="$(cd "$(dirname "$0")/.." && pwd)"
 SNAPSHOT_DIR="${VKMT_SNAPSHOT_DIR:-/Volumes/AverySSD/VKMT_snapshots}"
 STAMP="${VKMT_SNAPSHOT_STAMP:-$(date +%Y%m%d-%H%M%S)}"
-NAME="${VKMT_SNAPSHOT_NAME:-VKMT-runtime-j6-$STAMP}"
+NAME="${VKMT_SNAPSHOT_NAME:-VKMT-runtime-p8-$STAMP}"
 ARCHIVE="$SNAPSHOT_DIR/$NAME.tar.zst"
 CHECKSUM="$ARCHIVE.sha256"
 MANIFEST="$SNAPSHOT_DIR/$NAME.manifest.txt"
@@ -33,7 +33,7 @@ for required in \
   VKMT/AGENTS.md \
   VKMT/wine/build-ec/wine \
   VKMT/wine/build-ec/server/wineserver \
-  VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-known-good.dll \
+  VKMT/wine/wine-11.12/runtime-providers/xtajit64-arm64ec-p8-rendering-known-good.dll \
   VKMT/wine/wine-11.12/runtime-providers/xtajit-arm64-known-good.dll \
   VKMT/docs/WINDOWS_JAVA_WOW64_PLAN.md \
   VKMT/patches/fex-2607-java-j5.patch \

@@ -15,8 +15,18 @@ function finish(ok, detail) {
 }
 
 app.commandLine.appendSwitch("no-sandbox");
-app.commandLine.appendSwitch("disable-gpu-compositing");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+if (process.env.VKMT_ELECTRON_SOFTWARE_RENDER === "1") {
+  /* Keep the browser contract independent of the host Vulkan compositor while
+   * the ARM64EC renderer boundary is being validated. This is deliberately
+   * opt-in at the app layer so a future hardware-rendering gate can remove it
+   * without changing the HTTPS/input/audio/pixel fixture. */
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch("disable-gpu");
+  app.commandLine.appendSwitch("disable-gpu-compositing");
+  app.commandLine.appendSwitch("disable-vulkan");
+  app.commandLine.appendSwitch("in-process-gpu");
+}
 
 function getHttps(url) {
   return new Promise((resolve, reject) => {
@@ -44,10 +54,20 @@ app.whenReady().then(async () => {
       backgroundThrottling: false
     }
   });
-  window.loadURL(
-    "data:text/html,<canvas id=c width=4 height=4></canvas><input id=i>"
-  );
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("renderer load timeout")), 15000);
+    window.webContents.once("did-finish-load", () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    window.webContents.once("render-process-gone", (_event, details) => {
+      clearTimeout(timer);
+      reject(new Error(`renderer gone ${JSON.stringify(details)}`));
+    });
+    window.loadURL(
+      "data:text/html,<canvas id=c width=4 height=4></canvas><input id=i>"
+    );
+  });
   const rendererResult = window.webContents.executeJavaScript(`(() => {
     const c = document.getElementById("c");
     const i = document.getElementById("i");
