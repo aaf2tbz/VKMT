@@ -1,0 +1,8 @@
+prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix
+wine=/Volumes/AverySSD/VKMT/wine/build-ec/wine
+stage_consumers=1
+FEX_TSOENABLED=0
+FEX_VECTORTSOENABLED=0
+FEX_MEMCPYSETTSOENABLED=0
+wineboot=not-run
+source=test/d3dcompiler_contract.c

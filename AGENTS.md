@@ -2007,3 +2007,32 @@ but measured 1.54% slower than the matched control and was rejected. The
 canonical P8 ARM64EC provider was restored and the all-architecture prepared
 prefix gate returned status 0. Do not infer FEX dispatcher or JIT optimization
 from this result; those paths remain protected.
+
+### 2026-08-03 — P8 D3DCompiler contract
+
+`test/d3dcompiler_contract.c` and
+`scripts/probe-d3dcompiler-contract.sh` are the authoritative D3DCompiler
+coverage. The runner reuses the receipt-backed
+`build/probe-runs/phase-a-graphics-prefix`; it does not create a prefix or run
+Wineboot. It compiles and executes ARM64, ARM64EC, x86_64, and i386 fixtures
+with `FEX_TSOENABLED=0`, `FEX_VECTORTSOENABLED=0`, and
+`FEX_MEMCPYSETTSOENABLED=0`. The retained P8 receipt and full capability table
+are `docs/validation/d3dcompiler-contract-p8-20260803/RESULTS.md` and
+`capability.tsv`.
+
+The fixture covers VS/PS/CS compilation, flags/macros, custom include
+callbacks, diagnostics, Unicode `D3DCompileFromFile`/`D3DReadFileToBlob`,
+preprocess, disassembly, reflection/signatures, and dynamic 43/46/47 exports.
+It records `D3DLoadModule` `E_NOTIMPL`, all discovered Wine spec stubs as
+`KNOWN_STUB_NOT_CALLED` with `E_NOTIMPL`, and the d3dcompiler_43 reflection
+`E_NOINTERFACE` limitation without calling aborting stubs. All four compiler
+lanes returned rc=0. i386 DXVK D3D11 compute readback and vkd3d-proton D3D12
+compute pipeline also returned rc=0 in separate processes.
+
+The i386 consumer closure is explicitly staged in-place, not through a new
+prefix, by `scripts/vkmt-prefix sync-graphics32`. It records the x32 DXVK pair
+and win32 vkd3d-proton pair in the prefix manifest and
+`.vkmt/graphics32-sync.receipt`; a subsequent `vkmt-prefix verify` must pass.
+Do not combine the D3D11 and D3D12 consumer calls in one i386 process: the
+current boundary faults after a successful D3D11 pass and is intentionally
+kept visible in the receipt.

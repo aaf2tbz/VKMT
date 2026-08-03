@@ -38,6 +38,8 @@ host-libs	required-runtime	arm64	wine/build-ec/dlls/win32u	scripts/stage-wine-ho
 fex-source	required-source	arm64,x64,i386	third_party/FEX-2607	FEX checkout	git revision and status	P8/FEX probes	FEX license	source-required
 moltenvk-source	required-source	arm64	third_party/MoltenVK	MoltenVK checkout	scripts/verify-preservation.sh	graphics probes	MoltenVK license	source-required
 dxvk-source	required-source	x64,i386	third_party/dxvk	DXVK checkout	scripts/verify-preservation.sh	future DXVK gate	DXVK license	source-required
+d3dcompiler-contract	test-only	arm64,arm64ec,x64,i386	test/d3dcompiler_contract.c	scripts/probe-d3dcompiler-contract.sh	docs/validation/d3dcompiler-contract-p8-20260803/capability.tsv	P8 one-prefix contract	Wine LGPL	exclude
+graphics32-consumer-closure	optional-runtime	i386	third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32;third_party/vkd3d-proton/install-win32/bin	scripts/vkmt-prefix sync-graphics32	prefix .vkmt manifest + graphics32-sync.receipt	D3D11/D3D12 consumer lanes	DXVK/vkd3d-proton licenses	separate-provider-policy
 vkd3d-source	required-source	x64,i386	third_party/vkd3d-proton	vkd3d-proton checkout	scripts/verify-preservation.sh	future vkd3d gate	vkd3d-proton license	source-required
 dxmt-pair	required-runtime	arm64ec	wine/build-ec/dxmt-v0.80/aarch64-windows	scripts/stage-dxmt-runtime.sh	scripts/stage-dxmt-runtime.sh	scripts/probe-dxmt-arm64ec.sh	project-pinned	profile-graphics
 gecko	optional-external	all	third_party/wine-gecko	scripts/stage-gecko-runtime.sh	external manifest	future browser gate	MPL/user fetch	separate-fetch
@@ -53,7 +55,7 @@ candidate-providers	excluded	all	wine/wine-11.12/runtime-providers/*candidate*	r
 | Profile | Verified Phase-A content | Explicitly not claimed installed |
 | --- | --- | --- |
 | core | Wine host closure, providers, GStreamer/GPU-cache/hotset contracts, WoW64 bridges, i386 DLL closure | Browser and managed payloads |
-| graphics | core plus the preserved release-qualified DXMT pair | DXVK and vkd3d runtime DLLs |
+| graphics | core plus the preserved release-qualified DXMT pair; optional receipt-backed 32-bit DXVK/vkd3d consumer closure via `sync-graphics32` | CEF/WebView2/Electron payloads; 32-bit graphics providers are not staged until that explicit sync |
 | browser | graphics plus browser identity metadata | CEF, WebView2, Electron payloads |
 | managed | core plus managed identity metadata | Wine Mono and Java payload installation |
 | full | union of the above truthful contracts | Any component lacking a prefix staging helper |
@@ -231,6 +233,44 @@ staging now updates the existing prefix manifest/receipt through
 `scripts/vkmt-prefix sync-providers`; no prefix recreation or wineboot is
 needed. Do not package diagnostic logs, disposable browser runtimes, or
 rollback providers.
+
+### D3DCompiler contract (P8, 2026-08-03)
+
+The complete D3DCompiler fixture is `test/d3dcompiler_contract.c`. Its
+single-prefix runner is `scripts/probe-d3dcompiler-contract.sh`; it validates
+the existing receipt-backed prefix before execution, never creates a prefix,
+and records `wineboot=not-run`. The runner compiles and executes ARM64,
+ARM64EC, x86_64, and i386 PE fixtures with all FEX TSO controls set to zero.
+
+The canonical prefix is
+`build/probe-runs/phase-a-graphics-prefix`. The i386 D3D11/D3D12 consumer
+lanes use the explicit, hash-backed
+`scripts/vkmt-prefix sync-graphics32` operation. It stages only the x32 DXVK
+`d3d11.dll`/`dxgi.dll` pair and win32 vkd3d-proton `d3d12.dll`/
+`d3d12core.dll`; their source paths and hashes are included in the prefix
+manifest and `graphics32-sync.receipt`. No Wineboot or full prefix rebuild is
+needed to add this closure.
+
+The retained receipt is
+`docs/validation/d3dcompiler-contract-p8-20260803/RESULTS.md`, with the
+machine-readable architecture/API table in `capability.tsv`. The final run
+returned status 0 and recorded:
+
+| Area | Evidence |
+| --- | --- |
+| VS/PS/CS, macros, flags, include handler, failures/diagnostics | all four compiler lanes `PASS` |
+| Unicode `D3DCompileFromFile`/`D3DReadFileToBlob`, preprocess, disassembly | 43/46/47 rows recorded for every architecture; 46/47 file APIs pass |
+| Reflection/signatures and version behavior | 47 metadata pass; 43 `D3DReflect` `E_NOINTERFACE` is explicitly `KNOWN_LIMITATION` |
+| Unsupported API behavior | `D3DLoadModule` `E_NOTIMPL`; spec stubs such as compression, trace, `D3DReflectLibrary`, and `D3DSetBlobPart` are explicit `KNOWN_STUB_NOT_CALLED` rows and are never invoked |
+| Generated DXBC consumers | i386 DXVK D3D11 readback and vkd3d-proton D3D12 compute pipeline both pass in isolated processes |
+
+The consumer processes are intentionally isolated: combining DXVK D3D11 and
+vkd3d-proton D3D12 in one i386 process currently faults after the D3D11 pass.
+That boundary is retained as a diagnostic rather than hidden. The table also
+keeps all expected missing exports and the d3dcompiler_43 reflection
+limitation visible; a green runner status is not a claim that Wine stubs are
+implemented. These D3DCompiler DLLs and probe executables are test/runtime
+inputs, not package payloads unless separately licensed and promoted.
 
 ### Current final-gate boundary (2026-08-03)
 
