@@ -110,6 +110,7 @@ Root commits pushed to origin/main during this pass:
   refresh its inventory/disposition receipts;
 - 4c71904 — promote the accepted NTDLL marker-scan candidate and validation
   harness.
+- 7b732c4 — retain the final post-promotion Wineboot `rc=0` receipt.
 
 Nested Wine commits:
 
