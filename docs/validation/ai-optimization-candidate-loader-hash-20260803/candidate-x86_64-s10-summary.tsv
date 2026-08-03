@@ -1,0 +1,5 @@
+session	state	runs	median_ms	p90_ms	p95_ms	min_ms	max_ms	rc0
+1	persistent_session_warm_guest	10	44.553	47.632	47.913	36.054	47.913	10
+1	persistent_session_warm_guest_primer	1	1083.434	1083.434	1083.434	1083.434	1083.434	1
+2	persistent_session_warm_guest	10	48.964	52.961	56.334	36.811	56.334	10
+2	persistent_session_warm_guest_primer	1	1074.696	1074.696	1074.696	1074.696	1074.696	1

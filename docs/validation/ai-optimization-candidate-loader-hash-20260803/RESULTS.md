@@ -44,3 +44,10 @@ or staged in the canonical prefix.
 This is an evidence-backed `PROFILED_NO_PROMOTION` result, not a failure of
 the loader runtime. A later candidate needs a larger paired control/candidate
 sample and a workload-specific loader trace before promotion.
+
+An extended x86_64 run (10 samples in each of two sessions) confirmed the
+disposition: control medians were 43.802 and 45.001 ms, while candidate
+medians were 44.553 and 48.964 ms. Candidate P95 values reached 47.913 and
+56.334 ms versus control values of 52.952 and 50.719 ms. The candidate is
+therefore rejected rather than promoted; the apparent small win in the first
+five-sample comparison was measurement noise.

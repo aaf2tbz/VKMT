@@ -1,0 +1,2 @@
+state	median_min_ms	median_max_ms	median_spread_pct	p95_min_ms	p95_max_ms	p95_spread_pct	gate
+persistent_session_warm_guest	43.802	45.001	2.74	50.719	52.952	4.40	OBSERVE
