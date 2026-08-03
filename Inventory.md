@@ -261,6 +261,8 @@ to c-ai-optimizer commit
 The candidate-path disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`; boundary and triage rows are not
 performance acceptance claims.
+Run `scripts/vkmt-c-ai-optimizer.sh disposition` to verify that all 15 ledger
+candidate rows are represented exactly once before packaging or promotion.
 
 The active provider-backed architecture runner is
 `scripts/probe-p8-single-prefix-architectures.sh`. It reuses the canonical

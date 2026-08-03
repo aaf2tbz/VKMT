@@ -13,6 +13,7 @@ OPTIMIZER_COMMIT="${VKMT_CAI_OPTIMIZER_COMMIT:-c6f96df0ec9973a4cbdb7b015b1fd106c
 OPTIMIZER_DIR="${VKMT_CAI_OPTIMIZER_ROOT:-$VKMT/third_party/c-ai-optimizer}"
 TARGETS="${VKMT_CAI_TARGETS:-$VKMT/docs/c-ai-optimizer-vkmt-targets.tsv}"
 FULL_LEDGER="${VKMT_CAI_FULL_LEDGER:-$VKMT/docs/AI_OPTIMIZATION_LEDGER.tsv}"
+DISPOSITION="${VKMT_CAI_DISPOSITION:-$VKMT/docs/AI_OPTIMIZATION_DISPOSITION.tsv}"
 CANDIDATES="${VKMT_CAI_CANDIDATES:-$VKMT/build/c-ai-optimizer-candidates}"
 SMOKE_OUT="${VKMT_CAI_SMOKE_OUT:-$VKMT/build/c-ai-optimizer-vkmt-arm64-smoke}"
 
@@ -21,7 +22,7 @@ die() { echo "vkmt-c-ai-optimizer: $*" >&2; exit 1; }
 usage()
 {
     cat >&2 <<EOF
-usage: $0 {setup|inventory|prepare|inventory-all|prepare-all|smoke|verify}
+usage: $0 {setup|inventory|prepare|inventory-all|prepare-all|smoke|disposition|verify}
 
   setup       clone/fetch and pin c-ai-optimizer at the recorded commit
   inventory   hash the high-priority custom Wine source inputs
@@ -30,6 +31,7 @@ usage: $0 {setup|inventory|prepare|inventory-all|prepare-all|smoke|verify}
   prepare-all copy all ledger paths into an immutable candidate workspace
   smoke       run the upstream normal/optimized correctness suite without
               ARM64-incompatible -mavx flags
+  disposition validate that every ledger candidate path has a disposition row
   verify      verify the pin and source inventory (no source mutation)
 EOF
     exit 2
@@ -157,6 +159,47 @@ prepare_all()
         "$candidate" "$(tail -n +2 "$candidate/metadata/sources.tsv" | wc -l | tr -d ' ')"
 }
 
+verify_disposition()
+{
+    require_file "$FULL_LEDGER"
+    require_file "$DISPOSITION"
+    python3 - "$FULL_LEDGER" "$DISPOSITION" <<'PY'
+import csv
+import sys
+
+ledger_path, disposition_path = sys.argv[1:]
+with open(ledger_path, newline="", encoding="utf-8") as stream:
+    ledger = list(csv.DictReader(stream, delimiter="\t"))
+with open(disposition_path, newline="", encoding="utf-8") as stream:
+    disposition = list(csv.DictReader(stream, delimiter="\t"))
+
+required = {"path", "phase", "ledger_mode", "disposition", "evidence", "next_action"}
+if not disposition or set(disposition[0]) != required:
+    raise SystemExit("invalid disposition header")
+
+candidates = {row["path"] for row in ledger if row.get("mode") == "candidate"}
+rows = {}
+for row in disposition:
+    path = row["path"]
+    if path in rows:
+        raise SystemExit(f"duplicate disposition row: {path}")
+    rows[path] = row
+
+missing = sorted(candidates - rows.keys())
+unknown = sorted(rows.keys() - candidates)
+if missing:
+    raise SystemExit("missing candidate dispositions: " + ", ".join(missing))
+if unknown:
+    raise SystemExit("dispositions for non-candidate paths: " + ", ".join(unknown))
+for path, row in rows.items():
+    if row["ledger_mode"] != "candidate":
+        raise SystemExit(f"disposition mode mismatch: {path}")
+    if not row["disposition"] or not row["evidence"] or not row["next_action"]:
+        raise SystemExit(f"incomplete disposition row: {path}")
+print(f"VKMT_CAI_DISPOSITION_OK candidates={len(rows)} path={disposition_path}")
+PY
+}
+
 smoke()
 {
     local root="$OPTIMIZER_DIR" cc omp_prefix
@@ -199,6 +242,7 @@ verify()
 {
     setup_optimizer >/dev/null
     inventory >/dev/null
+    verify_disposition
     echo "VKMT_CAI_OPTIMIZER_VERIFY_OK"
 }
 
@@ -210,6 +254,7 @@ case "$1" in
     inventory-all) inventory_all ;;
     prepare-all) prepare_all ;;
     smoke) smoke ;;
+    disposition) verify_disposition ;;
     verify) verify ;;
     *) usage ;;
 esac

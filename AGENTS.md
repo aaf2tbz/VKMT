@@ -1947,6 +1947,9 @@ The current candidate-path disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`. Treat `CANDIDATE_BLOCKED_*` and
 `TRIAGE_NO_SAFE_CANDIDATE` as unresolved scope/profiling entries, never as
 optimization wins.
+`scripts/vkmt-c-ai-optimizer.sh verify` now enforces that every ledger
+candidate path has exactly one disposition row with evidence and a next
+action.
 
 The FEX and graphics phase receipts are
 `docs/validation/ai-optimization-fex-phase4-20260803/RESULTS.md` and

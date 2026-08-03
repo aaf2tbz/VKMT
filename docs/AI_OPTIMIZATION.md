@@ -25,6 +25,7 @@ scripts/vkmt-c-ai-optimizer.sh smoke
 scripts/vkmt-c-ai-optimizer.sh prepare
 scripts/vkmt-c-ai-optimizer.sh inventory-all
 scripts/vkmt-c-ai-optimizer.sh prepare-all
+scripts/vkmt-c-ai-optimizer.sh disposition
 scripts/vkmt-c-ai-optimizer.sh verify
 ```
 
@@ -36,6 +37,11 @@ inputs and records their SHA-256 values. It never writes to
 `inventory-all` and `prepare-all` operate on the complete 82-file ledger,
 including files marked manual-review or generated/no-rewrite. Preparing a
 file is not permission to transform or promote it.
+
+`disposition` validates that every ledger row marked `candidate` has exactly
+one row in `docs/AI_OPTIMIZATION_DISPOSITION.tsv`. Boundary/triage rows are
+required to carry an evidence reference and a next action; they are not
+treated as optimization wins.
 
 ## Why this is candidate-only
 

@@ -106,6 +106,8 @@ The supplemental candidate disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records which remaining candidate
 paths are blocked by ABI, pointer, lock, TLS, ordering, or side-effect
 boundaries and which still need workload-specific profiling.
+The disposition validator passed with `candidates=15`; it is part of the
+optimizer verification command and does not turn unresolved rows green.
 
 ## Candidate disposition and remaining boundary
 
