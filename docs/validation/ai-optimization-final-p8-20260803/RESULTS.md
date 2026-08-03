@@ -89,7 +89,8 @@ Root commits pushed to origin/main during this pass:
 - b828a3f, 4647196 — evaluate and reject the loader hash candidate;
 - 7e52568 — record P8 FEX and graphics gates;
 - ffdc891 — add full-corpus candidate preparation and P8 snapshot naming;
-- be7f0ff — finalize the one-prefix P8 receipt and staging closure fix.
+- be7f0ff — finalize the one-prefix P8 receipt and staging closure fix;
+- d7c3c47, 7e87c47 — complete the final inventory and retained speed receipts.
 
 Nested Wine commits:
 
