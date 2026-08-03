@@ -105,3 +105,5 @@ root	A	docs/validation/ai-optimization-phase4-fex-mask-20260803/p8/prefix-receip
 root	A	docs/validation/ai-optimization-phase4-fex-mask-20260803/p8/status.txt
 root	A	docs/validation/ai-optimization-phase4-fex-mask-20260803/p8/x86_64.log
 root	A	docs/AI_OPTIMIZATION_DISPOSITION.tsv
+root	M	scripts/probe-x64-address-list-sort.sh
+root	A	docs/validation/address-list-sort-p8-canonical-20260803/RESULTS.md

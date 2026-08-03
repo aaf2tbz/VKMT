@@ -1979,6 +1979,10 @@ prepared-prefix P8 gate passed ARM64, ARM64EC, x86_64, and i386/WoW64 with
 status 0. This does not close the rest of Phase 2; continue to require a
 distinct, repeatable workload improvement before promoting any other helper.
 
+The x64 Winsock address-list probe also supports verified prepared-prefix
+execution via `scripts/probe-x64-address-list-sort.sh --prefix PATH`; it must
+not run Wineboot or stage providers in that mode.
+
 ### 2026-08-03 — AI optimization Phase 4 FEX candidate audit
 
 The FEX interpreter candidate receipt is

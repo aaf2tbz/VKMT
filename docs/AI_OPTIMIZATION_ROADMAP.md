@@ -268,6 +268,12 @@ The following remain manual-review until profiling identifies a safe leaf:
 Crypto, TLS, synchronization, process startup, and instruction emulation must
 not receive unsafe math, OpenMP, or opaque whole-file rewrites.
 
+The existing x64 address-list sort contract now has a prepared-prefix path:
+`scripts/probe-x64-address-list-sort.sh --prefix PATH`. Its canonical P8
+receipt is `docs/validation/address-list-sort-p8-canonical-20260803/`; the
+probe reuses the prefix, verifies it first, and does not run Wineboot or stage
+providers in prepared mode.
+
 ## Phase 7 — Server-side synchronization and mapping
 
 Files:

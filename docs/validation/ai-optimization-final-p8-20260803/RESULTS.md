@@ -108,6 +108,9 @@ paths are blocked by ABI, pointer, lock, TLS, ordering, or side-effect
 boundaries and which still need workload-specific profiling.
 The disposition validator passed with `candidates=15`; it is part of the
 optimizer verification command and does not turn unresolved rows green.
+The prepared-prefix Winsock address-list contract also passed with
+`VKMT_X64_ADDRESS_LIST_SORT_OK`; its receipt is
+`docs/validation/address-list-sort-p8-canonical-20260803/RESULTS.md`.
 
 ## Candidate disposition and remaining boundary
 

@@ -264,6 +264,11 @@ performance acceptance claims.
 Run `scripts/vkmt-c-ai-optimizer.sh disposition` to verify that all 15 ledger
 candidate rows are represented exactly once before packaging or promotion.
 
+The prepared-prefix Winsock address-order contract is recorded at
+`docs/validation/address-list-sort-p8-canonical-20260803/`. Its runner is
+`scripts/probe-x64-address-list-sort.sh --prefix PATH`; fresh bootstrap mode
+remains available separately.
+
 The active provider-backed architecture runner is
 `scripts/probe-p8-single-prefix-architectures.sh`. It reuses the canonical
 graphics prefix and does not recreate it or run Wineboot in prepared-prefix
