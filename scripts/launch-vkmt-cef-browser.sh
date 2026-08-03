@@ -12,7 +12,8 @@ COMPAT="$VKMT/build/cef-compat/x86_64"
 PRODUCT="$VKMT/build/vkmt-cef-browser/x86_64"
 RUNTIME="${VKMT_BROWSER_RUNTIME:-$VKMT/build/vkmt-browser-runtime/x86_64}"
 PREFIX="${VKMT_BROWSER_PREFIX:-$VKMT/build/vkmt-browser-prefix}"
-URL="${VKMT_BROWSER_URL:-https://example.com/}"
+URL="${VKMT_BROWSER_URL:-}"
+test -n "$URL" || URL='data:text/html,<style>body{margin:0;background:rgb(17,34,51)}div{position:absolute;left:100px;top:100px;color:white;font-size:64px;font-family:Arial}</style><div>VKMT_TEXT_OK</div>'
 LOG_DIR="${VKMT_BROWSER_LOG_DIR:-$PREFIX/.vkmt/browser}"
 USE_EXISTING_PREFIX=0
 
@@ -97,13 +98,20 @@ extra_args=()
 if test -n "${VKMT_BROWSER_EXTRA_ARGS:-}"; then
   read -r -a extra_args <<<"$VKMT_BROWSER_EXTRA_ARGS"
 fi
+certificate_args=()
+if test "${VKMT_BROWSER_IGNORE_CERT_ERRORS:-0}" = 1; then
+  certificate_args+=(--ignore-certificate-errors)
+fi
 echo "VKMT_BROWSER_LAUNCH url=$URL runtime=$RUNTIME prefix=$PREFIX log=$log"
 launch_args=(
   --no-sandbox
   --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader
-  --disable-vulkan --ignore-certificate-errors
+  --disable-vulkan
   "--url=$URL" "--vkmt-browser-log=$browser_log_win" "--log-file=Z:${cef_log//\//\\}"
 )
+if test "${#certificate_args[@]}" -gt 0; then
+  launch_args+=("${certificate_args[@]}")
+fi
 if test "${#debug_args[@]}" -gt 0; then
   launch_args+=("${debug_args[@]}")
 fi

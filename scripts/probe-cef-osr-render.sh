@@ -7,7 +7,8 @@ set -euo pipefail
 VKMT="$(cd "$(dirname "$0")/.." && pwd -P)"
 PREFIX="${VKMT_CEF_OSR_PREFIX:-$VKMT/build/probe-runs/phase-a-graphics-prefix}"
 EVIDENCE="${VKMT_CEF_OSR_EVIDENCE_DIR:-$VKMT/docs/validation/cef-osr-render-p8}"
-URL="${VKMT_CEF_OSR_URL:-data:text/html,<body style='margin:0;background:rgb(17,34,51)'>VKMT</body>}"
+URL="${VKMT_CEF_OSR_URL:-}"
+test -n "$URL" || URL='data:text/html,<style>body{margin:0;background:rgb(17,34,51)}div{position:absolute;left:100px;top:100px;color:white;font-size:64px;font-family:Arial}</style><div>VKMT_TEXT_OK</div>'
 TIMEOUT="${VKMT_CEF_OSR_TIMEOUT:-60}"
 
 case "$PREFIX" in /*) ;; *) echo "CEF OSR prefix must be absolute" >&2; exit 2;; esac
@@ -38,8 +39,9 @@ if test "$status" -ne 0; then
   exit "$status"
 fi
 grep -q 'VKMT_BROWSER_PAINT_BGRA_51_34_17_255' "$browser_log"
+grep -q 'VKMT_BROWSER_TEXT_PIXEL_OK' "$browser_log"
 grep -q 'VKMT_BROWSER_PIXEL_OK' "$browser_log"
 "$VKMT/scripts/vkmt-prefix" verify --prefix "$PREFIX" >"$EVIDENCE/prefix-verify.log"
 
-echo "CEF_X86_64_OSR_PIXEL_OK log=$browser_log"
+echo "CEF_X86_64_OSR_PIXEL_OK log=$browser_log text=VKMT_TEXT_OK"
 echo "CEF_X86_64_OSR_RENDER_OK prefix=$PREFIX evidence=$EVIDENCE"

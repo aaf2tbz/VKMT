@@ -416,3 +416,27 @@ was rejected without staging; the canonical P8 ARM64EC provider was restored,
 prefix verification passed, and the prepared-prefix P8 gate again passed
 ARM64, ARM64EC, x86_64, and i386/WoW64. The FEX dispatcher/JIT/context,
 invalidation, and executable-memory code remains protected and unchanged.
+
+### Networking, TLS trust, COM/STA, DirectWrite, and CEF text gate (P8, 2026-08-03)
+
+This phase reuses the single receipt-backed prefix
+`build/probe-runs/phase-a-graphics-prefix`; no new prefix or wineboot was used.
+All lanes set `FEX_TSOENABLED=0`, `FEX_VECTORTSOENABLED=0`, and
+`FEX_MEMCPYSETTSOENABLED=0`.
+
+| Area | Implementation / runner | Evidence | Status |
+|---|---|---|---|
+| WinSock | `test/network_contract.c`, `scripts/probe-network-contract.sh` | `docs/validation/network-contract-p8-20260803/` | ARM64, ARM64EC, x86_64, i386 processes rc=0; IPv4/IPv6, localhost ordering, nonblocking connect, select, WSAPoll, event rearm, IOCP, and parallel close pass; i386 `SIO_ADDRESS_LIST_SORT` is explicit `UNSUPPORTED` / WSAEOPNOTSUPP |
+| TLS/trust | `test/tls_trust_contract.c`, `scripts/probe-tls-trust-contract.sh`, `test/browser/tls_connect_delay_proxy.mjs` | `docs/validation/tls-trust-contract-p8-20260803/` | All four architectures rc=0; WinHTTP/WinINet valid root+intermediate+hostname, expired rejection, untrusted-root rejection, and local fragmented CONNECT proxy pass without bypass flags |
+| COM/UI/fonts | `test/ui_com_dwrite_contract.c`, `scripts/probe-ui-com-dwrite-contract.sh` | `docs/validation/ui-com-dwrite-contract-p8-20260803/` | All four processes rc=0; STA pump/callback/nested loop/window lifetime, font enumeration/glyphs/layout/fallback pass where supported; standard IStream cross-apartment marshal is explicit `UNSUPPORTED` on all lanes and i386 mixed-script layout metrics are explicit `UNSUPPORTED` |
+| CEF text/pixels | `third_party/metalsharp-cef/vkmt_browser_capi.c`, `scripts/probe-cef-osr-render.sh` | `docs/validation/cef-osr-render-p8/RESULTS.md` and `browser-20260803T143019.log` | CEF load text marker, DOM text visitor, deterministic BGRA background, and foreground text pixels all pass; `--ignore-certificate-errors` is now opt-in |
+
+The DirectWrite source audit is
+`docs/validation/ui-com-dwrite-contract-p8-20260803/font-source-audit.txt`.
+`dlls/dwrite/freetype.c` and `dlls/win32u/freetype.c` were not modified or
+promoted in this phase; no optimization is claimed without a benchmark-backed
+source change and a passing contract gate.
+The optional BoringSSL diagnostic probe now drains fragmented TLS I/O and can
+enable CA verification, but its x86_64 process is still blocked before
+application output by the known custom-FEX `0xc000001d` startup boundary; this
+is recorded in `docs/validation/tls-trust-contract-p8-20260803/boringssl-diagnostic.txt`.

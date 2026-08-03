@@ -1,0 +1,18 @@
+Target: wine/wine-11.12/dlls/dwrite/freetype.c
+Target: wine/wine-11.12/dlls/win32u/freetype.c
+
+Both target files were clean in the nested Wine working tree at probe time;
+this phase made no source edits to either file.
+
+SHA256 dwrite/freetype.c b4b95cada83425720ea4249114100db90ddab654579ece50007743b6138969ef
+SHA256 win32u/freetype.c 6fb25aeb6e2ca7fa7da3c7c0e9171f2b79a416317994880f5f8a78ecde346d52
+
+Validation disposition:
+- DirectWrite font collection, family/font-face selection, Latin/mixed-script
+  glyph lookup, layout metrics, and system fallback MapCharacters passed on
+  ARM64, ARM64EC, x86_64, and i386 except the explicit i386 layout gap in
+  capability.tsv.
+- No optimization is promoted from these files without a before/after
+  benchmark and the contract remaining green.
+- The i386 mixed-script layout result is recorded as UNSUPPORTED rather than
+  being converted into a pass.

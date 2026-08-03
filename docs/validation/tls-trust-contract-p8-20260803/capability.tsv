@@ -1,0 +1,52 @@
+arch	api	status	error	detail
+arm64	fixture	PASS	0	expired
+arm64	WinHTTP	PASS	12157	invalid certificate rejected
+arm64	WinINet	PASS	12037	invalid certificate rejected
+arm64	fixture	PASS	0	untrusted
+arm64	WinHTTP	PASS	12157	invalid certificate rejected
+arm64	WinINet	PASS	12045	invalid certificate rejected
+arm64	fixture	PASS	0	valid local trust through fragmented proxy
+arm64	WinHTTP	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+arm64	WinINet	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+arm64	fixture	PASS	0	valid local trust
+arm64	WinHTTP	PASS	0	trusted localhost chain and hostname
+arm64	WinINet	PASS	0	trusted localhost chain and hostname
+arm64ec	fixture	PASS	0	expired
+arm64ec	WinHTTP	PASS	12157	invalid certificate rejected
+arm64ec	WinINet	PASS	12037	invalid certificate rejected
+arm64ec	fixture	PASS	0	untrusted
+arm64ec	WinHTTP	PASS	12157	invalid certificate rejected
+arm64ec	WinINet	PASS	12045	invalid certificate rejected
+arm64ec	fixture	PASS	0	valid local trust through fragmented proxy
+arm64ec	WinHTTP	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+arm64ec	WinINet	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+arm64ec	fixture	PASS	0	valid local trust
+arm64ec	WinHTTP	PASS	0	trusted localhost chain and hostname
+arm64ec	WinINet	PASS	0	trusted localhost chain and hostname
+i386	fixture	PASS	0	expired
+i386	WinHTTP	PASS	12157	invalid certificate rejected
+i386	WinINet	PASS	12037	invalid certificate rejected
+i386	fixture	PASS	0	untrusted
+i386	WinHTTP	PASS	12157	invalid certificate rejected
+i386	WinINet	PASS	12045	invalid certificate rejected
+i386	fixture	PASS	0	valid local trust through fragmented proxy
+i386	WinHTTP	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+i386	WinINet	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+i386	fixture	PASS	0	valid local trust
+i386	WinHTTP	PASS	0	trusted localhost chain and hostname
+i386	WinINet	PASS	0	trusted localhost chain and hostname
+arm64	certificate_chain_seed	PASS	0	current-user root visible to chain engine
+arm64	certificate_crl	PASS	0	installed current-user intermediate CRL
+arm64	certificate_root	PASS	0	installed current-user localhost root
+x86_64	fixture	PASS	0	expired
+x86_64	WinHTTP	PASS	12157	invalid certificate rejected
+x86_64	WinINet	PASS	12037	invalid certificate rejected
+x86_64	fixture	PASS	0	untrusted
+x86_64	WinHTTP	PASS	12157	invalid certificate rejected
+x86_64	WinINet	PASS	12045	invalid certificate rejected
+x86_64	fixture	PASS	0	valid local trust through fragmented proxy
+x86_64	WinHTTP	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+x86_64	WinINet	PASS	0	trusted localhost chain via fragmented CONNECT proxy
+x86_64	fixture	PASS	0	valid local trust
+x86_64	WinHTTP	PASS	0	trusted localhost chain and hostname
+x86_64	WinINet	PASS	0	trusted localhost chain and hostname

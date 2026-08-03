@@ -2036,3 +2036,50 @@ and win32 vkd3d-proton pair in the prefix manifest and
 Do not combine the D3D11 and D3D12 consumer calls in one i386 process: the
 current boundary faults after a successful D3D11 pass and is intentionally
 kept visible in the receipt.
+
+### 2026-08-03 — Networking, TLS trust, COM/STA, DirectWrite, and CEF text
+
+The new contract runners all reuse `build/probe-runs/phase-a-graphics-prefix`;
+they do not create prefixes or invoke wineboot. Every lane uses
+`FEX_TSOENABLED=0`, `FEX_VECTORTSOENABLED=0`, and
+`FEX_MEMCPYSETTSOENABLED=0`.
+
+`test/network_contract.c` and `scripts/probe-network-contract.sh` provide the
+deterministic WinSock gate. ARM64, ARM64EC, x86_64, and i386 processes return
+rc=0 for loopback, localhost address ordering, nonblocking connect, select,
+WSAPoll, WSAEventSelect rearm, IOCP lifetime, and parallel close pressure.
+i386 `SIO_ADDRESS_LIST_SORT` returns WSAEOPNOTSUPP and is recorded as an
+explicit `UNSUPPORTED` capability rather than hidden.
+
+`test/tls_trust_contract.c` and `scripts/probe-tls-trust-contract.sh` generate
+a local root/intermediate/localhost chain and test normal WinHTTP and WinINet
+validation across all four architectures. Valid trust, expired rejection,
+untrusted-root rejection, and a local HTTP CONNECT proxy that fragments both
+directions all pass. No certificate-ignore flag is used. The companion
+`test/browser/tls_connect_delay_proxy.mjs` is local-only. Existing
+BoringSSL `SSL_VERIFY_NONE` probes remain diagnostic-only.
+
+`test/ui_com_dwrite_contract.c` and
+`scripts/probe-ui-com-dwrite-contract.sh` cover COM STA initialization, STA
+message pumping, cross-thread callbacks, nested callback completion, window
+lifetime, DirectWrite font enumeration, glyph selection, mixed-script layout,
+and system fallback. All four processes return rc=0. The capability table
+explicitly records standard IStream cross-apartment marshaling as unsupported
+(`0x80070102`) on all lanes and i386 mixed-script layout metrics as
+unsupported (`0x80004005`); these are open compatibility gaps.
+
+The CEF OSR host now waits for `cef_frame_t::get_text` to observe
+`VKMT_TEXT_OK` and for foreground text pixels in addition to the deterministic
+BGRA background. The canonical gate is
+`docs/validation/cef-osr-render-p8/RESULTS.md` and the current receipt is
+`browser-20260803T143019.log`. `scripts/launch-vkmt-cef-browser.sh` only adds
+`--ignore-certificate-errors` when `VKMT_BROWSER_IGNORE_CERT_ERRORS=1` is
+explicitly set.
+
+`dlls/dwrite/freetype.c` and `dlls/win32u/freetype.c` were audited but not
+modified or promoted. Hashes and disposition are in
+`docs/validation/ui-com-dwrite-contract-p8-20260803/font-source-audit.txt`.
+The optional BoringSSL diagnostic client now exercises split writes and
+multi-read draining, but remains outside acceptance because its x86_64 launch
+hits the known custom-FEX `0xc000001d` startup boundary before probe output;
+the WinHTTP/WinINet fragmented lanes are the authoritative TLS transport gate.

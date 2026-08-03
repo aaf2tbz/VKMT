@@ -34,6 +34,9 @@ int main(int argc, char **argv)
     char response[4096];
     int port = argc > 1 ? atoi(argv[1]) : 19445;
     int result;
+    int total = 0;
+    size_t sent = 0;
+    const char *ca_file = argc > 2 ? argv[2] : NULL;
     int status = 2;
 
     if (WSAStartup(MAKEWORD(2, 2), &winsock) != 0)
@@ -64,7 +67,17 @@ int main(int argc, char **argv)
         print_ssl_error("SSL_new", ssl, 0);
         goto done;
     }
-    SSL_CTX_set_verify(context, SSL_VERIFY_NONE, NULL);
+    if (ca_file)
+    {
+        if (!SSL_CTX_load_verify_locations(context, ca_file, NULL))
+        {
+            print_ssl_error("SSL_CTX_load_verify_locations", ssl, 0);
+            goto done;
+        }
+        SSL_CTX_set_verify(context, SSL_VERIFY_PEER, NULL);
+    }
+    else
+        SSL_CTX_set_verify(context, SSL_VERIFY_NONE, NULL);
     SSL_set_tlsext_host_name(ssl, "localhost");
     if (!SSL_set_fd(ssl, (int)socket_fd))
     {
@@ -77,26 +90,39 @@ int main(int argc, char **argv)
         print_ssl_error("SSL_connect", ssl, result);
         goto done;
     }
-    result = SSL_write(ssl, request, (int)strlen(request));
-    if (result <= 0)
+    /* Deliberately split the request and consume the response until EOF. The
+     * delay proxy used by the runner can split at arbitrary TLS record and
+     * socket boundaries; one successful SSL_read is not proof of this path. */
+    while (sent < strlen(request))
     {
-        print_ssl_error("SSL_write", ssl, result);
-        goto done;
+        size_t chunk = strlen(request) - sent;
+        if (chunk > 7) chunk = 7;
+        result = SSL_write(ssl, request + sent, (int)chunk);
+        if (result <= 0)
+        {
+            print_ssl_error("SSL_write", ssl, result);
+            goto done;
+        }
+        sent += (size_t)result;
     }
-    result = SSL_read(ssl, response, sizeof(response) - 1);
-    if (result <= 0)
+    while (total < (int)sizeof(response) - 1)
     {
+        result = SSL_read(ssl, response + total, (int)sizeof(response) - 1 - total);
+        if (result > 0) { total += result; continue; }
+        if (SSL_get_error(ssl, result) == SSL_ERROR_ZERO_RETURN) break;
         print_ssl_error("SSL_read", ssl, result);
         goto done;
     }
-    response[result] = 0;
+    response[total] = 0;
     if (!strstr(response, "HTTP/"))
     {
         fputs("VKMT_BORINGSSL_TLS_FAILED stage=response\n", stderr);
         goto done;
     }
-    printf("VKMT_BORINGSSL_TLS_OK protocol=%s cipher=%s bytes=%d\n",
-           SSL_get_version(ssl), SSL_get_cipher(ssl), result);
+    printf("VKMT_BORINGSSL_TLS_OK protocol=%s cipher=%s bytes=%d verify=%s\n",
+           SSL_get_version(ssl), SSL_get_cipher(ssl), total,
+           ca_file ? "enabled" : "diagnostic-disabled");
+    puts("VKMT_BORINGSSL_TLS_FRAGMENTED_OK");
     status = 0;
 
 done:
