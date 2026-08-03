@@ -51,6 +51,16 @@ rewrite was promoted.
 | CEF x86_64 OSR | pixel marker and rc=0 |
 | P8 hot-set | PASS; 62.00% cold stall reduction |
 
+After the NTDLL promotion, the existing canonical prefix was run through
+`wine wineboot.exe --update` without prefix creation or reset; the result was
+`rc=0`. Evidence is `wineboot-after-ntdll.txt`.
+Wineboot refreshed one built-in graphics file and removed one staged i386
+closure file, so the canonical prefix was repaired with the non-creating
+`scripts/vkmt-prefix refresh --prefix PATH` operation. The subsequent prepared
+P8 run passed all four architecture markers with status 0. This establishes
+the required ordering: final Wineboot first, then one prefix refresh, then
+prepared runtime gates.
+
 The active runner is scripts/probe-p8-single-prefix-architectures.sh. P6
 names are retained only for historical provenance; new provider acceptance
 uses P8 names.
@@ -110,15 +120,15 @@ Nested Wine commits:
 
 The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
-It records 97 root paths and 16 nested-Wine paths relative to the start of
+It records 98 root paths and 16 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
 The supplemental candidate disposition matrix is
-`docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records which remaining candidate
-paths are blocked by ABI, pointer, lock, TLS, ordering, or side-effect
-boundaries and which still need workload-specific profiling.
+`docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records one accepted helper, two
+rejected candidates, four profiled no-safe-candidate rows, and eight paths
+blocked by ABI, pointer, lock, TLS, ordering, or FEX boundaries.
 The disposition validator passed with `candidates=15`; it is part of the
 optimizer verification command and does not turn unresolved rows green.
-The remaining 12 candidate rows are audited at
+The remaining 12 candidate rows are audited and dispositioned at
 `docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.
 The prepared-prefix Winsock address-list contract also passed with
 `VKMT_X64_ADDRESS_LIST_SORT_OK`; its receipt is

@@ -112,3 +112,4 @@ root	A	scripts/probe-ai-ntdll-file-scan.sh
 root	A	docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md
 nested-wine	M	dlls/ntdll/unix/file.c
 root	A	docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md
+root	A	docs/validation/ai-optimization-final-p8-20260803/wineboot-after-ntdll.txt

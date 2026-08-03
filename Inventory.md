@@ -313,6 +313,10 @@ The promoted ARM64 `ntdll.so` hash is
 `e3cd6e3c55a96ea5f47c7c9a24f3c268fecb15b0bdf43d6577aa4450b71aae89`.
 The 12 remaining candidate dispositions and their concrete next actions are
 audited in `docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.
+After a final existing-prefix Wineboot update, use
+`scripts/vkmt-prefix refresh --prefix PATH` once before prepared gates; this
+restores any built-in files that Wineboot may replace and does not recreate or
+reset the prefix.
 
 ### AI optimization FEX/graphics gates (2026-08-03)
 

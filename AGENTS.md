@@ -1945,8 +1945,8 @@ The complete 82-file candidate preparation is recorded in
 `wine/wine-11.12`.
 The current candidate-path disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`. Treat `CANDIDATE_BLOCKED_*` and
-`TRIAGE_NO_SAFE_CANDIDATE` as unresolved scope/profiling entries, never as
-optimization wins.
+`PROFILED_NO_SAFE_CANDIDATE` as explicit audit outcomes, never as optimization
+wins or permission for unsafe rewrites.
 `scripts/vkmt-c-ai-optimizer.sh verify` now enforces that every ledger
 candidate path has exactly one disposition row with evidence and a next
 action.
@@ -1995,6 +1995,8 @@ This is the only accepted narrow source candidate so far; all other
 dispositions remain subject to their own workload and semantic gates.
 The remaining 12-row audit is
 `docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.
+If a final Wineboot update is required, run the non-creating prefix refresh
+once afterward before prepared gates; do not recreate the canonical prefix.
 
 ### 2026-08-03 — AI optimization Phase 4 FEX candidate audit
 

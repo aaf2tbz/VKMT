@@ -87,5 +87,6 @@ The first accepted narrow helper is
 NTDLL build, and the prepared P8 four-architecture gate before promotion in
 nested commit `07df604e8f4e2f475bdd9983905cf98802905ee7`. The complete receipt
 is `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
-The remaining 12 candidate rows are explicitly audited, but not closed, in
+The remaining 12 candidate rows are explicitly audited as either
+`PROFILED_NO_SAFE_CANDIDATE` or protected boundary code in
 `docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.

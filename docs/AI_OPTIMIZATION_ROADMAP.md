@@ -1,9 +1,11 @@
 # VKMT File-by-File AI Optimization Roadmap
 
-Status: Phases 0 and 1, the WoW64/MSync functional promotion gate, and the
-first Phase 2 heap candidate audit are complete. The heap candidate was
-compiler-equivalent and was rejected without promotion; the remaining
-candidate files still require workload-specific passes.
+Status: Phases 0 and 1, the WoW64/MSync functional promotion gate, the Phase 2
+and Phase 4 candidate passes, and the current safe-candidate audit are
+complete. One pure helper was promoted, two candidates were rejected, four
+were profiled with no safe pure leaf, and eight remain protected by ABI,
+pointer, lock, TLS, ordering, or FEX boundaries. A future workload may reopen
+one of those rows; no unsafe rewrite is pending in this pass.
 This document does not authorize source changes by itself. The current
 c-ai-optimizer integration is a candidate pipeline. One narrowly scoped pure
 helper has now been promoted after paired source, equivalence, build, and P8
@@ -75,9 +77,9 @@ benchmark workload, affected architectures, test receipts, and rejection
 reason where applicable.
 
 The current candidate-path disposition matrix is
-`docs/AI_OPTIMIZATION_DISPOSITION.tsv`. `TRIAGE_NO_SAFE_CANDIDATE` and
-`CANDIDATE_BLOCKED_*` are scope findings, not green performance results; they
-remain open until a matching workload proves a pure leaf is hot and safe.
+`docs/AI_OPTIMIZATION_DISPOSITION.tsv`. `PROFILED_NO_SAFE_CANDIDATE` and
+`CANDIDATE_BLOCKED_*` are explicit audit outcomes, not performance wins. A
+new matching workload may reopen them, but they do not authorize a rewrite.
 
 ## Phase 2 — NTDLL, loader, exceptions, and host boundaries
 
