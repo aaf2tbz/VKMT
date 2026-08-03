@@ -10,7 +10,7 @@ dlls/win32u/freetype.c	5	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; dlopen
 dlls/win32u/sysparams.c	5	candidate	CANDIDATE_BLOCKED_BY_LOCK_PROTOCOL	diff-996020f; recursive user-lock unlock/relock API	Do not transform lock ownership or reentrancy code
 dlls/winhttp/net.c	6	candidate	CANDIDATE_BLOCKED_BY_TLS_LIFECYCLE	diff-996020f; SSPI/TLS cleanup and certificate verification	Profile only immutable parser helpers outside secure-connect lifecycle
 dlls/ws2_32/protocol.c	6	candidate	CANDIDATE_BLOCKED_BY_API_STATE	diff-996020f; NLA lookup allocation/state machine	Keep handle state and buffer layout manual
-dlls/ws2_32/socket.c	6	candidate	CANDIDATE_BLOCKED_BY_ORDERING_SEMANTICS	diff-996020f; stable IPv4/IPv6 address-list ordering	Measure Chromium Happy-Eyeballs lists before considering a stable helper
+dlls/ws2_32/socket.c	6	candidate	CANDIDATE_BLOCKED_BY_ORDERING_SEMANTICS	diff-996020f; stable IPv4/IPv6 address-list ordering; docs/validation/address-list-sort-p8-canonical-20260803/RESULTS.md	Measure Chromium Happy-Eyeballs lists before considering a stable helper
 dlls/ws2_32/unixlib.c	6	candidate	CANDIDATE_BLOCKED_BY_WOW64_BOUNDARY	diff-996020f; guest pointer and addrinfo conversion	Keep guest-size validation and pointer publication manual
 dlls/xtajit64/cpu.c	4	candidate	CANDIDATE_BLOCKED_BY_FEX_BOUNDARY	diff-996020f; invalidation, process/thread, and feature callbacks	Only isolate a measured non-callback leaf
 dlls/xtajit64/vkmt/interp.c	4	candidate	PROFILED_NO_PROMOTION	docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md	Profile instruction-mix-specific helpers with FEX telemetry
