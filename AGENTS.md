@@ -2070,11 +2070,13 @@ unsupported (`0x80004005`); these are open compatibility gaps.
 
 The CEF OSR host now waits for `cef_frame_t::get_text` to observe
 `VKMT_TEXT_OK` and for foreground text pixels in addition to the deterministic
-BGRA background. The canonical gate is
-`docs/validation/cef-osr-render-p8/RESULTS.md` and the current receipt is
-`browser-20260803T143019.log`. `scripts/launch-vkmt-cef-browser.sh` only adds
-`--ignore-certificate-errors` when `VKMT_BROWSER_IGNORE_CERT_ERRORS=1` is
-explicitly set.
+BGRA background. The data-URL and local-trust HTTPS receipts are
+`browser-20260803T145531.log` and `browser-20260803T145321.log` in
+`docs/validation/cef-osr-render-p8/RESULTS.md`. The HTTPS mode generates a
+temporary localhost SAN leaf, installs only its local root into the current-
+user ROOT store, and proves CEF text/pixels without a bypass flag.
+`scripts/launch-vkmt-cef-browser.sh` only adds `--ignore-certificate-errors`
+when `VKMT_BROWSER_IGNORE_CERT_ERRORS=1` is explicitly set.
 
 `dlls/dwrite/freetype.c` and `dlls/win32u/freetype.c` were audited but not
 modified or promoted. Hashes and disposition are in

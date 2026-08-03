@@ -107,10 +107,10 @@ static PCCERT_CONTEXT install_root(const char *path, const char *crl_path, HCERT
         return NULL;
     }
     free(encoded);
-    crl_encoded = read_file(crl_path, &crl_size);
-    if (!crl_encoded || !CertAddEncodedCRLToStore(
+    crl_encoded = strcmp(crl_path, "-") ? read_file(crl_path, &crl_size) : NULL;
+    if (strcmp(crl_path, "-") && (!crl_encoded || !CertAddEncodedCRLToStore(
             system_store, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
-            crl_encoded, crl_size, CERT_STORE_ADD_REPLACE_EXISTING, NULL))
+            crl_encoded, crl_size, CERT_STORE_ADD_REPLACE_EXISTING, NULL)))
     {
         fail("certificate_crl", GetLastError(), "install current-user intermediate CRL");
         free(crl_encoded);
@@ -171,7 +171,8 @@ static PCCERT_CONTEXT install_root(const char *path, const char *crl_path, HCERT
             "current-user root visible to chain engine");
         CertFreeCertificateChain(chain);
     }
-    cap("certificate_crl", "PASS", 0, "installed current-user intermediate CRL");
+    if (strcmp(crl_path, "-"))
+        cap("certificate_crl", "PASS", 0, "installed current-user intermediate CRL");
     *store = system_store;
     cap("certificate_root", "PASS", 0, "installed current-user localhost root");
     return root;
@@ -296,7 +297,7 @@ static int remove_trust_material(const char *root_path, const char *crl_path)
     int result = 0;
 
     encoded = read_file(root_path, &size);
-    crl_encoded = read_file(crl_path, &crl_size);
+    crl_encoded = strcmp(crl_path, "-") ? read_file(crl_path, &crl_size) : NULL;
     store = open_root_store();
     certificate = encoded ? CertCreateCertificateContext(
         X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, encoded, size) : NULL;
@@ -328,6 +329,25 @@ int main(int argc, char **argv)
     int i;
 
     setvbuf(stdout, NULL, _IONBF, 0);
+    if (argc == 3 && !strcmp(argv[1], "install-root"))
+    {
+        root = install_root(argv[2], "-", &store);
+        if (!root) return 1;
+        CertFreeCertificateContext(root);
+        CertCloseStore(store, 0);
+        puts("TLS_ROOT_INSTALL_OK");
+        return 0;
+    }
+    if (argc == 3 && !strcmp(argv[1], "remove-root"))
+    {
+        if (remove_trust_material(argv[2], "-"))
+        {
+            fprintf(stderr, "TLS_ROOT_REMOVE_FAIL error=%lu\n", GetLastError());
+            return 1;
+        }
+        puts("TLS_ROOT_REMOVE_OK");
+        return 0;
+    }
     if (argc == 4 && !strcmp(argv[1], "install"))
     {
         root = install_root(argv[2], argv[3], &store);
