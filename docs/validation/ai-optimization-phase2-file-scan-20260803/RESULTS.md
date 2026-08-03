@@ -54,6 +54,18 @@ status=0
 
 No prefix was created, reset, staged, or Wineboot-run for the prepared gate.
 
+The unchanged opt-in boundary was also checked against the canonical CEF
+workload:
+
+```text
+CEF_X86_64_OSR_PIXEL_OK
+CEF_X86_64_OSR_RENDER_OK
+```
+
+This prepared-prefix CEF run reused the same prefix and did not run Wineboot.
+Its compact evidence is under `cef-osr/`; the runtime log is intentionally
+not a package asset.
+
 ## Provenance
 
 ```text
