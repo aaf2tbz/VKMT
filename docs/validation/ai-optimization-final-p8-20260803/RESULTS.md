@@ -77,7 +77,8 @@ Root commits pushed to origin/main during this pass:
 - eb9007a — record P8 WoW64/MSync promotion;
 - b828a3f, 4647196 — evaluate and reject the loader hash candidate;
 - 7e52568 — record P8 FEX and graphics gates;
-- ffdc891 — add full-corpus candidate preparation and P8 snapshot naming.
+- ffdc891 — add full-corpus candidate preparation and P8 snapshot naming;
+- be7f0ff — finalize the one-prefix P8 receipt and staging closure fix.
 
 Nested Wine commits:
 
@@ -86,7 +87,7 @@ Nested Wine commits:
 
 The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
-It records 59 root paths and 15 nested-Wine paths relative to the start of
+It records 75 root paths and 15 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
 
 ## Candidate disposition and remaining boundary
