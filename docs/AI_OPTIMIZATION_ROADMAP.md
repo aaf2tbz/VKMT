@@ -141,8 +141,8 @@ Receipt: `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
 
 The remaining candidate-row audit is retained at
 `docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`. It
-records 12 rows that remain blocked or lack a hot pure leaf; those rows are
-not treated as completed optimizations.
+records four no-safe-candidate rows and eight protected/boundary rows; those
+rows are not performance wins and do not authorize unsafe rewrites.
 
 ### Phase 2 candidate pass A — heap free-list index
 
@@ -157,8 +157,8 @@ hashes, and the canonical-prefix P8 prepared-prefix gate passed all four
 architectures with status 0.
 
 Receipt: `docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md`.
-This is a valid rejection, not evidence that the entire Phase 2 corpus is
-complete; the remaining eligible files need separate hot-workload profiling.
+This is a valid rejection. The other Phase 2 candidate rows are dispositioned
+by the safe-candidate audit rather than forced through an unsafe transform.
 
 ## Phase 3 — WoW64 virtual memory correctness, then optimization
 
