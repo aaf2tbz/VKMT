@@ -28,7 +28,7 @@ provenance_license, package_action`.
 id	class	architectures	canonical_path	producer_or_stage_script	verification_source	acceptance_runner	provenance_license	package_action
 wine-host	required-runtime	arm64	wine/build-ec/wine	wine build	scripts/verify-preservation.sh	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
 wineserver	required-runtime	arm64	wine/build-ec/server/wineserver	wine build	scripts/verify-preservation.sh	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
-ntdll-host	required-runtime	arm64	wine/build-ec/dlls/ntdll/ntdll.so	wine build	scripts/verify-preservation.sh	scripts/probe-msync.sh	Wine LGPL	required
+ntdll-host	required-runtime	arm64	wine/build-ec/dlls/ntdll/ntdll.so	wine build	scripts/verify-preservation.sh	scripts/probe-msync.sh; scripts/probe-ai-ntdll-file-scan.sh	Wine LGPL	required
 xtajit64	required-runtime	arm64ec	wine/build-ec/dlls/xtajit64/aarch64-windows/xtajit64.dll	scripts/stage-runtime-providers.sh	scripts/stage-runtime-providers.sh	P8 hotset acceptance; P8 provider smoke	project-pinned	provider-required
 xtajit	required-runtime	arm64	wine/build-ec/dlls/xtajit/aarch64-windows/xtajit.dll	scripts/stage-runtime-providers.sh	scripts/stage-runtime-providers.sh	P8 hotset acceptance; P8 provider smoke	project-pinned	provider-required
 wow64-bridge	required-runtime	arm64	wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll	wine build	scripts/vkmt-prefix	P8 hotset acceptance; P8 provider smoke	Wine LGPL	required
