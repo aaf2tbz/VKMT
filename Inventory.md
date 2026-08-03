@@ -210,6 +210,8 @@ The x86_64 rendering gate is accepted on the recorded canonical P8 provider:
 
 | Diagnostic | Evidence | Result |
 | --- | --- | --- |
+| P8 final non-WoW64 architecture gate | `docs/validation/p8-final-nonwow64-rc0-20260803` | ARM64, ARM64EC, and x86_64 smoke `rc=0`; i386/WoW64 intentionally excluded |
+| Current CEF x86_64 OSR final gate | `docs/validation/cef-x64-final-p8-20260803` | current host rebuilt, `VKMT_BROWSER_PIXEL_OK`, deterministic BGRA marker, launcher `rc=0`; canonical-prefix reuse |
 | Windowless CEF host, canonical P8 provider | `docs/validation/cef-osr-render-p8` | `VKMT_BROWSER_PIXEL_OK`, BGRA `51,34,17,255`, launcher `rc=0`; one-prefix reuse |
 | Electron x64 software-render fixture, canonical P8 provider | `docs/validation/electron-render-p8-canonical-x64-vmfix` | `ELECTRON_X64_OK`, HTTPS/input/audio/pixel result, renderer and FEX allocation markers; `rc=0` |
 | WoW64 VM contract, x64+i386 | `docs/validation/wow64-vm-contract-cef-fix-final2` | both architecture contracts, concurrent pressure, executable reuse, i386 FEX invalidation; `rc=0` |
@@ -229,3 +231,22 @@ staging now updates the existing prefix manifest/receipt through
 `scripts/vkmt-prefix sync-providers`; no prefix recreation or wineboot is
 needed. Do not package diagnostic logs, disposable browser runtimes, or
 rollback providers.
+
+### Current final-gate boundary (2026-08-03)
+
+The acceptance boundary for this phase is the non-WoW64 architecture gate
+plus the user-facing x86_64 CEF OSR host. Both were run against
+`build/probe-runs/phase-a-graphics-prefix` with the current P8 providers and
+all three FEX TSO controls set to zero. No prefix was recreated and Wineboot
+was not run. The authoritative retained summaries are:
+
+- `docs/validation/p8-final-nonwow64-rc0-20260803/RESULTS.md`
+- `docs/validation/cef-x64-final-p8-20260803/RESULTS.md`
+
+i386/WoW64 CEF is intentionally outside this final gate. The official CEF
+Windows32 runtime is present and exports load, but the current i386 browser
+does not return from `cef_initialize` or publish a DevTools/renderer/pixel
+marker. That remains an open compatibility gap and must not be represented
+as package-ready or green. The standalone legacy `cefclient` diagnostic is
+also not the product acceptance gate; the user-facing CEF host and its OSR
+pixel marker are the authoritative x86_64 result here.
