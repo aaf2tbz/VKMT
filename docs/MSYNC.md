@@ -71,7 +71,7 @@ named event shared with a child process.
 The broader architecture regression also passes with MSync enabled:
 
 ```sh
-WINEMSYNC=1 scripts/probe-p6-single-prefix-architectures.sh
+WINEMSYNC=1 scripts/probe-p8-single-prefix-architectures.sh
 ```
 
 That gate proves ARM64, ARM64EC, x86_64, and i386/WoW64 execution in one fresh

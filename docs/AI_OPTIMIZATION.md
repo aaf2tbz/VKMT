@@ -3,6 +3,11 @@
 VKMT now has a pinned, out-of-tree integration point for
 [`sebyx07/c-ai-optimizer`](https://github.com/sebyx07/c-ai-optimizer).
 
+The execution plan and complete 82-file ledger are maintained separately in
+`docs/AI_OPTIMIZATION_ROADMAP.md` and `docs/AI_OPTIMIZATION_LEDGER.tsv`.
+The current P8 all-architecture baseline is retained in
+`docs/validation/ai-optimization-p8-phase0-baseline-20260803/`.
+
 ## Pin and commands
 
 The optimizer is pinned to:

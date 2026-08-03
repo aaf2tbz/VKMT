@@ -39,7 +39,7 @@ for required in \
   VKMT/patches/fex-2607-java-j5.patch \
   VKMT/patches/wine-11.12-java-j5.patch \
   VKMT/scripts/stage-runtime-providers.sh \
-  VKMT/scripts/probe-p6-single-prefix-architectures.sh \
+  VKMT/scripts/probe-p8-single-prefix-architectures.sh \
   VKMT/scripts/probe-windows-java-j6-unified.sh; do
   grep -Fxq "$required" "$MANIFEST"
 done

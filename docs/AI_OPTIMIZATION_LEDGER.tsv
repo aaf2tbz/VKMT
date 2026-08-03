@@ -1,0 +1,83 @@
+path	state	tier	mode	sha256	rationale
+dlls/crypt32/unixlib.c	committed-custom	P2	manual-review	4e14d5c99c9620393c3d31824b8282adf2d63361e6bc16106756d18c2f3b319f	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/dwrite/freetype.c	worktree-only	P1	candidate	b4b95cada83425720ea4249114100db90ddab654579ece50007743b6138969ef	pure conversion/cache helpers only
+dlls/kernel32/process.c	committed-custom	P2	manual-review	013597a66c4dc0dbbff7876930902264aa1531796e6681e8a3e8a09f3a32f09d	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/kernel32/sync.c	committed-custom	P2	manual-review	2d874f9b57b0d86a3b7342ec657685bbcd647a5aae8e36479ac2c46e827b5628	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/kernelbase/process.c	committed-custom	P2	manual-review	4eabf925f183f64689aecf0c26d0f7526678f0f9f2697d46334cb48a087b12d3	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/kernelbase/sync.c	committed-custom	P2	manual-review	fd9a743fa5e0dbcdaf9e3f83f6f94a14a8a1c66bc886f581fee6e4ad17919851	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/mscoree/mscoree_main.c	committed-custom	P2	manual-review	a658c97183e692dad3ca46609cd0c0d874e5f826015a64f68fd11d952cba0b02	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/msvcrt/locale.c	committed-custom	P1	candidate	80d5367d6289ecb0b193f816be2c7ab8d861fb6d2a72268d959a8aa4adb88261	pure table/conversion helpers only
+dlls/msvcrt/main.c	committed-custom	P2	manual-review	808f16c2f13cbc60c834bbc4a0d224bcab1143de9b58f808f4b3907c9eb76f93	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/msvcrt/thread.c	committed-custom	P2	manual-review	2679b13c36836d9c18f6434602a6e1d2b065af299c1204cc8fc9e01b7bda2110	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/ntdll/exception.c	committed-custom	P0	manual-review	03c5943c2966473eef17b64c973ffbd524fb247433b433de63770dfeee13ce81	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/heap.c	committed-custom	P0	candidate	90381483700e7171c768857e7bee7c7e35d637b69efac0eed710a07d0838a8b9	pure allocator sizing/bin/lookup helpers only
+dlls/ntdll/loader.c	committed-custom	P0	manual-review	43c36680b11daf7f76db79edcf82b29dda7d8205831b34c9923b75887681583e	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/process.c	committed-custom	P0	manual-review	2bc2f28baf7671feb28e7327f527e44d60ea3f57c01652534ca820d4f398b931	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/signal_arm64.c	committed-custom	P0	manual-review	85610504e1c647876b261d4e90c241eb29a8c94a0de9841b9a2b53366085ed34	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/signal_arm64ec.c	committed-custom+dirty	P0	manual-review	4223aa4ca48fb65536abbe0574587a4dead9eb639bd0d254c7b3d2956461898e	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/sync.c	committed-custom	P0	manual-review	67d7ef51baf8ad37cd96d42dc6fa01c7da332dbf1bb7a498621d97bc505b95fb	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/thread.c	committed-custom	P0	manual-review	240b6db854f4f8f415e0dd0c26ffbb8e3ac04dfc3d5c4aaf694120c7b85cc38e	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/env.c	committed-custom	P0	candidate	71c894e649ee574ca604cc4ef78161c95a62a9a9d083dc055acef69fcfddd302	pure environment lookup and normalization helpers only
+dlls/ntdll/unix/file.c	committed-custom	P0	candidate	5ab86f713d070918a7fb655c364ea3bdaa6b35d248873fd757e14231fdfa5f82	pure path/metadata helpers only
+dlls/ntdll/unix/loader.c	committed-custom	P0	manual-review	9b642a6e0e0efd58e885ba433f63de6f27ccff559cf547c1758a423150c6e221	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/msync.c	committed-custom+dirty	P0	manual-review	bd7ef2610f0d8327a349519b7f9cdde189ea6fe90b14171704ac07c767c5c91f	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/process.c	committed-custom	P0	manual-review	6b9e24cca9c3f82d5ecb7221c96250e158e48f62612a6a2ab03ee132322bbdba	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/signal_arm64.c	committed-custom+dirty	P0	manual-review	0ef2e83997e729b02a5db0329a43a6126cb9ba9c16daaa0efa61059f468da481	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/socket.c	committed-custom	P0	candidate	de82343363211721bad0bd05588853fc74421978c83d7164b971247e652360b6	pure address conversion helpers only
+dlls/ntdll/unix/sync.c	committed-custom	P0	manual-review	5708df88d63fec2e6da50a83e4dba1e9f8d18c28255a1d0f9ec671685b805bae	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/system.c	committed-custom	P0	candidate	1ed94652e95bafe48085a8a8efdef06efc2739bb62d80d5865e333b9539c4208	pure system-query calculations only
+dlls/ntdll/unix/thread.c	committed-custom	P0	manual-review	fd6c2f5478e76ae20f61ad1c3c59842ae956bebccbc6eb945c0f5873b8f2adf5	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntdll/unix/virtual.c	committed-custom	P0	manual-review	62a6c08536172a0587c104606ad3b9e6678f6ea5cae3ead1612bf488e8afc5ac	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ntoskrnl.exe/instr.c	committed-custom	P2	manual-review	f24c70fd70958f912d90646e5e49607e643541b18df082ae61555b387bb9e22a	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/opengl32/unix_thunks.c	committed-custom	P2	generated/no-rewrite	15c87e1ca8c65969e77d629093282068b4b2cbd9523b85ab87f24c0c88460ca3	generated thunk, bootstrap, or build-tool boundary
+dlls/opengl32/unix_wgl.c	committed-custom	P2	manual-review	ddffaa292ae5223df0b5e1e67e285aa59021750e5175f7b4a56f38d96af19e03	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/opengl32/wgl.c	committed-custom	P2	manual-review	7b8dcdad7151ca60807f7491aeb53791e74c5514c5654feb02122cfa056d6800	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/secur32/schannel_gnutls.c	committed-custom	P2	manual-review	cfc506606f6dc473b32800e407f26048b6422ab303ed61a2fe5a8b29824fd04c	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/user32/button.c	committed-custom	P2	manual-review	1056796b1511246070cdd192bbee0e779bf1cac0897b74ec127fa42b39f2de5c	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/class.c	committed-custom	P2	manual-review	4ab2f7b013a578cfa5b960795a43d85dffc660089c791b67c25912710dc9076a	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/driver.c	committed-custom	P2	manual-review	3dfd7b0a055814cf9c074f1f86cda0bd5246fb13e893cd880fcd8a1823d8b9c7	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/freetype.c	committed-custom+dirty	P1	candidate	6fb25aeb6e2ca7fa7da3c7c0e9171f2b79a416317994880f5f8a78ecde346d52	pure conversion/cache helpers only
+dlls/win32u/gdiobj.c	committed-custom	P2	manual-review	d33510b089cc326581b8994868c4bfdf4aa8cbb072b4ec83a888d985d8ca3077	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/hook.c	committed-custom	P2	manual-review	a64af217f4f2e1d30c89f522dd7d925afee9e74bd487d0b1678b2cc1399dc0e4	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/message.c	committed-custom	P2	manual-review	19ca509fcca766d2b2acf61de8e4762f9749204f0e458631a6ed5b1962a6c217	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/opengl.c	committed-custom	P2	manual-review	d9225c7d8efefb9c05bf317bb7ab5d20704a90062fd296e755ccc63db777cc1e	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/sysparams.c	committed-custom	P1	candidate	c8b5898430f7cd1ceffce7742ba449ffb52cdbfd808754a24ce049f25e5c5956	pure parsing/immutable lookup helpers only
+dlls/win32u/vulkan.c	committed-custom	P2	manual-review	eb70b4821b2efafb50eea21ab7f924151b120bf53b8ccc72faf34439ca03694e	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/window.c	committed-custom	P2	manual-review	8a253b502f1a78b5817725814ecbcf024e46983f3036ab92955c25bce8681cc4	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/win32u/winstation.c	committed-custom	P2	manual-review	065c6f2d917c5f8f683b09abba90f509da0376f68b142435b8b8da495c14e529	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winecoreaudio.drv/coreaudio.c	committed-custom	P2	manual-review	ff14602b9f0d122bde3b6f9c4cb6badd31fd2e12c3c94fe0010b2af1e457f53b	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winemac.drv/macdrv_main.c	committed-custom	P2	manual-review	c671f67a940427dccc2dfddc6ca51746c2c081c4a287c676c463f472f933d01f	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winemac.drv/opengl.c	committed-custom	P2	manual-review	03a0b5aeaff21005321a859c1bbaf1ec94804753ee82e0feefb439570af80748	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winemac.drv/window.c	committed-custom	P2	manual-review	231bd7e857a7c0a538d0d15c62d3a37b4ba12d382ad0e660bf32d2dee86c9a97	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winevulkan/loader.c	committed-custom	P2	manual-review	9bb9e1fb2f7fe623d03156083c6f241b47a84248bfa16ff0d3985aac2b6936fc	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winevulkan/loader_thunks.c	committed-custom	P2	generated/no-rewrite	f6ec04d561b198eeded9b398becf322eb0f8a11afd20200000859bcbe36a4df4	generated thunk, bootstrap, or build-tool boundary
+dlls/winevulkan/vulkan.c	committed-custom	P2	manual-review	41ef15616a281afd59f90bc6a83b20a2f20a5498f5d9d9dce51ae5d8c9f05e79	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+dlls/winevulkan/vulkan_thunks.c	committed-custom	P2	generated/no-rewrite	689cef9f155c985375fefbd101e03dbfc4f231686891a901fa9a30daee1715f1	generated thunk, bootstrap, or build-tool boundary
+dlls/winhttp/net.c	committed-custom	P1	candidate	5a6d586e616dc2ff54c24aeb2c414265dc2c9f2e9270bacc830486bcb79052b5	pure protocol/parser helpers only
+dlls/wow64/file.c	committed-custom	P0	manual-review	540c2de2a33849c431975f14f1d744a02589ca27a9330b256da1864e43ddcd87	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/memory.c	committed-custom+dirty	P0	manual-review	85bddf25d5eb5d420728cb87f84444a18e399c2c973ef8ab320a0ceb7f58b642	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/process.c	committed-custom	P0	manual-review	1d42d82cc349718f7f19eee12171f0c75c61796e897644f108b91b41065f79a2	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/security.c	committed-custom	P0	manual-review	5880897be0f9d73022efbb4196747542c145659b3849e081176063f13e1387dd	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/sync.c	committed-custom	P0	manual-review	7a84a987e970114dd5118fc7a39d709aaa55e77a19f8b56bfa7211b4e3189fb5	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/syscall.c	committed-custom+dirty	P0	manual-review	964303431c810d5df3146e0bc8dd27f81194005a6fcdd22f84c7facd43c5fa33	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/system.c	committed-custom	P0	manual-review	24b916bf5d27c498d55626b8af58f98248f4503372a8ff5b80ec80f66c1d6936	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64/virtual.c	committed-custom+dirty	P0	manual-review	fff0f5ecffaf0d9207f9405feecc28e1fcd89ca1046f68d3cc1f00d8ec73e71f	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64win/gdi.c	committed-custom	P0	manual-review	12aa9dc30ed8e2ea65b424a2e39ccfa13e4778749db85a2549f94c977dadd141	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/wow64win/user.c	committed-custom+dirty	P0	manual-review	0c400ff60fe8298d3d46b4464cd2e43fc5f68b2e2de8a55be9785e01be35ec2e	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/ws2_32/protocol.c	committed-custom	P1	candidate	9ae3984e17d32cc95760c11deef2472283c1c9e22eb0598a0be99bbe1a0735ab	pure protocol/address helpers only
+dlls/ws2_32/socket.c	worktree-only	P1	candidate	68776ce759a162201b66f10adbf1fcfd962253e23c14760324cb4b60cc4ffa10	pure address sorting/conversion helpers only
+dlls/ws2_32/unixlib.c	committed-custom	P1	candidate	02193641377ddb86bfc229e64be0e9569ef091d49a663b1e5b60dd06d0289e7b	pure protocol conversion helpers only
+dlls/xtajit64/cpu.c	committed-custom	P1	candidate	da195e3936e971216571774491cda60b12468d7fe2129e6a46e2f5e35fb1dbcb	pure measured CPU backend helpers only
+dlls/xtajit64/vkmt/context.c	committed-custom	P0	manual-review	3d4f1bd5b62de1092e6ee4b78036ca0a198c9f15f48925c7d4846e1390cd0744	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/xtajit64/vkmt/dispatch.c	committed-custom	P0	manual-review	47fe69dbf4d47187a9a36d74192a94748b5968f685b8dc66181a35c30ae01111	protected ABI, synchronization, signal, VM, FEX, or server boundary
+dlls/xtajit64/vkmt/interp.c	committed-custom	P1	candidate	d4d8fc69f6f9ef44d9ec7c05e4c41f0b44e6c408bb0b4d581f671d9093ca6eca	pure measured instruction/flag helpers only
+dlls/xtajit64/vkmt/jit.c	committed-custom	P0	manual-review	2cbff4bfcc11439d7ff20e570eed00d22b82645607d8758a5674c8ac7a97bbe4	protected ABI, synchronization, signal, VM, FEX, or server boundary
+libs/winecrt0/arm64ec.c	committed-custom	P2	generated/no-rewrite	9b49ac76f22cd1e96f934172fdf60e8862f1b900c2e6eb3e2a6511fd08371f0d	generated thunk, bootstrap, or build-tool boundary
+programs/wineboot/wineboot.c	committed-custom	P2	manual-review	40835d1f2ea574f46409d093c574cb6c7c7854a4c011528ff602a954bc8cbeaa	host callback, ABI, lock, lifecycle, or runtime boundary; profile but do not whole-file rewrite
+server/inproc_sync.c	committed-custom	P0	manual-review	6ebd6354249bf51a301ec0c3b3cb06cec9724c05921c5a595a2b446cbb927797	protected ABI, synchronization, signal, VM, FEX, or server boundary
+server/main.c	committed-custom	P0	manual-review	e0ebac36730e92ee0f6ecae4c69a04bb56434739149cd13253f37db9d995bbd2	protected ABI, synchronization, signal, VM, FEX, or server boundary
+server/mapping.c	committed-custom	P0	manual-review	a122ae423307ed84f977406836ba9b44c52d4702baefd0559ed9af321499700f	protected ABI, synchronization, signal, VM, FEX, or server boundary
+server/msync.c	committed-custom+dirty	P0	manual-review	2173bc5db38c42d583e8b656e78cf75ed79db0bce9e88f74459693e009787fec	protected ABI, synchronization, signal, VM, FEX, or server boundary
+server/thread.c	committed-custom	P0	manual-review	1a5a43933eaaf225a9178b1da9087406d2f1866619b7183f84b022643555aa61	protected ABI, synchronization, signal, VM, FEX, or server boundary
+tools/makedep.c	committed-custom	P2	generated/no-rewrite	6778edf5b9621ef4ba76a5b0ed607beb153df6203cd76a4b3c42a94e94af5d23	generated thunk, bootstrap, or build-tool boundary
+tools/wine/wine.c	committed-custom	P2	generated/no-rewrite	49b5d5164c2ff1c6ec804e6ce330284fe9aa682e0ea938eca90b4aec3addaed9	generated thunk, bootstrap, or build-tool boundary

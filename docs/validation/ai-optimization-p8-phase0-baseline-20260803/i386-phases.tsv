@@ -1,0 +1,7 @@
+run_id	coverage	total_ms	loader_ms	server_connect_ms	ntdll_init_ms	fex_context_ms	fex_process_init_ms	guest_lifetime_ms
+p0-i386-s1-persistent_session_warm_guest-r1	PASS	375.363	204.466	190.986	195.508	0.431	8.878	132.873
+p0-i386-s1-persistent_session_warm_guest-r2	PASS	371.236	190.075	178.682	182.909	0.244	8.410	143.833
+p0-i386-s1-persistent_session_warm_guest-r3	PASS	377.499	200.526	186.760	192.726	0.235	8.324	136.352
+p0-i386-s1-persistent_session_warm_guest-r4	PASS	378.925	202.346	188.777	193.642	0.214	8.242	138.687
+p0-i386-s1-persistent_session_warm_guest-r5	PASS	375.669	198.959	185.675	191.154	0.188	8.029	136.042
+p0-i386-s1-persistent_session_warm_guest_primer-r0	PRIMER							

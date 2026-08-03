@@ -67,11 +67,11 @@ Required behavior:
 
 Migrate first:
 
-- `scripts/probe-p6-single-prefix-architectures.sh`
+- `scripts/probe-p8-single-prefix-architectures.sh`
 - `scripts/probe-msync.sh`
 - `scripts/probe-dxmt-arm64ec.sh`
 - `scripts/probe-cef-runtime.sh`
-- `scripts/probe-perf-p6-gpu-cache.sh`
+- `scripts/probe-perf-p8-hotset.sh`
 - managed Java/Wine Mono probes
 - networking/browser fixture probes
 

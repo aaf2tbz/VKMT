@@ -1,0 +1,7 @@
+run_id	coverage	total_ms	loader_ms	server_connect_ms	ntdll_init_ms	fex_context_ms	fex_process_init_ms	guest_lifetime_ms
+p0-x86_64-s1-persistent_session_warm_guest-r1	OBSERVE:provider_telemetry_unavailable;missing_provider:context_init_complete,context_init_enter,process_init_complete,process_init_enter,process_term_before,thread_init_complete,thread_init_enter	42.167	9.771	0.382	4.979			
+p0-x86_64-s1-persistent_session_warm_guest-r2	OBSERVE:provider_telemetry_unavailable;missing_provider:context_init_complete,context_init_enter,process_init_complete,process_init_enter,process_term_before,thread_init_complete,thread_init_enter	48.367	13.449	0.417	5.793			
+p0-x86_64-s1-persistent_session_warm_guest-r3	OBSERVE:provider_telemetry_unavailable;missing_provider:context_init_complete,context_init_enter,process_init_complete,process_init_enter,process_term_before,thread_init_complete,thread_init_enter	45.773	12.976	0.386	5.139			
+p0-x86_64-s1-persistent_session_warm_guest-r4	OBSERVE:provider_telemetry_unavailable;missing_provider:context_init_complete,context_init_enter,process_init_complete,process_init_enter,process_term_before,thread_init_complete,thread_init_enter	50.479	15.672	0.562	6.134			
+p0-x86_64-s1-persistent_session_warm_guest-r5	OBSERVE:provider_telemetry_unavailable;missing_provider:context_init_complete,context_init_enter,process_init_complete,process_init_enter,process_term_before,thread_init_complete,thread_init_enter	45.632	13.098	0.373	5.504			
+p0-x86_64-s1-persistent_session_warm_guest_primer-r0	PRIMER							

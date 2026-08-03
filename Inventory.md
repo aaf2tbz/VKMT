@@ -250,3 +250,25 @@ marker. That remains an open compatibility gap and must not be represented
 as package-ready or green. The standalone legacy `cefclient` diagnostic is
 also not the product acceptance gate; the user-facing CEF host and its OSR
 pixel marker are the authoritative x86_64 result here.
+
+### AI optimization Phase 0/1 baseline (2026-08-03)
+
+The file-by-file optimization plan is `docs/AI_OPTIMIZATION_ROADMAP.md` and
+the source-hashed ledger for all 82 custom C paths is
+`docs/AI_OPTIMIZATION_LEDGER.tsv`. The current candidate pipeline is pinned
+to c-ai-optimizer commit
+`c6f96df0ec9973a4cbdb7b015b1fd106c815ad89`.
+
+The active provider-backed architecture runner is
+`scripts/probe-p8-single-prefix-architectures.sh`. It reuses the canonical
+graphics prefix and does not recreate it or run Wineboot in prepared-prefix
+mode. The compatibility `probe-p6-single-prefix-architectures.sh` name and
+historical P6 evidence remain provenance-only; current acceptance markers and
+new receipts use P8 naming to identify the P8 provider generation.
+
+Phase 0/1 evidence is
+`docs/validation/ai-optimization-p8-phase0-baseline-20260803/`. It passed
+ARM64, ARM64EC, x86_64, and i386/WoW64 with status 0 and all three FEX TSO
+settings fixed at zero. No production source candidate has been promoted yet;
+the ledger records the current source hashes and candidate/manual-review
+boundary.

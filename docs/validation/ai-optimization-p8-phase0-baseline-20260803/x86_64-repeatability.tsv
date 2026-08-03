@@ -1,0 +1,2 @@
+state	median_min_ms	median_max_ms	median_spread_pct	p95_min_ms	p95_max_ms	p95_spread_pct	gate
+persistent_session_warm_guest	45.773	45.773	0.00	50.479	50.479	0.00	PASS

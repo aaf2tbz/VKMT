@@ -1907,3 +1907,21 @@ canonical provider staging, relocated GStreamer closure, P6 versioned graphics
 cache, P8 hot-set staging, no-TSO environment, and native ARM64 GOG tool all
 passed. The canonical local release set is retained at
 `/Volumes/AverySSD/MetalSharp-Wine-Runtime-COMPLETE-release-parts/`.
+
+## 2026-08-03 — AI optimization Phase 0/1 status
+
+The active optimization plan is `docs/AI_OPTIMIZATION_ROADMAP.md` and its
+source ledger is `docs/AI_OPTIMIZATION_LEDGER.tsv`. The ledger covers all 82
+custom C paths relative to Wine 11.12. The current P8 provider-backed
+architecture runner is `scripts/probe-p8-single-prefix-architectures.sh`; use
+it for new acceptance receipts. P6 names remain only in historical evidence
+and compatibility references, and must not be used to label current P8
+provider results.
+
+The Phase 0/1 baseline receipt is
+`docs/validation/ai-optimization-p8-phase0-baseline-20260803/`. It passed
+ARM64, ARM64EC, x86_64, and i386/WoW64 with all FEX TSO settings zero using
+the existing canonical prefix. No AI candidate has been promoted into
+`wine/wine-11.12` yet. Any candidate must be built and tested against the
+actual installed Wine tree, then staged into the existing prefix only after
+the source-level build and P8 gates pass.

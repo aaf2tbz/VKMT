@@ -1,0 +1,9 @@
+canonical_prefix=/Volumes/AverySSD/VKMT/build/probe-runs/phase-a-graphics-prefix
+FEX_TSOENABLED=0
+FEX_VECTORTSOENABLED=0
+FEX_MEMCPYSETTSOENABLED=0
+VKMT_PERF_ALLOW_PROVIDER_TELEMETRY_GAP=1
+runs=5
+sessions=1
+state=persistent_session_warm_guest
+provider_telemetry=not emitted by current P8 provider; host correlation is retained and gap is explicit
