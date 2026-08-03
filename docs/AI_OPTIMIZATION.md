@@ -80,3 +80,10 @@ measurements and rejected as `PROFILED_NO_PROMOTION`; its receipt is
 `docs/validation/ai-optimization-candidate-loader-hash-20260803/RESULTS.md`.
 The installed Wine tree was restored to the pre-candidate source after the
 measurement.
+
+The first accepted narrow helper is
+`dlls/ntdll/unix/file.c::buffer_contains()`. Its `memchr()` candidate passed
+250,000 exact-equivalence cases, repeated helper benchmarks, an actual ARM64
+NTDLL build, and the prepared P8 four-architecture gate before promotion in
+nested commit `07df604e8f4e2f475bdd9983905cf98802905ee7`. The complete receipt
+is `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.

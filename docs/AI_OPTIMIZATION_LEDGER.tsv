@@ -18,7 +18,7 @@ dlls/ntdll/signal_arm64ec.c	committed-custom+dirty	P0	manual-review	4223aa4ca48f
 dlls/ntdll/sync.c	committed-custom	P0	manual-review	67d7ef51baf8ad37cd96d42dc6fa01c7da332dbf1bb7a498621d97bc505b95fb	protected ABI, synchronization, signal, VM, FEX, or server boundary
 dlls/ntdll/thread.c	committed-custom	P0	manual-review	240b6db854f4f8f415e0dd0c26ffbb8e3ac04dfc3d5c4aaf694120c7b85cc38e	protected ABI, synchronization, signal, VM, FEX, or server boundary
 dlls/ntdll/unix/env.c	committed-custom	P0	candidate	71c894e649ee574ca604cc4ef78161c95a62a9a9d083dc055acef69fcfddd302	pure environment lookup and normalization helpers only
-dlls/ntdll/unix/file.c	committed-custom	P0	candidate	5ab86f713d070918a7fb655c364ea3bdaa6b35d248873fd757e14231fdfa5f82	pure path/metadata helpers only
+dlls/ntdll/unix/file.c	committed-custom	P0	candidate	732c5ef59e4fd2e19442e57cb4c0e6332f62c075cc2462c56e1ced775a92e3d1	accepted opt-in buffer marker scan; socket side effect remains unchanged
 dlls/ntdll/unix/loader.c	committed-custom	P0	manual-review	9b642a6e0e0efd58e885ba433f63de6f27ccff559cf547c1758a423150c6e221	protected ABI, synchronization, signal, VM, FEX, or server boundary
 dlls/ntdll/unix/msync.c	committed-custom+dirty	P0	manual-review	bd7ef2610f0d8327a349519b7f9cdde189ea6fe90b14171704ac07c767c5c91f	protected ABI, synchronization, signal, VM, FEX, or server boundary
 dlls/ntdll/unix/process.c	committed-custom	P0	manual-review	6b9e24cca9c3f82d5ecb7221c96250e158e48f62612a6a2ab03ee132322bbdba	protected ABI, synchronization, signal, VM, FEX, or server boundary

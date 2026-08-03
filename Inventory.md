@@ -279,9 +279,9 @@ new receipts use P8 naming to identify the P8 provider generation.
 Phase 0/1 evidence is
 `docs/validation/ai-optimization-p8-phase0-baseline-20260803/`. It passed
 ARM64, ARM64EC, x86_64, and i386/WoW64 with status 0 and all three FEX TSO
-settings fixed at zero. No production source candidate has been promoted yet;
-the ledger records the current source hashes and candidate/manual-review
-boundary.
+settings fixed at zero. One narrow pure NTDLL marker-scan candidate has since
+been promoted; the ledger and disposition matrix record its source hash and
+receipt separately from the remaining candidate/manual-review boundary.
 
 ### AI optimization WoW64/MSync promotion (2026-08-03)
 
@@ -296,7 +296,21 @@ The WoW64 contract passed x64 and i386 mapping pressure, reuse, concurrency,
 executable reuse, and i386 FEX invalidation. MSync passed manual/auto pulse,
 WaitAll rollback, stale-port recovery, and invalid-destination fallback.
 These are functional source promotions; no AI-generated performance candidate
-has been promoted yet.
+has been promoted in this phase. The separate NTDLL scan promotion is recorded
+below.
+
+### AI optimization Phase 2 file-scan promotion (2026-08-03)
+
+`dlls/ntdll/unix/file.c::buffer_contains()` was promoted in nested Wine commit
+`07df604e8f4e2f475bdd9983905cf98802905ee7` after 250,000 equivalence cases,
+repeated benchmark cells, an actual ARM64 `ntdll.so` build, and the prepared
+P8 four-architecture gate passed. The candidate accelerates the opt-in Steam
+handoff marker scan while leaving notification state, socket transport,
+completion ordering, and default-disabled behavior unchanged.
+
+Receipt: `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
+The promoted ARM64 `ntdll.so` hash is
+`e3cd6e3c55a96ea5f47c7c9a24f3c268fecb15b0bdf43d6577aa4450b71aae89`.
 
 ### AI optimization FEX/graphics gates (2026-08-03)
 

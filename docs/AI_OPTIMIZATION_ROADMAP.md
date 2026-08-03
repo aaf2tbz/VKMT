@@ -5,8 +5,9 @@ first Phase 2 heap candidate audit are complete. The heap candidate was
 compiler-equivalent and was rejected without promotion; the remaining
 candidate files still require workload-specific passes.
 This document does not authorize source changes by itself. The current
-c-ai-optimizer integration is a candidate pipeline; no production Wine or FEX
-source has been optimized yet.
+c-ai-optimizer integration is a candidate pipeline. One narrowly scoped pure
+helper has now been promoted after paired source, equivalence, build, and P8
+validation; no broad AI-generated rewrite has been promoted.
 
 ## Scope and operating rules
 
@@ -116,6 +117,25 @@ The initial candidate scope is limited to pure size, lookup, parsing,
 normalization, address-conversion, or calculation helpers. Heap ownership,
 allocation, synchronization, signal, and process lifecycle code remains
 manual until separately proven.
+
+### Phase 2 candidate pass B — opt-in Steam marker scan
+
+The pure `buffer_contains()` helper in `dlls/ntdll/unix/file.c` was changed
+from a byte-by-byte full scan to a `memchr()` first-byte search followed by
+the same exact `memcmp()` confirmation. The scan is only reached when
+`VKMT_STEAM_HANDOFF_NOTIFY=1`; the notification socket, atomic state machine,
+read completion ordering, and TSO-disabled behavior were not changed.
+
+`scripts/probe-ai-ntdll-file-scan.sh` ran 250,000 deterministic equivalence
+cases and nine repeated benchmark cells. For 4 KiB and 64 KiB absent/end
+markers, the candidate was approximately 23x and 30x faster; for 1 MiB it
+was approximately 33x faster. The marker-at-offset-zero cells are below the
+clock resolution and are not presented as a speed claim. The actual ARM64
+`ntdll.so` built successfully, the prepared-prefix P8 gate passed ARM64,
+ARM64EC, x86_64, and i386/WoW64, and the change was promoted in nested Wine
+commit `07df604e8f4e2f475bdd9983905cf98802905ee7`.
+
+Receipt: `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
 
 ### Phase 2 candidate pass A — heap free-list index
 

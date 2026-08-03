@@ -12,7 +12,7 @@ rewrite was promoted.
 | Item | Value |
 | --- | --- |
 | Canonical prefix | build/probe-runs/phase-a-graphics-prefix |
-| Nested Wine HEAD | 03ba1ecd8fac211eeef768c63b71358453b4a0d0 |
+| Nested Wine HEAD | 07df604e8f4e2f475bdd9983905cf98802905ee7 |
 | Functional Wine promotion | 656bd43 |
 | P8 provider publication | 03ba1ec |
 | Host | native Apple ARM64; Rosetta false |
@@ -24,7 +24,7 @@ rewrite was promoted.
 | --- | --- |
 | wine/build-ec/wine | 334122ba9c93fdc9624fe2ef7138ef6c4000b7bb9ab25e7af3e388ba1d9dbd5d |
 | wine/build-ec/server/wineserver | 82b35e96bd449382ca1df262bd493781b638cd74fc1070bc67fcbd17a90ddee7 |
-| wine/build-ec/dlls/ntdll/ntdll.so | e1959129169227d89e0a884eff9d51d39aefd6f77f41d69ddbb5ad6cf9a4348e |
+| wine/build-ec/dlls/ntdll/ntdll.so | e3cd6e3c55a96ea5f47c7c9a24f3c268fecb15b0bdf43d6577aa4450b71aae89 |
 | wine/build-ec/programs/wineboot/aarch64-windows/wineboot.exe | 939478679896dc14b754c564dadfb1392cd7fb63aa5d89f889b50eb7c8bfaa1e |
 | wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll | cd534da4ec125c292bede66e5b7bf6a91eb5ce4c025db7bb0a0df77d3b129a39 |
 | wine/build-ec/dlls/wow64win/aarch64-windows/wow64win.dll | 8703ca51aaa5ec5f1e0859f46835add0d4e247cfda0b055f82504ef1978c9113 |
@@ -66,8 +66,11 @@ The final P8 hot-set retry measured:
 - warm_regression_pct=2.52
 
 The earlier accepted P8 hot-set receipt measured 61.45% reduction; both are
-well above the 25% gate. The current source candidate evaluation did not add a
-new production speed claim.
+well above the 25% gate. The promoted NTDLL scan candidate adds a focused
+opt-in helper result: absent/end-marker scans improved from 0.319/0.325 ms to
+0.014 ms at 4 KiB, 5.357/5.339 ms to 0.177 ms at 64 KiB, and
+91.403/97.953 ms to 2.799 ms at 1 MiB over 100 calls. These are helper-level
+measurements, not a claim about total Steam startup time.
 
 Previously promoted runtime optimizations already present in this Wine tree
 also have retained measurements:
@@ -97,10 +100,12 @@ Nested Wine commits:
 
 - 656bd43 — promote WoW64/MSync functional source changes;
 - 03ba1ec — publish the two canonical P8 provider artifacts.
+- 07df604e — promote the NTDLL opt-in marker-scan helper after paired
+  equivalence, benchmark, build, and P8 validation.
 
 The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
-It records 93 root paths and 15 nested-Wine paths relative to the start of
+It records 96 root paths and 16 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
 The supplemental candidate disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records which remaining candidate
@@ -117,8 +122,11 @@ The prepared-prefix Winsock address-list contract also passed with
 The hashed NTDLL loader cache candidate was compiled and tested against paired
 control runs, but was rejected: the extended candidate median/P95 became
 slower and noisier. Its source was restored and the actual Wine build was
-rebuilt from the committed source. No AI-generated C candidate remains in the
-installed Wine tree or canonical prefix.
+rebuilt from the committed source. It was not installed. The separate
+`dlls/ntdll/unix/file.c::buffer_contains()` candidate was accepted and is
+installed in the actual nested Wine source/build; its receipt is
+`docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
+No claim is made that the remaining custom C corpus is optimized.
 
 The protected loader, exception, signal, WoW64, FEX dispatcher/JIT, MSync,
 Vulkan, and graphics callback files remain manual-review unless a measured

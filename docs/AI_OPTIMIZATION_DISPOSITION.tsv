@@ -3,7 +3,7 @@ dlls/dwrite/freetype.c	5	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; startu
 dlls/msvcrt/locale.c	6	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; ARM64EC diagnostic-only log	Remove/measure diagnostic path separately; no optimization target
 dlls/ntdll/heap.c	2	candidate	PROFILED_NO_PROMOTION	docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md	Find a distinct allocator workload candidate
 dlls/ntdll/unix/env.c	2	candidate	CANDIDATE_BLOCKED_BY_BOUNDARY	diff-996020f; WoW64 PEB/NLS pointer translation	Profile pure environment lookup only, not guest pointer paths
-dlls/ntdll/unix/file.c	2	candidate	CANDIDATE_BLOCKED_BY_SIDE_EFFECT	diff-996020f; opt-in Steam handoff socket notification	Profile marker scan only with notification disabled/enabled
+dlls/ntdll/unix/file.c	2	candidate	ACCEPTED_PROMOTED_PURE_LEAF	docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md; nested commit 07df604e8f4e2f475bdd9983905cf98802905ee7	Keep notification opt-in; rerun focused scan gate when changing the marker or transport
 dlls/ntdll/unix/socket.c	2	candidate	CANDIDATE_BLOCKED_BY_BOUNDARY	diff-996020f; WoW64 socket buffer conversion	Keep pointer validation manual; isolate a pure address helper if hot
 dlls/ntdll/unix/system.c	2	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; ARM64 sysctl feature publication	Profile system-query call frequency; no hot pure helper identified
 dlls/win32u/freetype.c	5	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; dlopen fallback and null guard	Profile font startup/cache workload before candidate generation

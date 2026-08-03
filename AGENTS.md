@@ -1921,8 +1921,8 @@ provider results.
 The Phase 0/1 baseline receipt is
 `docs/validation/ai-optimization-p8-phase0-baseline-20260803/`. It passed
 ARM64, ARM64EC, x86_64, and i386/WoW64 with all FEX TSO settings zero using
-the existing canonical prefix. No AI candidate has been promoted into
-`wine/wine-11.12` yet. Any candidate must be built and tested against the
+the existing canonical prefix. One narrow pure NTDLL candidate has now been
+promoted into `wine/wine-11.12`; any candidate must be built and tested against the
 actual installed Wine tree, then staged into the existing prefix only after
 the source-level build and P8 gates pass.
 
@@ -1964,8 +1964,8 @@ The final P8 one-prefix receipt is
 update returned rc=0, all four architecture fixtures returned rc=0, and the
 WoW64, MSync, CEF x86_64 OSR, and P8 hot-set gates were retained. The final
 receipt must continue to distinguish accepted x86_64 CEF from the unresolved
-i386 CEF boundary and must not claim an AI source optimization that was not
-promoted.
+i386 CEF boundary and must identify the single accepted pure NTDLL helper
+without claiming that the remaining corpus was optimized.
 
 ### 2026-08-03 — AI optimization Phase 2 heap candidate audit
 
@@ -1974,14 +1974,25 @@ The first Phase 2 candidate receipt is
 It tested an out-of-tree `dlls/ntdll/heap.c` free-list-index candidate using
 the actual ARM64 build. Candidate and control `ntdll.so` were byte-identical,
 so the candidate was rejected without staging or promotion. The installed
-source and runtime hashes match the pre-candidate values, and the canonical
-prepared-prefix P8 gate passed ARM64, ARM64EC, x86_64, and i386/WoW64 with
-status 0. This does not close the rest of Phase 2; continue to require a
+source and runtime hashes matched the pre-file-scan candidate values at that
+time, and its canonical prepared-prefix P8 gate passed ARM64, ARM64EC,
+x86_64, and i386/WoW64 with status 0. A later file-scan promotion changed
+only the accepted NTDLL helper; this does not close the rest of Phase 2,
+which continues to require a
 distinct, repeatable workload improvement before promoting any other helper.
 
 The x64 Winsock address-list probe also supports verified prepared-prefix
 execution via `scripts/probe-x64-address-list-sort.sh --prefix PATH`; it must
 not run Wineboot or stage providers in that mode.
+
+### 2026-08-03 — AI optimization Phase 2 file-scan promotion
+
+`dlls/ntdll/unix/file.c::buffer_contains()` was promoted in nested Wine commit
+`07df604e8f4e2f475bdd9983905cf98802905ee7`. Its exact-equivalence, benchmark,
+ARM64 build, and prepared P8 evidence is
+`docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
+This is the only accepted narrow source candidate so far; all other
+dispositions remain subject to their own workload and semantic gates.
 
 ### 2026-08-03 — AI optimization Phase 4 FEX candidate audit
 
