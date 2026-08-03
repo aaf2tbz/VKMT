@@ -110,7 +110,7 @@ Nested Wine commits:
 
 The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
-It records 96 root paths and 16 nested-Wine paths relative to the start of
+It records 97 root paths and 16 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
 The supplemental candidate disposition matrix is
 `docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records which remaining candidate
@@ -118,6 +118,8 @@ paths are blocked by ABI, pointer, lock, TLS, ordering, or side-effect
 boundaries and which still need workload-specific profiling.
 The disposition validator passed with `candidates=15`; it is part of the
 optimizer verification command and does not turn unresolved rows green.
+The remaining 12 candidate rows are audited at
+`docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.
 The prepared-prefix Winsock address-list contract also passed with
 `VKMT_X64_ADDRESS_LIST_SORT_OK`; its receipt is
 `docs/validation/address-list-sort-p8-canonical-20260803/RESULTS.md`.

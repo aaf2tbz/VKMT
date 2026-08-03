@@ -111,3 +111,4 @@ root	A	test/perf/ntdll_file_buffer_contains.c
 root	A	scripts/probe-ai-ntdll-file-scan.sh
 root	A	docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md
 nested-wine	M	dlls/ntdll/unix/file.c
+root	A	docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md

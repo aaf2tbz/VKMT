@@ -137,6 +137,11 @@ commit `07df604e8f4e2f475bdd9983905cf98802905ee7`.
 
 Receipt: `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
 
+The remaining candidate-row audit is retained at
+`docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`. It
+records 12 rows that remain blocked or lack a hot pure leaf; those rows are
+not treated as completed optimizations.
+
 ### Phase 2 candidate pass A — heap free-list index
 
 `get_free_list_index()` in `dlls/ntdll/heap.c` received one out-of-tree

@@ -311,6 +311,8 @@ completion ordering, and default-disabled behavior unchanged.
 Receipt: `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
 The promoted ARM64 `ntdll.so` hash is
 `e3cd6e3c55a96ea5f47c7c9a24f3c268fecb15b0bdf43d6577aa4450b71aae89`.
+The 12 remaining candidate dispositions and their concrete next actions are
+audited in `docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.
 
 ### AI optimization FEX/graphics gates (2026-08-03)
 

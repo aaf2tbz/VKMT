@@ -1993,6 +1993,8 @@ ARM64 build, and prepared P8 evidence is
 `docs/validation/ai-optimization-phase2-file-scan-20260803/RESULTS.md`.
 This is the only accepted narrow source candidate so far; all other
 dispositions remain subject to their own workload and semantic gates.
+The remaining 12-row audit is
+`docs/validation/ai-optimization-candidate-audit-20260803/RESULTS.md`.
 
 ### 2026-08-03 — AI optimization Phase 4 FEX candidate audit
 
