@@ -73,6 +73,11 @@ The ledger must include a baseline hash, candidate hash, compiler flags,
 benchmark workload, affected architectures, test receipts, and rejection
 reason where applicable.
 
+The current candidate-path disposition matrix is
+`docs/AI_OPTIMIZATION_DISPOSITION.tsv`. `TRIAGE_NO_SAFE_CANDIDATE` and
+`CANDIDATE_BLOCKED_*` are scope findings, not green performance results; they
+remain open until a matching workload proves a pure leaf is hot and safe.
+
 ## Phase 2 — NTDLL, loader, exceptions, and host boundaries
 
 These are the highest-priority functional files, but they are protected from

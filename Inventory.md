@@ -258,6 +258,9 @@ the source-hashed ledger for all 82 custom C paths is
 `docs/AI_OPTIMIZATION_LEDGER.tsv`. The current candidate pipeline is pinned
 to c-ai-optimizer commit
 `c6f96df0ec9973a4cbdb7b015b1fd106c815ad89`.
+The candidate-path disposition matrix is
+`docs/AI_OPTIMIZATION_DISPOSITION.tsv`; boundary and triage rows are not
+performance acceptance claims.
 
 The active provider-backed architecture runner is
 `scripts/probe-p8-single-prefix-architectures.sh`. It reuses the canonical

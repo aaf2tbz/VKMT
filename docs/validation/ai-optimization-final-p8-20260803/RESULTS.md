@@ -102,6 +102,10 @@ The complete changed-file inventory is
 docs/validation/ai-optimization-final-p8-20260803/changed-files.tsv.
 It records 76 root paths and 15 nested-Wine paths relative to the start of
 this pass. The 82-file source ledger is docs/AI_OPTIMIZATION_LEDGER.tsv.
+The supplemental candidate disposition matrix is
+`docs/AI_OPTIMIZATION_DISPOSITION.tsv`; it records which remaining candidate
+paths are blocked by ABI, pointer, lock, TLS, ordering, or side-effect
+boundaries and which still need workload-specific profiling.
 
 ## Candidate disposition and remaining boundary
 

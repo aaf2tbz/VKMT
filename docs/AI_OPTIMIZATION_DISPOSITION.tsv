@@ -1,0 +1,16 @@
+path	phase	ledger_mode	disposition	evidence	next_action
+dlls/dwrite/freetype.c	5	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; startup-only relocatable FreeType fallback	Profile browser font workload before considering a path helper
+dlls/msvcrt/locale.c	6	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; ARM64EC diagnostic-only log	Remove/measure diagnostic path separately; no optimization target
+dlls/ntdll/heap.c	2	candidate	PROFILED_NO_PROMOTION	docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md	Find a distinct allocator workload candidate
+dlls/ntdll/unix/env.c	2	candidate	CANDIDATE_BLOCKED_BY_BOUNDARY	diff-996020f; WoW64 PEB/NLS pointer translation	Profile pure environment lookup only, not guest pointer paths
+dlls/ntdll/unix/file.c	2	candidate	CANDIDATE_BLOCKED_BY_SIDE_EFFECT	diff-996020f; opt-in Steam handoff socket notification	Profile marker scan only with notification disabled/enabled
+dlls/ntdll/unix/socket.c	2	candidate	CANDIDATE_BLOCKED_BY_BOUNDARY	diff-996020f; WoW64 socket buffer conversion	Keep pointer validation manual; isolate a pure address helper if hot
+dlls/ntdll/unix/system.c	2	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; ARM64 sysctl feature publication	Profile system-query call frequency; no hot pure helper identified
+dlls/win32u/freetype.c	5	candidate	TRIAGE_NO_SAFE_CANDIDATE	diff-996020f; dlopen fallback and null guard	Profile font startup/cache workload before candidate generation
+dlls/win32u/sysparams.c	5	candidate	CANDIDATE_BLOCKED_BY_LOCK_PROTOCOL	diff-996020f; recursive user-lock unlock/relock API	Do not transform lock ownership or reentrancy code
+dlls/winhttp/net.c	6	candidate	CANDIDATE_BLOCKED_BY_TLS_LIFECYCLE	diff-996020f; SSPI/TLS cleanup and certificate verification	Profile only immutable parser helpers outside secure-connect lifecycle
+dlls/ws2_32/protocol.c	6	candidate	CANDIDATE_BLOCKED_BY_API_STATE	diff-996020f; NLA lookup allocation/state machine	Keep handle state and buffer layout manual
+dlls/ws2_32/socket.c	6	candidate	CANDIDATE_BLOCKED_BY_ORDERING_SEMANTICS	diff-996020f; stable IPv4/IPv6 address-list ordering	Measure Chromium Happy-Eyeballs lists before considering a stable helper
+dlls/ws2_32/unixlib.c	6	candidate	CANDIDATE_BLOCKED_BY_WOW64_BOUNDARY	diff-996020f; guest pointer and addrinfo conversion	Keep guest-size validation and pointer publication manual
+dlls/xtajit64/cpu.c	4	candidate	CANDIDATE_BLOCKED_BY_FEX_BOUNDARY	diff-996020f; invalidation, process/thread, and feature callbacks	Only isolate a measured non-callback leaf
+dlls/xtajit64/vkmt/interp.c	4	candidate	PROFILED_NO_PROMOTION	docs/validation/ai-optimization-phase4-fex-mask-20260803/RESULTS.md	Profile instruction-mix-specific helpers with FEX telemetry

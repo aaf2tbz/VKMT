@@ -1943,6 +1943,10 @@ The complete 82-file candidate preparation is recorded in
 `docs/validation/ai-optimization-corpus-20260803/RESULTS.md`. Use
 `inventory-all` and `prepare-all` for corpus-wide work; they never mutate
 `wine/wine-11.12`.
+The current candidate-path disposition matrix is
+`docs/AI_OPTIMIZATION_DISPOSITION.tsv`. Treat `CANDIDATE_BLOCKED_*` and
+`TRIAGE_NO_SAFE_CANDIDATE` as unresolved scope/profiling entries, never as
+optimization wins.
 
 The FEX and graphics phase receipts are
 `docs/validation/ai-optimization-fex-phase4-20260803/RESULTS.md` and
