@@ -95,6 +95,11 @@ Root commits pushed to origin/main during this pass:
 - be7f0ff — finalize the one-prefix P8 receipt and staging closure fix;
 - d7c3c47, 7e87c47, 8afcc88 — complete the final inventory, speed, and P8
   marker receipts.
+- 183c6bd — enforce complete candidate disposition coverage;
+- b4abed9, 7462a19, d41412c — add prepared-prefix address-sort evidence and
+  refresh its inventory/disposition receipts;
+- 4c71904 — promote the accepted NTDLL marker-scan candidate and validation
+  harness.
 
 Nested Wine commits:
 
