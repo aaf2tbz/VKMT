@@ -272,3 +272,18 @@ ARM64, ARM64EC, x86_64, and i386/WoW64 with status 0 and all three FEX TSO
 settings fixed at zero. No production source candidate has been promoted yet;
 the ledger records the current source hashes and candidate/manual-review
 boundary.
+
+### AI optimization WoW64/MSync promotion (2026-08-03)
+
+The current nested Wine functional changes are committed at
+`wine/wine-11.12` commit `656bd43`. Targeted builds were promoted into the
+actual `wine/build-ec` runtime and the existing canonical prefix was updated
+only through `scripts/vkmt-prefix sync-wow64`.
+
+The combined receipt is
+`docs/validation/ai-optimization-wow64-msync-phase3-20260803/RESULTS.md`.
+The WoW64 contract passed x64 and i386 mapping pressure, reuse, concurrency,
+executable reuse, and i386 FEX invalidation. MSync passed manual/auto pulse,
+WaitAll rollback, stale-port recovery, and invalid-destination fallback.
+These are functional source promotions; no AI-generated performance candidate
+has been promoted yet.

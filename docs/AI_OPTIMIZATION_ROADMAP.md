@@ -1,6 +1,7 @@
 # VKMT File-by-File AI Optimization Roadmap
 
-Status: Phases 0 and 1 complete; candidate optimization phases are pending.
+Status: Phases 0, 1, and the WoW64/MSync functional promotion gate are
+complete; candidate optimization phases are pending.
 This document does not authorize source changes by itself. The current
 c-ai-optimizer integration is a candidate pipeline; no production Wine or FEX
 source has been optimized yet.

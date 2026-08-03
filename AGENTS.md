@@ -1925,3 +1925,10 @@ the existing canonical prefix. No AI candidate has been promoted into
 `wine/wine-11.12` yet. Any candidate must be built and tested against the
 actual installed Wine tree, then staged into the existing prefix only after
 the source-level build and P8 gates pass.
+
+The current WoW64/MSync functional promotion is nested Wine commit `656bd43`.
+Its targeted build and canonical-prefix receipts are retained in
+`docs/validation/ai-optimization-wow64-msync-phase3-20260803/RESULTS.md`.
+The nested Wine remote is currently configured to an unavailable local archive
+path, so the commit is retained locally while the VKMT root receipt is pushed
+to `origin/main`.
