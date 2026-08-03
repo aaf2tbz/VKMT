@@ -1959,3 +1959,15 @@ WoW64, MSync, CEF x86_64 OSR, and P8 hot-set gates were retained. The final
 receipt must continue to distinguish accepted x86_64 CEF from the unresolved
 i386 CEF boundary and must not claim an AI source optimization that was not
 promoted.
+
+### 2026-08-03 — AI optimization Phase 2 heap candidate audit
+
+The first Phase 2 candidate receipt is
+`docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md`.
+It tested an out-of-tree `dlls/ntdll/heap.c` free-list-index candidate using
+the actual ARM64 build. Candidate and control `ntdll.so` were byte-identical,
+so the candidate was rejected without staging or promotion. The installed
+source and runtime hashes match the pre-candidate values, and the canonical
+prepared-prefix P8 gate passed ARM64, ARM64EC, x86_64, and i386/WoW64 with
+status 0. This does not close the rest of Phase 2; continue to require a
+distinct, repeatable workload improvement before promoting any other helper.

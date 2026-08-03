@@ -1,7 +1,9 @@
 # VKMT File-by-File AI Optimization Roadmap
 
-Status: Phases 0, 1, and the WoW64/MSync functional promotion gate are
-complete; candidate optimization phases are pending.
+Status: Phases 0 and 1, the WoW64/MSync functional promotion gate, and the
+first Phase 2 heap candidate audit are complete. The heap candidate was
+compiler-equivalent and was rejected without promotion; the remaining
+candidate files still require workload-specific passes.
 This document does not authorize source changes by itself. The current
 c-ai-optimizer integration is a candidate pipeline; no production Wine or FEX
 source has been optimized yet.
@@ -109,6 +111,22 @@ The initial candidate scope is limited to pure size, lookup, parsing,
 normalization, address-conversion, or calculation helpers. Heap ownership,
 allocation, synchronization, signal, and process lifecycle code remains
 manual until separately proven.
+
+### Phase 2 candidate pass A — heap free-list index
+
+`get_free_list_index()` in `dlls/ntdll/heap.c` received one out-of-tree
+candidate that replaces the generic bit-scan wrapper with a native compiler
+`clz` intrinsic while preserving the zero case and all bin arithmetic. The
+candidate was built with the actual ARM64 Wine flags. Its `ntdll.so` was
+byte-identical to control (`e1959129...`), so it was recorded as
+`PROFILED_NO_PROMOTION` rather than being staged or benchmarked as a claimed
+speedup. The source and installed runtime were restored to their original
+hashes, and the canonical-prefix P8 prepared-prefix gate passed all four
+architectures with status 0.
+
+Receipt: `docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md`.
+This is a valid rejection, not evidence that the entire Phase 2 corpus is
+complete; the remaining eligible files need separate hot-workload profiling.
 
 ## Phase 3 — WoW64 virtual memory correctness, then optimization
 

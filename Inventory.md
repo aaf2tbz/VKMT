@@ -320,3 +320,17 @@ WoW64 VM, MSync, CEF x86_64 OSR, and the final P8 hot-set measurement. The
 prefix was refreshed in place after Wineboot repopulated a stale i386 DLL;
 `scripts/vkmt-prefix` now prunes only stale prefix-owned i386 closure files
 that have no source-built counterpart before rebuilding the receipt.
+
+### AI optimization Phase 2 candidate pass A (2026-08-03)
+
+The first Phase 2 heap candidate receipt is
+`docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md`.
+It evaluated the pure `get_free_list_index()` helper in the actual installed
+NTDLL build, but the native `clz` candidate compiled to a byte-identical
+`ntdll.so` under the current ARM64 flags. It was therefore rejected as
+`PROFILED_NO_PROMOTION`; no candidate binary or source was staged into the
+Wine tree or canonical prefix. The source and installed NTDLL hashes were
+restored exactly, and the prepared-prefix P8 gate returned status 0 for
+ARM64, ARM64EC, x86_64, and i386/WoW64. This receipt closes only this heap
+candidate pass; it does not claim that the remaining eligible C paths have
+been materially optimized.

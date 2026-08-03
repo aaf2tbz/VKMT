@@ -118,5 +118,11 @@ explicit unresolved compatibility boundary. The nested Wine remote is still
 configured to an unavailable local archive path, so nested commits are
 retained locally while VKMT documentation is pushed to GitHub.
 
+The first follow-on Phase 2 heap candidate is recorded separately at
+`docs/validation/ai-optimization-phase2-heap-index-20260803/RESULTS.md`.
+It compiled to the exact same `ntdll.so` as control and was rejected without
+promotion; the current final runtime hashes and P8 gate therefore remain
+unchanged.
+
 Therefore the functional/runtime P8 gate is green, but the stronger claim
 that every custom C file has been materially AI-optimized is not made.
