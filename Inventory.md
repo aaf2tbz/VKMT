@@ -522,6 +522,12 @@ transform-feedback path only tracked state and skipped capture, so its
 extension entry and feature bits were removed instead of being reported as
 working.
 
+The source truthfulness change is nested MoltenVK commit `665b11e7`, with the
+raw bundling delta in `patches/moltenvk-phase2-665b11e7.patch`; the rebuild
+script promotes the resulting universal dylib into
+`wine/build-ec/dlls/win32u/libMoltenVK.dylib`. This is a deliberate capability
+boundary, not evidence that transform feedback or indirect-count is complete.
+
 Evidence:
 
 docs/validation/moltenvk-behavior-p8-20260803/RESULTS.md

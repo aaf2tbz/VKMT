@@ -2152,3 +2152,16 @@ executable reuse, and i386 FEX invalidation. The retained P8 receipt is
 `docs/validation/graphics-phase1-wow64-p8/RESULTS.md`; x64 and i386 both
 returned rc=0 with all FEX TSO settings zero. Fixed low-host hints on the x64
 high-host mapping policy are explicitly recorded, not hidden as passes.
+
+### 2026-08-03 — P8 MoltenVK capability truthfulness
+
+The direct native MoltenVK contract is retained at
+`docs/validation/moltenvk-behavior-p8-20260803/RESULTS.md`. Nested commit
+`665b11e7` removes the unimplemented transform-feedback extension and clears
+its feature/property bits; the custom path previously tracked state without
+capturing output. Indirect-count remains unadvertised and typed-buffer
+alignment remains query-only until direct count/capture and misaligned
+read/write evidence exists. The source delta is preserved in
+`patches/moltenvk-phase2-665b11e7.patch`, and future source assembly must also
+keep `patches/MoltenVK-vkmt-phase2-fatal-gaps.patch` in sync. Do not call this
+full MoltenVK feature completion.

@@ -20,6 +20,12 @@ reserve/commit/decommit/recommit, protection, reuse, overlapping views,
 concurrent mapping pressure, executable reuse, and correlated i386 FEX
 invalidation with all TSO settings zero.
 
+The current custom MoltenVK truthfulness delta is nested commit `665b11e7`.
+It is promoted into the actual universal Wine runtime by
+`scripts/build-moltenvk.sh` and is reproducible from
+`patches/moltenvk-phase2-665b11e7.patch` (with the broader source recipe
+recorded in `patches/MoltenVK-vkmt-phase2-fatal-gaps.patch`).
+
 ## Requirement matrix
 
 | Area | Behavioral evidence | Result |

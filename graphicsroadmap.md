@@ -145,6 +145,12 @@ The current custom MoltenVK has narrow robust/null behavior proven, while
 transform feedback and indirect-count remain disabled. The full goal requires
 implementing them or retaining an explicit, justified limitation.
 
+**Current P8 status (2026-08-03):** the direct ARM64 behavior gate passes and
+the custom runtime is rebuilt/promoted, but the capability policy is still
+truthful fallback rather than full feature completion. Nested source commit
+`665b11e7` disables the old passthrough transform-feedback advertisement;
+`docs/validation/moltenvk-behavior-p8-20260803/RESULTS.md` is the receipt.
+
 ### 2.1 Robust access and null descriptors
 
 Expand the direct native tests to cover:

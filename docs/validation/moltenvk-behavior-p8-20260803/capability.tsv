@@ -1,0 +1,7 @@
+api	status	evidence	policy
+nullDescriptor	PASS	direct null storage-buffer read returned zero	advertise
+robustBufferAccess2	PASS	direct out-of-bounds storage-buffer read returned zero	advertise-narrowly
+robustImageAccess2	PASS	direct out-of-bounds storage-image read returned zero	advertise-narrowly
+transformFeedback	NOT_ADVERTISED	no passthrough claim	keep-disabled
+drawIndirectCount	NOT_ADVERTISED	no count-buffer claim	keep-disabled
+typedBufferAlignment	QUERY_ONLY	device alignment was queried; unaligned access remains unproven	limit-offsets

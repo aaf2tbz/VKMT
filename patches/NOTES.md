@@ -22,6 +22,11 @@
   falling back from an occupied derived low alias, and retires complete mapped
   reservations after WoW64 interval splitting. Apply after the canonical
   `wine-11.12-vkmt.patch` delta.
+- `moltenvk-phase2-665b11e7.patch` — the custom MoltenVK truthfulness delta
+  from nested commit `665b11e7`. It removes `VK_EXT_transform_feedback` from
+  device advertisement and reports zero transform-feedback limits/features
+  until a real capture/counter implementation is available. The direct P8
+  behavior receipt records this as an explicit non-advertised capability.
 - `wine-11.12-arm64-mono-fusion.patch` — native ARM64 `mscoree` fallback
   plus the same-bitness PE32+ IL-only process/loader/server contract.
   `scripts/build-wine-mono-arm64.sh` applies it and rebuilds only ARM64X
