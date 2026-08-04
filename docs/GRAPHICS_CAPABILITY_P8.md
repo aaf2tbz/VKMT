@@ -39,7 +39,8 @@ recorded in `patches/MoltenVK-vkmt-phase2-fatal-gaps.patch`).
 | D3D11 swapchain/present/resize | Same fixture | **NOT APPLICABLE** on current no-display host |
 | D3D11 device-loss/recreation | No safe injected loss fixture | **NOT CLAIMED** |
 | D3D12 queue/fence/copy/readback | Existing no-DXGI probe and P8 fixture | **PASS — all four lanes** |
-| D3D12 render/barrier/RTV/readback | `d3d12_graphics_contract.c` | **PASS — all four lanes**, after the ARM64-safe DXIL-SPIRV TLS fix and rebuilt ARM64/ARM64EC providers |
+| D3D12 VS/PS/CS, descriptor-table UAV, render/compute readback, barriers, fence timeout | `d3d12_graphics_contract.c` | **PASS — all four lanes**, after the ARM64-safe DXIL-SPIRV/C TLS fixes and rebuilt ARM64/ARM64EC providers |
+| D3D12 second device initialization | Same fixture | **PASS — ARM64, ARM64EC, x86_64**; i386/WoW64 is explicitly `NOT_CLAIMED` because the second `D3D12CreateDevice` entry faults after the first lane completes |
 | D3D12 swapchain/present/resize | No-display host and no window lane in fixture | **NOT CLAIMED** |
 | D3D9 device/texture/surface | `d3d9_contract.c` | Device and texture upload/readback pass; fixed-function and shader textured draw/readback remain unavailable in the current headless DXVK route |
 | D3D9 present/resize/reset | `d3d9_contract.c` | Visible present is no-display; reset is downstream of draw gap |
@@ -73,13 +74,19 @@ their capability tables.
 4. Execute the updated DXMT standard D3D11 gate and add compute/render
    readback to it before claiming DXMT WoW64 coverage.
 
+5. Repair the i386/WoW64 second-device D3D12CreateDevice thunk path before
+   claiming D3D12 device recreation for that lane; the core device, compute,
+   render, readback, and fence contract is already rc=0.
+
 ## ARM64 pipeline fix
 
-The ARM64/ARM64EC D3D12 pipeline crash was not a D3D12 feature limitation. It
-was DXIL-SPIRV C++ `thread_local` lowering emitting an x18-relative access
-inside `dxil_spv_set_thread_log_callback`; x18 is reserved at VKMT's Wine/FEX
-boundary. `subprojects/dxil-spirv/util/vkmt_thread_local.hpp` now uses the
-Win32 TLS API on Windows while retaining native C++ TLS elsewhere. The rebuilt
-providers are installed in `third_party/vkd3d-proton/install-arm64` and
-`install-arm64ec`, and the four-lane D3D12 receipt records pixel readback
-`64,128,191,255` with rc=0.
+The ARM64/ARM64EC D3D12 pipeline/compute crash was not a D3D12 feature
+limitation. It was a combination of DXIL-SPIRV C++ `thread_local` lowering and
+vkd3d C `__declspec(thread)` accesses emitting x18-relative accesses at the
+Wine/FEX boundary. `subprojects/dxil-spirv/util/vkmt_thread_local.hpp` and
+the vkd3d UAV/debug/address-binding paths now use Win32 TLS on Windows while
+retaining native TLS elsewhere. The rebuilt providers are installed in
+`third_party/vkd3d-proton/install-arm64` and `install-arm64ec`, and the
+four-lane D3D12 receipt records pixel readback `64,128,191,255`, compute
+readback, fence timeout/completion, and rc=0. i386's second-device thunk
+boundary remains visible in the receipt rather than being hidden.

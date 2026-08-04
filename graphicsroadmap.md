@@ -207,7 +207,15 @@ the behavior through D3D11 and D3D12 consumers where applicable.
 ## Phase 3 — Stabilize and complete vkd3d-proton/D3D12
 
 The current D3D12 path is the strongest: all four architectures pass
-deterministic render/readback.
+deterministic render/compute/readback. The ARM64/ARM64EC provider now avoids
+both DXIL-SPIRV C++ TLS and vkd3d C PE-TLS x18 accesses.
+
+**Current P8 status (2026-08-03):** the canonical fixture is rc=0 on ARM64,
+ARM64EC, x86_64, and i386/WoW64 for VS/PS/CS, descriptor-table UAV, render
+and compute output, barriers, texture/buffer copies, fence timeout/completion,
+and removal-reason queries. A second device initialization passes on the three
+64-bit lanes; i386's second `D3D12CreateDevice` entry faults after the first
+lane completes and is recorded as `DEVICE_RECREATE_NOT_CLAIMED_I386_WOW64`.
 
 ### Remaining work
 

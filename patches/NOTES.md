@@ -27,6 +27,12 @@
   device advertisement and reports zero transform-feedback limits/features
   until a real capture/counter implementation is available. The direct P8
   behavior receipt records this as an explicit non-advertised capability.
+- `vkd3d-proton-phase3-tls.patch` — the P8 vkd3d C TLS delta applied after
+  `vkd3d-proton-vkmt-wine-compat.patch`. It replaces the ARM64/ARM64EC
+  `__declspec(thread)` paths used by UAV handoff, debug buffers, and address
+  binding with process-allocated Win32 TLS while preserving per-thread
+  semantics. This is required for the D3D12 CS/UAV gate; do not omit it from
+  future provider assembly.
 - `wine-11.12-arm64-mono-fusion.patch` — native ARM64 `mscoree` fallback
   plus the same-bitness PE32+ IL-only process/loader/server contract.
   `scripts/build-wine-mono-arm64.sh` applies it and rebuilds only ARM64X

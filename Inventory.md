@@ -542,7 +542,7 @@ Wineboot:
 | Area | Source / runner | Evidence | Current truth |
 |---|---|---|---|
 | D3D11 | `test/d3d11_graphics_contract.c`, `scripts/probe-d3d11-graphics-contract.sh` | `docs/validation/d3d11-graphics-contract-p8-20260803/` | Latest receipt: i386 completes device, VS/PS/CS, compute UAV readback, texture copy/readback, and render-target shader readback. ARM64EC/x86_64 create the device and shaders but retain a bounded structured-UAV compute readback gap (`0x80004005`); the latest ARM64 rerun timed out during provider startup and is not counted green. Swapchain is headless-not-applicable; device-loss injection is not claimed. The runner supports targeted `VKMT_D3D11_GRAPHICS_LANES`. |
-| D3D12 | `test/d3d12_graphics_contract.c`, `scripts/probe-d3d12-graphics-contract.sh` | `docs/validation/d3d12-graphics-contract-p8-20260803/` | **All four lanes pass** generated VS/PS, queue/allocator/list, RTV descriptor, graphics pipeline, barrier, render/readback, and fence. ARM64/ARM64EC required the ARM64-safe DXIL-SPIRV TLS fix and rebuilt providers. Existing no-DXGI queue/copy/fence probe remains separate. |
+| D3D12 | `test/d3d12_graphics_contract.c`, `scripts/probe-d3d12-graphics-contract.sh` | `docs/validation/d3d12-graphics-contract-p8-20260803/` | **All four lanes rc=0** generated VS/PS/CS, queue/allocator/list, descriptor-table UAV, RTV descriptor, graphics/compute pipeline, barriers, render/compute readback, fence timeout/completion, and device-removal-reason query. ARM64/ARM64EC required the ARM64-safe DXIL-SPIRV plus vkd3d C-TLS fixes and rebuilt providers. i386 second-device recreation remains explicitly `NOT_CLAIMED`; swapchain/device-loss injection remains separate. |
 | D3D9 | `test/d3d9_contract.c`, `scripts/probe-d3d9-contract.sh` | `docs/validation/d3d9-contract-p8-20260803/` | Device and texture upload are proven in attempted lanes; both fixed-function and shader textured draw/readback remain unavailable in the current headless DXVK route and are not advertised as passing. Present is no-display only. The runner supports targeted `VKMT_D3D9_LANES`. |
 | OpenGL | `test/opengl_extended_contract.c`, `scripts/probe-opengl-extended-contract.sh` | `docs/validation/opengl-extended-contract-p8-20260803/` | Four architecture processes execute and record a no-display boundary on this host. The display-capable fixture contains indexed VBO/EBO, texture sampling, FBO, uniform, sync, sharing, UBO API, present, and resize markers; no headless run is counted as visible-presentation proof. |
 | MoltenVK runtime promotion | `scripts/build-moltenvk.sh`, `wine/build-ec/dlls/win32u/libMoltenVK.dylib` | `docs/validation/moltenvk-behavior-p8-20260803/` plus runtime hash | Rebuilt universal MoltenVK is promoted into the actual Wine tree, not only the prefix/package. Runtime extension truthfulness remains authoritative from the direct native behavior receipt. |
@@ -560,18 +560,22 @@ change. The resulting i386 D3D12 device plus graphics render/readback receipt
 returned rc=0; older pre-rebuild binaries returned `DXGI_ERROR_UNSUPPORTED`
 or `E_INVALIDARG` and must not be used as current evidence.
 
-The ARM64 graphics-pipeline failure was fixed rather than waived. DXIL-SPIRV
-had C++ `thread_local` variables that emitted `[x18,#0x58]` accesses in the
-ARM64 PE; `subprojects/dxil-spirv/util/vkmt_thread_local.hpp` routes Windows
-builds through Win32 TLS and preserves normal native TLS elsewhere. The
-reproducible builders are `scripts/build-vkd3d-proton-arm64.sh` and
+The ARM64 graphics/compute failure was fixed rather than waived. DXIL-SPIRV
+C++ `thread_local` and vkd3d C `__declspec(thread)` paths emitted
+`[x18,#0x58]` accesses in ARM64/ARM64EC PEs;
+`subprojects/dxil-spirv/util/vkmt_thread_local.hpp` plus the vkd3d UAV,
+debug-buffer, and address-binding paths now route Windows builds through
+Win32 TLS and preserve native TLS elsewhere. The reproducible builders are
+`scripts/build-vkd3d-proton-arm64.sh` and
 `scripts/build-vkd3d-proton-arm64ec.sh`. Current installed provider hashes:
 
 ```
-arm64    d3d12.dll     4abfc19fce06daff755f9a48d3a0a0acefea8fb0c2b85d4d34645d9f5079e40a
-arm64    d3d12core.dll 7d3900ebeaac424dbe57fa74a8cdde2e12a93ff21e7d94a2e876063896571775
-arm64ec  d3d12.dll     b534c163f6a4409e92669f725d0be2dfee7ce4ad840eaf77a135b2d60eefaf66
-arm64ec  d3d12core.dll 152c97a524f7696d37a76d40039bb0791e4681f027c5364f829f71f346be17fd
+arm64    d3d12.dll     278daf30d640e3d6f1d339ba0fbe6170b3724a7dea37208759d145be633b496e
+arm64    d3d12core.dll 54f939570cf893526e4f70134b7a097e9091db70a20ed5d99589d66512117e93
+arm64ec  d3d12.dll     7a5f0d3656c64b066fe0663bc563e6d4ac96b6e29a4769eaae3f6f0bc6f38230
+arm64ec  d3d12core.dll 8ebf054bf8336af06725466d7bc32eb61fd767f4e5077f82d0bf28f2ed620cd9
+win32    d3d12.dll     52cfe58b301771dc163fd45a5c0689bf22d1bc2396133456e7f2bd94cc3b87f1
+win32    d3d12core.dll 56abc44d741df607ccf4ae7d3cdbd801d592fba4124bccab1705661fefbeaad3
 MoltenVK wine/build-ec/dlls/win32u/libMoltenVK.dylib
          f05d95bb072630c301228752ecdbe5eecc5afce2d3de5365b2a29934fd32e0f2
 ```

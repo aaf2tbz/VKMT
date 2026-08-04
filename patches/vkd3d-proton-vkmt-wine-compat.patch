@@ -8,12 +8,12 @@ index f6db6954..0a20e33f 100644
      {
 -        ERR("Lacking support for transform feedback.\n");
 -        return E_INVALIDARG;
-+        /* VKMT: Wine's winevulkan does not pass VK_EXT_transform_feedback through,
-+         * so this query always reads false under Wine even when the underlying
-+         * driver (e.g. VKMT MoltenVK) advertises it. Demote to a warning;
-+         * stream output stays marked unsupported unless the extension is
-+         * actually visible, so non-SO workloads are unaffected. */
-+        WARN("Lacking support for transform feedback; continuing anyway (VKMT).\n");
++        /* VKMT does not advertise transform feedback until its captured
++         * output, counters, queries, and indirect-byte-count behavior have a
++         * direct contract. Keep ordinary D3D12 workloads usable, but leave
++         * stream-output PSOs explicitly unsupported. */
++        WARN("Lacking transform-feedback behavior; stream output is disabled (VKMT).\n");
++        vulkan_info->EXT_transform_feedback = false;
      }
  
      single_storage_texel =
@@ -97,24 +97,310 @@ index d5cfbf95..97b83f5c 100644
  
  /* VK_AMD_anti_lag */
  VK_DEVICE_EXT_PFN(vkAntiLagUpdateAMD)
-diff --git a/meson.build b/meson.build
-index 9a607264..f9bf67e3 100644
---- a/meson.build
-+++ b/meson.build
-@@ -180,6 +180,16 @@ dxil_spirv_dep = dxil_spirv.get_variable('dxil_spirv_dep')
- subdir('include')
- subdir('libs')
+diff --git a/subprojects/dxil-spirv/debug/logging.cpp b/subprojects/dxil-spirv/debug/logging.cpp
+index e7a57205..da77d0b9 100644
+--- a/subprojects/dxil-spirv/debug/logging.cpp
++++ b/subprojects/dxil-spirv/debug/logging.cpp
+@@ -23,25 +23,26 @@
+  */
  
-+# VKMT: LLVM's Windows TLS lowering hardcodes [x18,#0x58], but on Darwin PE
-+# keeps the TEB in x28. Rewrite the operands in every freshly linked PE dll.
-+if vkd3d_platform == 'windows' and host_machine.cpu_family() == 'aarch64'
-+  custom_target('fix-x18-tls',
-+    input   : [d3d12core_lib, d3d12_lib],
-+    output  : 'fix-x18-tls.stamp',
-+    command : ['sh', '-c', 'python3 /Volumes/AverySSD/VKMT/scripts/fix-x18-tls.py "$@" && touch "$0"', '@OUTPUT@', '@INPUT@'],
-+    build_by_default : true)
-+endif
+ #include "logging.hpp"
++#include "../util/vkmt_thread_local.hpp"
+ 
+ namespace dxil_spv
+ {
+-static thread_local LoggingCallback log_callback;
+-static thread_local void *log_userdata;
++static vkmt_thread_local<LoggingCallback> log_callback;
++static vkmt_thread_local<void *> log_userdata;
+ 
+ void set_thread_log_callback(LoggingCallback callback, void *userdata)
+ {
+-	log_callback = callback;
+-	log_userdata = userdata;
++	log_callback.set(callback);
++	log_userdata.set(userdata);
+ }
+ 
+ LoggingCallback get_thread_log_callback()
+ {
+-	return log_callback;
++	return log_callback.get();
+ }
+ 
+ void *get_thread_log_callback_userdata()
+ {
+-	return log_userdata;
++	return log_userdata.get();
+ }
+ }
+diff --git a/subprojects/dxil-spirv/dxil_spirv_c.cpp b/subprojects/dxil-spirv/dxil_spirv_c.cpp
+index 702c8540..f9ae268a 100644
+--- a/subprojects/dxil-spirv/dxil_spirv_c.cpp
++++ b/subprojects/dxil-spirv/dxil_spirv_c.cpp
+@@ -25,6 +25,7 @@
+ #define DXIL_SPV_ENABLE_EXPERIMENTAL_WORKGRAPHS
+ #define DXIL_SPV_ENABLE_EXPERIMENTAL_MULTIVIEW
+ #include "thread_local_allocator.hpp"
++#include "util/vkmt_thread_local.hpp"
+ #include "dxil_spirv_c.h"
+ #include "dxil_converter.hpp"
+ #include "dxil_parser.hpp"
+@@ -1742,15 +1743,15 @@ void dxil_spv_reset_thread_allocator_context(void)
+ 	reset_thread_allocator_context();
+ }
+ 
+-static thread_local dxil_spv_log_cb c_callback_wrapper;
++static vkmt_thread_local<dxil_spv_log_cb> c_callback_wrapper;
+ static void c_callback_wrapper_trampoline(void *userdata, dxil_spv::LogLevel level, const char *msg)
+ {
+-	if (c_callback_wrapper)
+-		c_callback_wrapper(userdata, dxil_spv_log_level(level), msg);
++	if (c_callback_wrapper.get())
++		c_callback_wrapper.get()(userdata, dxil_spv_log_level(level), msg);
+ }
+ 
+ void dxil_spv_set_thread_log_callback(dxil_spv_log_cb callback, void *userdata)
+ {
+-	c_callback_wrapper = callback;
++	c_callback_wrapper.set(callback);
+ 	dxil_spv::set_thread_log_callback(c_callback_wrapper_trampoline, userdata);
+ }
+diff --git a/subprojects/dxil-spirv/util/thread_local_allocator.cpp b/subprojects/dxil-spirv/util/thread_local_allocator.cpp
+index ead148db..a613101c 100644
+--- a/subprojects/dxil-spirv/util/thread_local_allocator.cpp
++++ b/subprojects/dxil-spirv/util/thread_local_allocator.cpp
+@@ -23,6 +23,7 @@
+  */
+ 
+ #include "thread_local_allocator.hpp"
++#include "vkmt_thread_local.hpp"
+ #include <assert.h>
+ #include <stdint.h>
+ #include <memory>
+@@ -81,7 +82,7 @@ void *ChainAllocator::Block::allocate(size_t size)
+ 		return nullptr;
+ }
+ 
+-static thread_local ChainAllocator *allocator;
++static vkmt_thread_local<ChainAllocator *> allocator;
+ 
+ void ChainAllocator::reset()
+ {
+@@ -124,15 +125,15 @@ void *ChainAllocator::allocate(size_t size)
+ 
+ void *allocate_in_thread(size_t size)
+ {
+-	if (!allocator)
++	if (!allocator.get())
+ 		return malloc(size);
+ 
+-	return allocator->allocate(size);
++	return allocator.get()->allocate(size);
+ }
+ 
+ void free_in_thread(void *ptr)
+ {
+-	if (!allocator)
++	if (!allocator.get())
+ 	{
+ 		free(ptr);
+ 		return;
+@@ -143,20 +144,20 @@ void free_in_thread(void *ptr)
+ 
+ void begin_thread_allocator_context()
+ {
+-	assert(!allocator);
+-	allocator = new ChainAllocator;
++	assert(!allocator.get());
++	allocator.set(new ChainAllocator);
+ }
+ 
+ void end_thread_allocator_context()
+ {
+-	assert(allocator);
+-	delete allocator;
+-	allocator = nullptr;
++	assert(allocator.get());
++	delete allocator.get();
++	allocator.set(nullptr);
+ }
+ 
+ void reset_thread_allocator_context()
+ {
+-	assert(allocator);
+-	allocator->reset();
++	assert(allocator.get());
++	allocator.get()->reset();
+ }
+ }
+diff --git a/subprojects/dxil-spirv/util/vkmt_thread_local.hpp b/subprojects/dxil-spirv/util/vkmt_thread_local.hpp
+new file mode 100644
+index 00000000..8d86ea14
+--- /dev/null
++++ b/subprojects/dxil-spirv/util/vkmt_thread_local.hpp
+@@ -0,0 +1,94 @@
++/*
++ * VKMT ARM64/FEX-safe thread-local storage.
++ *
++ * The Windows ARM64 ABI reserves x18 for the platform TLS pointer.  The
++ * MinGW C++ thread_local implementation consequently emits an x18-relative
++ * access even when the rest of a DLL is compiled with -ffixed-x18.  Wine's
++ * ARM64 guest boundary does not provide that native Windows register value;
++ * using such a variable from DXIL-SPIRV crashes before a graphics pipeline
++ * can be created.  Use the Win32 TLS API for Windows builds instead.  The
++ * non-Windows implementation remains a normal C++ thread_local so this
++ * helper does not change native tooling behavior.
++ */
++#pragma once
 +
- if vkd3d_platform == 'windows'
-   # MinGW LD on x86 emits incorrect implib with ordinal suffixes.
-   # As a workaround, just link to the system D3D12.
++#if defined(_WIN32)
++# define WIN32_LEAN_AND_MEAN
++# include <windows.h>
++#endif
++
++#include <cstring>
++
++namespace dxil_spv
++{
++template <typename T>
++class vkmt_thread_local
++{
++public:
++    vkmt_thread_local() noexcept
++#if defined(_WIN32)
++        : index_(TLS_OUT_OF_INDEXES), once_(INIT_ONCE_STATIC_INIT)
++#endif
++    {
++#if !defined(_WIN32)
++        value_ = T();
++#endif
++    }
++
++    T &get() const noexcept
++    {
++#if defined(_WIN32)
++        DWORD index = get_index();
++        if (index == TLS_OUT_OF_INDEXES)
++            return fallback();
++
++        void *storage = TlsGetValue(index);
++        if (!storage)
++        {
++            storage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(T));
++            if (!storage || !TlsSetValue(index, storage))
++            {
++                if (storage) HeapFree(GetProcessHeap(), 0, storage);
++                return fallback();
++            }
++        }
++        return *static_cast<T *>(storage);
++#else
++        return value_;
++#endif
++    }
++
++    void set(const T &value) const noexcept
++    {
++        get() = value;
++    }
++
++private:
++#if defined(_WIN32)
++    static BOOL CALLBACK initialize(PINIT_ONCE, PVOID parameter, PVOID *)
++    {
++        vkmt_thread_local *self = static_cast<vkmt_thread_local *>(parameter);
++        self->index_ = TlsAlloc();
++        return self->index_ != TLS_OUT_OF_INDEXES;
++    }
++
++    DWORD get_index() const noexcept
++    {
++        InitOnceExecuteOnce(const_cast<PINIT_ONCE>(&once_), initialize,
++                const_cast<vkmt_thread_local *>(this), NULL);
++        return index_;
++    }
++
++    static T &fallback() noexcept
++    {
++        static T value = T();
++        return value;
++    }
++
++    mutable DWORD index_;
++    mutable INIT_ONCE once_;
++#else
++    mutable T value_;
++#endif
++};
++}
+diff --git a/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.cpp b/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.cpp
+index f338030..18acbb6 100644
+--- a/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.cpp
++++ b/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.cpp
+@@ -5,35 +5,35 @@
+ 
+ namespace dxbc_spv::util {
+ 
+-thread_local Logger* Logger::s_logger = nullptr;
++dxil_spv::vkmt_thread_local<Logger*> Logger::s_logger;
+ 
+ 
+ Logger::Logger() {
+-  dxbc_spv_assert(!s_logger);
++  dxbc_spv_assert(!s_logger.get());
+ 
+   /* Safe because thread-local; there is no way the logger gets
+    * invoked before the object is sufficiently initialized. */
+-  s_logger = this;
++  s_logger.set(this);
+ }
+ 
+ 
+ Logger::~Logger() {
+-  dxbc_spv_assert(s_logger == this);
+-  s_logger = nullptr;
++  dxbc_spv_assert(s_logger.get() == this);
++  s_logger.set(nullptr);
+ }
+ 
+ 
+ LogLevel Logger::minSeverity() {
+-  if (s_logger)
+-    return s_logger->getMinimumSeverity();
++  if (s_logger.get())
++    return s_logger.get()->getMinimumSeverity();
+ 
+   return LogLevel::eInfo;
+ }
+ 
+ 
+ void Logger::log(LogLevel severity, const char* message) {
+-  if (s_logger) {
+-    s_logger->message(severity, message);
++  if (s_logger.get()) {
++    s_logger.get()->message(severity, message);
+     return;
+   }
+ 
+diff --git a/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.h b/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.h
+index 832b918..1ada35b 100644
+--- a/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.h
++++ b/subprojects/dxil-spirv/subprojects/dxbc-spirv/util/util_log.h
+@@ -3,6 +3,7 @@
+ #include <cstddef>
+ #include <cstdint>
+ #include <sstream>
++#include "../../../util/vkmt_thread_local.hpp"
+ 
+ namespace dxbc_spv::util {
+ 
+@@ -74,7 +75,7 @@ public:
+ 
+ private:
+ 
+-  static thread_local Logger* s_logger;
++  static dxil_spv::vkmt_thread_local<Logger*> s_logger;
+ 
+ };
+ 

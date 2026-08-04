@@ -1,0 +1,10 @@
+# P8 D3D12 provider and fixture hashes
+278daf30d640e3d6f1d339ba0fbe6170b3724a7dea37208759d145be633b496e  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-arm64/bin/d3d12.dll
+54f939570cf893526e4f70134b7a097e9091db70a20ed5d99589d66512117e93  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-arm64/bin/d3d12core.dll
+7a5f0d3656c64b066fe0663bc563e6d4ac96b6e29a4769eaae3f6f0bc6f38230  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-arm64ec/bin/d3d12.dll
+8ebf054bf8336af06725466d7bc32eb61fd767f4e5077f82d0bf28f2ed620cd9  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-arm64ec/bin/d3d12core.dll
+52cfe58b301771dc163fd45a5c0689bf22d1bc2396133456e7f2bd94cc3b87f1  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-win32/bin/d3d12.dll
+56abc44d741df607ccf4ae7d3cdbd801d592fba4124bccab1705661fefbeaad3  /Volumes/AverySSD/VKMT/third_party/vkd3d-proton/install-win32/bin/d3d12core.dll
+ce2b138a7af26401c828a54900f175cd64491bf7b4b590a2cc29561de0a61ad3  /Volumes/AverySSD/VKMT/test/d3d12_graphics_contract.c
+ed7411df2b12579ffcdaeb37349868738bc697ffcd0d7b896382c7c6cea2bf15  /Volumes/AverySSD/VKMT/scripts/probe-d3d12-graphics-contract.sh
+vkd3d_source_commit 3300fe64cc1ecf53ccf06db67f4888b3d84b4a86

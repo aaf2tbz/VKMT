@@ -2110,6 +2110,18 @@ retaining native C++ TLS on non-Windows builds. Use
 `scripts/build-vkd3d-proton-arm64.sh` and
 `scripts/build-vkd3d-proton-arm64ec.sh` to rebuild the actual providers.
 
+The D3D12 fixture now also proves VS/PS/CS, descriptor-table UAV dispatch,
+compute readback, explicit UAV/RTV barriers, fence timeout/completion, and
+device-removal-reason queries. The remaining ARM64/ARM64EC x18 sources in
+vkd3d C `__declspec(thread)` storage were replaced with Win32 TLS for the UAV
+handoff, debug buffers, and address-binding tracker; the bundling delta is
+`patches/vkd3d-proton-phase3-tls.patch`. The resulting receipt is
+`docs/validation/d3d12-graphics-contract-p8-20260803/RESULTS.md`, with rc=0
+on all four lanes. A second device initialization passes on ARM64, ARM64EC,
+and x86_64; i386/WoW64 records
+`DEVICE_RECREATE_NOT_CLAIMED_I386_WOW64` because the second thunk entry
+faults after the first device has completed. This is not hidden as a pass.
+
 D3D11 i386 remains green in the latest receipt. ARM64EC/x86_64 reach device,
 shader, dispatch, and copy submission but the current structured-UAV staging
 map is a known provider boundary (`0x80004005`); the fixture fails boundedly
