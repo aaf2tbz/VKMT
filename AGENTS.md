@@ -396,9 +396,12 @@ or i386.
 Phase 1.1 native Vulkan passed. An ARM64 host executable built from
 `scripts/smoke_vk.c`, with `VK_ICD_FILENAMES=test/vkmt_icd.json`, created a
 Vulkan 1.3 instance through the pinned MoltenVK ICD and enumerated the Apple
-M4. The checked vkd3d-proton requirements all reported available:
-robustness2, transform-feedback queries, buffer-device-address,
+M4. Feature enumeration covers robustness2, buffer-device-address,
 mirror-clamp-to-edge, dynamic rendering, synchronization2, and maintenance4.
+The current direct behavior receipt is
+`docs/validation/moltenvk-behavior-p8-20260803/RESULTS.md`; it proves narrow
+null-descriptor and robustness readback. Transform feedback is deliberately
+not advertised because the former passthrough path did not capture output.
 The probe explicitly enables portability enumeration, which MoltenVK requires.
 
 The `dxmt-v0.80/aarch64-windows` directory name is staging terminology, not a
@@ -2088,3 +2091,48 @@ canonical prepared prefix, the x86_64 client returns `rc=0` and emits
 receipt is `docs/validation/fex-startup-p8-20260803/RESULTS.md`. BoringSSL
 remains diagnostic-only for trust acceptance; the WinHTTP/WinINet fragmented
 lanes are the authoritative TLS transport gate.
+
+### 2026-08-03 — P8 graphics behavioral expansion
+
+The graphics contract sources are `test/d3d11_graphics_contract.c`,
+`test/d3d12_graphics_contract.c`, `test/d3d9_contract.c`, and
+`test/opengl_extended_contract.c`, with matching `scripts/probe-*` runners
+and receipts under `docs/validation/*-contract-p8-20260803/`. They reuse the
+canonical prepared prefix and explicitly set `FEX_TSOENABLED=0`,
+`FEX_VECTORTSOENABLED=0`, and `FEX_MEMCPYSETTSOENABLED=0`; the DXMT runner was
+corrected to set the same values rather than inheriting the shell environment.
+
+The current D3D12 graphics receipt is green for ARM64, ARM64EC, x86_64, and
+i386/WoW64. The ARM64/ARM64EC crash was traced to DXIL-SPIRV C++
+`thread_local` lowering emitting an x18-relative TLS access; the Windows-only
+`subprojects/dxil-spirv/util/vkmt_thread_local.hpp` shim uses Win32 TLS while
+retaining native C++ TLS on non-Windows builds. Use
+`scripts/build-vkd3d-proton-arm64.sh` and
+`scripts/build-vkd3d-proton-arm64ec.sh` to rebuild the actual providers.
+
+D3D11 i386 remains green in the latest receipt. ARM64EC/x86_64 reach device,
+shader, dispatch, and copy submission but the current structured-UAV staging
+map is a known provider boundary (`0x80004005`); the fixture fails boundedly
+and does not convert it to a pass. The latest ARM64 rerun timed out during
+provider startup after repeated canonical-prefix sessions and is not counted
+as green until isolated. D3D9 device/texture upload is proven, but both
+fixed-function and shader textured draw/readback remain unavailable on this
+headless route. OpenGL's extended display-dependent rows remain
+`NO_DISPLAY`, not passes. These boundaries are maintained in
+`docs/GRAPHICS_CAPABILITY_P8.md` and `Inventory.md`.
+
+### 2026-08-03 — P8 graphics infrastructure Phase 0
+
+`scripts/verify-graphics-infrastructure.sh` provides a non-mutating preflight
+for the canonical graphics prefix. It does not create a prefix or invoke
+Wineboot. It verifies the receipt/profile, the staged environment's three
+zero-TSO settings, active graphics runner assignments, promoted custom FEX
+providers, universal promoted MoltenVK, architecture-matched DXVK and
+vkd3d-proton artifacts, and the ARM64EC DXMT/native ARM64 winemetal closure.
+
+The direct receipt is
+`docs/validation/graphics-infrastructure-p8/RESULTS.md`; it returned
+`GRAPHICS_INFRASTRUCTURE_P8_OK`. This is a staging/integrity gate only. It does
+not turn the existing D3D11 structured-UAV, D3D9 textured-draw, DXMT full
+device, MoltenVK transform-feedback/indirect-count, or headless-present gaps
+into passes.

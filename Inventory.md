@@ -39,6 +39,10 @@ fex-source	required-source	arm64,x64,i386	third_party/FEX-2607	FEX checkout	git 
 moltenvk-source	required-source	arm64	third_party/MoltenVK	MoltenVK checkout	scripts/verify-preservation.sh	graphics probes	MoltenVK license	source-required
 dxvk-source	required-source	x64,i386	third_party/dxvk	DXVK checkout	scripts/verify-preservation.sh	future DXVK gate	DXVK license	source-required
 d3dcompiler-contract	test-only	arm64,arm64ec,x64,i386	test/d3dcompiler_contract.c	scripts/probe-d3dcompiler-contract.sh	docs/validation/d3dcompiler-contract-p8-20260803/capability.tsv	P8 one-prefix contract	Wine LGPL	exclude
+moltenvk-behavior	behavior-contract	native arm64	test/moltenvk_behavior_contract.c;test/moltenvk_storage_read.comp;test/moltenvk_image_read.comp	scripts/probe-moltenvk-behavior.sh	docs/validation/moltenvk-behavior-p8-20260803/RESULTS.md;capability.tsv	P8 direct Vulkan/Metal behavior	MoltenVK/Vulkan licenses	required-source
+eac-contract	test-only	arm64,arm64ec,x64,i386	test/eac_contract.c;test/eac_mock_backend	scripts/probe-eac-contract.sh	docs/validation/eac-contract-p8-20260803/capability.tsv	P8 mock lifecycle/negative matrix	project test code	exclude
+eac-host-bridge	test-only	arm64	dlls/vkmt_eac/unix/vkmt_eac.c	scripts/probe-eac-contract.sh	docs/validation/eac-contract-p8-20260803/host-exports.txt	P8 dynamically loaded mock bridge	project test code	exclude
+eac-runtime	optional-external	x64	build/probe-runs/phase-a-graphics-prefix/drive_c/vkmt-eac-test	scripts/stage-eac-runtime.sh	VKMT_EAC_STAGE.tsv;docs/validation/eac-contract-p8-20260803/RESULTS.md	Epic EOS/EAC license	separate-fetch;never-package
 graphics32-consumer-closure	optional-runtime	i386	third_party/dxvk/runtime/dxvk-vkmt-1a5919b/x32;third_party/vkd3d-proton/install-win32/bin	scripts/vkmt-prefix sync-graphics32	prefix .vkmt manifest + graphics32-sync.receipt	D3D11/D3D12 consumer lanes	DXVK/vkd3d-proton licenses	separate-provider-policy
 vkd3d-source	required-source	x64,i386	third_party/vkd3d-proton	vkd3d-proton checkout	scripts/verify-preservation.sh	future vkd3d gate	vkd3d-proton license	source-required
 dxmt-pair	required-runtime	arm64ec	wine/build-ec/dxmt-v0.80/aarch64-windows	scripts/stage-dxmt-runtime.sh	scripts/stage-dxmt-runtime.sh	scripts/probe-dxmt-arm64ec.sh	project-pinned	profile-graphics
@@ -444,3 +448,142 @@ the four-lane FEX startup receipt is
 diagnostic-only for trust acceptance; WinHTTP/WinINet fragmented lanes remain
 authoritative. The updated diagnostic details are in
 `docs/validation/tls-trust-contract-p8-20260803/boringssl-diagnostic.txt`.
+
+### Easy Anti-Cheat compatibility phase (P8, 2026-08-03)
+
+The EAC-only contract is implemented by:
+
+- test/eac_contract.c
+- test/eac_mock_backend/main.c
+- test/eac_mock_backend/vkmt_eac_test_protocol.[ch]
+- dlls/vkmt_eac/unix/vkmt_eac.[ch]
+- scripts/stage-eac-runtime.sh
+- scripts/probe-eac-contract.sh
+
+The host bridge is a test-only dynamically loaded native .so; it is not an
+Epic implementation and must never be reported as a real EAC attestation
+provider. The loopback backend uses a VKMT-owned protocol and test key. It
+covers valid challenge/response, module-digest mismatch, expiration, missing
+capabilities, wrong architecture, bad signatures, malformed messages, replay
+rejection, backend disconnect, separate client/server restart, four-client
+concurrent sessions, and callback/lifetime cleanup.
+
+The official artifacts are kept outside Git at:
+
+/Volumes/AverySSD/anticheat-evaluation/
+
+The canonical prefix was updated in place by scripts/stage-eac-runtime.sh
+without Wineboot. Only the required Win64 loading surface was staged under:
+
+drive_c/vkmt-eac-test/
+
+The stage manifest is VKMT_EAC_STAGE.tsv. It records the staged EOS SDK DLL,
+protected launcher, EAC setup executable, test settings, dummy target, and
+source archive hashes. The official setup executable is never invoked with an
+install command; the probe only creates it for a bounded loader test.
+
+Authoritative evidence:
+
+docs/validation/eac-contract-p8-20260803/RESULTS.md
+docs/validation/eac-contract-p8-20260803/capability.tsv
+docs/validation/eac-contract-p8-20260803/sdk-api-inventory.tsv
+
+The final run returned EAC_CONTRACT_ALL_ARCHITECTURES_OK and status=0.
+ARM64, ARM64EC, x86_64/FEX, and i386/WoW64 all passed the VKMT mock contract,
+malformed-message and negative matrix, client/server restart, and concurrent
+session checks. The x86_64/FEX lane also:
+
+- loaded all selected EOS Anti-Cheat client/server exports;
+- created the official start_protected_game.exe;
+- created the official EasyAntiCheat_EOS_Setup.exe without installing it;
+- recorded launcher/setup exit or bounded-termination results.
+
+The official Win64 launcher is NOT_APPLICABLE to ARM64, ARM64EC, and i386
+guest binaries; those lanes retain mock/API coverage. Real EAC backend
+attestation remains MISSING_PRODUCT_CONFIGURATION because the downloaded
+sample settings contain placeholder product, sandbox, and deployment IDs.
+No VKMT_EAC_REAL_ATTESTATION_OK marker exists. Kernel-driver requirements
+remain unsupported unless a legitimate platform/vendor implementation is
+provided.
+
+EAC binaries are external licensed assets and are never package payloads by
+default. They must remain separate-fetch;never-package unless distribution
+authorization is separately documented.
+
+### MoltenVK capability-truthfulness phase (P8, 2026-08-03)
+
+`scripts/probe-moltenvk-behavior.sh` is the authoritative native ARM64
+Vulkan/Metal fixture. It directly verifies null storage-buffer descriptors and
+out-of-bounds storage-buffer/storage-image robustness readback on Apple M4.
+It records typed-buffer alignment properties (16-byte storage/uniform
+alignment) without claiming unaligned offsets are safe. Transform feedback
+and indirect-count behavior are explicitly not advertised: the previous
+transform-feedback path only tracked state and skipped capture, so its
+extension entry and feature bits were removed instead of being reported as
+working.
+
+Evidence:
+
+docs/validation/moltenvk-behavior-p8-20260803/RESULTS.md
+docs/validation/moltenvk-behavior-p8-20260803/capability.tsv
+
+### Graphics behavioral coverage expansion (P8, 2026-08-03)
+
+The following fixtures and runners reuse the receipt-backed canonical prefix
+`build/probe-runs/phase-a-graphics-prefix`; none creates a prefix or invokes
+Wineboot:
+
+| Area | Source / runner | Evidence | Current truth |
+|---|---|---|---|
+| D3D11 | `test/d3d11_graphics_contract.c`, `scripts/probe-d3d11-graphics-contract.sh` | `docs/validation/d3d11-graphics-contract-p8-20260803/` | Latest receipt: i386 completes device, VS/PS/CS, compute UAV readback, texture copy/readback, and render-target shader readback. ARM64EC/x86_64 create the device and shaders but retain a bounded structured-UAV compute readback gap (`0x80004005`); the latest ARM64 rerun timed out during provider startup and is not counted green. Swapchain is headless-not-applicable; device-loss injection is not claimed. The runner supports targeted `VKMT_D3D11_GRAPHICS_LANES`. |
+| D3D12 | `test/d3d12_graphics_contract.c`, `scripts/probe-d3d12-graphics-contract.sh` | `docs/validation/d3d12-graphics-contract-p8-20260803/` | **All four lanes pass** generated VS/PS, queue/allocator/list, RTV descriptor, graphics pipeline, barrier, render/readback, and fence. ARM64/ARM64EC required the ARM64-safe DXIL-SPIRV TLS fix and rebuilt providers. Existing no-DXGI queue/copy/fence probe remains separate. |
+| D3D9 | `test/d3d9_contract.c`, `scripts/probe-d3d9-contract.sh` | `docs/validation/d3d9-contract-p8-20260803/` | Device and texture upload are proven in attempted lanes; both fixed-function and shader textured draw/readback remain unavailable in the current headless DXVK route and are not advertised as passing. Present is no-display only. The runner supports targeted `VKMT_D3D9_LANES`. |
+| OpenGL | `test/opengl_extended_contract.c`, `scripts/probe-opengl-extended-contract.sh` | `docs/validation/opengl-extended-contract-p8-20260803/` | Four architecture processes execute and record a no-display boundary on this host. The display-capable fixture contains indexed VBO/EBO, texture sampling, FBO, uniform, sync, sharing, UBO API, present, and resize markers; no headless run is counted as visible-presentation proof. |
+| MoltenVK runtime promotion | `scripts/build-moltenvk.sh`, `wine/build-ec/dlls/win32u/libMoltenVK.dylib` | `docs/validation/moltenvk-behavior-p8-20260803/` plus runtime hash | Rebuilt universal MoltenVK is promoted into the actual Wine tree, not only the prefix/package. Runtime extension truthfulness remains authoritative from the direct native behavior receipt. |
+| ARM64EC DXMT | `scripts/probe-dxmt-arm64ec.sh` | runner source | WMT bridge proof remains plus a standard `D3D11CreateDevice` lane; this does not convert to a pass until that runner is executed successfully with the paired DXMT provider. |
+
+The capability tables intentionally distinguish `PASS`, `NOT_APPLICABLE`,
+`UNAVAILABLE`, and `CRASH_OR_FAIL`; feature enumeration or DLL presence is not
+substituted for behavioral proof. The rebuilt i386 vkd3d-proton runtime is in
+`third_party/vkd3d-proton/install-win32/bin` and was used by the D3D12 i386
+contract. All test environments set FEX TSO modes to zero.
+
+The i386 vkd3d-proton rebuild was performed with
+`scripts/build-vkd3d-proton-i386.sh` after the transform-feedback policy
+change. The resulting i386 D3D12 device plus graphics render/readback receipt
+returned rc=0; older pre-rebuild binaries returned `DXGI_ERROR_UNSUPPORTED`
+or `E_INVALIDARG` and must not be used as current evidence.
+
+The ARM64 graphics-pipeline failure was fixed rather than waived. DXIL-SPIRV
+had C++ `thread_local` variables that emitted `[x18,#0x58]` accesses in the
+ARM64 PE; `subprojects/dxil-spirv/util/vkmt_thread_local.hpp` routes Windows
+builds through Win32 TLS and preserves normal native TLS elsewhere. The
+reproducible builders are `scripts/build-vkd3d-proton-arm64.sh` and
+`scripts/build-vkd3d-proton-arm64ec.sh`. Current installed provider hashes:
+
+```
+arm64    d3d12.dll     4abfc19fce06daff755f9a48d3a0a0acefea8fb0c2b85d4d34645d9f5079e40a
+arm64    d3d12core.dll 7d3900ebeaac424dbe57fa74a8cdde2e12a93ff21e7d94a2e876063896571775
+arm64ec  d3d12.dll     b534c163f6a4409e92669f725d0be2dfee7ce4ad840eaf77a135b2d60eefaf66
+arm64ec  d3d12core.dll 152c97a524f7696d37a76d40039bb0791e4681f027c5364f829f71f346be17fd
+MoltenVK wine/build-ec/dlls/win32u/libMoltenVK.dylib
+         f05d95bb072630c301228752ecdbe5eecc5afce2d3de5365b2a29934fd32e0f2
+```
+
+### Graphics infrastructure Phase 0 (P8, 2026-08-03)
+
+`scripts/verify-graphics-infrastructure.sh` is the non-mutating Phase 0 gate.
+It verifies the existing receipt-backed
+`build/probe-runs/phase-a-graphics-prefix` without creating a prefix or
+running Wineboot. It checks the promoted custom FEX providers, universal
+MoltenVK, architecture-matched DXVK/vkd3d-proton artifacts, ARM64EC DXMT
+artifacts, and native ARM64 `winemetal.so` closure. It also rejects any active
+graphics acceptance runner that enables a FEX TSO mode.
+
+The receipt is
+`docs/validation/graphics-infrastructure-p8/RESULTS.md` and the artifact
+hash/architecture table is `capability.tsv`. The gate returned
+`GRAPHICS_INFRASTRUCTURE_P8_OK`; this verifies staging integrity only and does
+not claim that the remaining D3D11, D3D9, DXMT full-device,
+MoltenVK transform-feedback/indirect-count, or display-backed feature gaps are
+complete.
