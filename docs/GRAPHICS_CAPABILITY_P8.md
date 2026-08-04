@@ -11,6 +11,15 @@ vkd3d-proton, DXMT, and MoltenVK artifacts, and rejects nonzero TSO settings
 in active graphics acceptance runners. It is staging evidence only; it does
 not replace the behavioral rows below.
 
+The FEX/WoW64 prerequisite gate is
+`docs/validation/graphics-phase1-wow64-p8/RESULTS.md`. The nested Wine memory
+source fix is commit `f108c09`; it repairs derived low-alias fallback and
+complete reservation retirement after interval splitting. The x64 and i386
+VM contracts now pass high-host/top-down allocation, guest-aperture pressure,
+reserve/commit/decommit/recommit, protection, reuse, overlapping views,
+concurrent mapping pressure, executable reuse, and correlated i386 FEX
+invalidation with all TSO settings zero.
+
 ## Requirement matrix
 
 | Area | Behavioral evidence | Result |

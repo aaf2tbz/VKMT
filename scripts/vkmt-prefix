@@ -307,7 +307,50 @@ PY
   done
   install -m 0644 "$dxvk32/d3d11.dll" "$dxvk32/dxgi.dll" \
     "$vkd3d32/d3d12.dll" "$vkd3d32/d3d12core.dll" "$p/drive_c/windows/syswow64/"
-  write_meta "$p" "$q"
+  # Keep this sync targeted. Rebuilding the complete WoW64 manifest here
+  # hashes every i386 DLL and turns a four-file provider update into a
+  # multi-minute prefix operation. The manifest already has one row per
+  # staged file; update only the four rows whose source bytes changed.
+  python3 - "$p" "$ROOT" "$dxvk32/d3d11.dll" "$dxvk32/dxgi.dll" \
+    "$vkd3d32/d3d12.dll" "$vkd3d32/d3d12core.dll" <<'PY'
+import hashlib, json, os, sys, tempfile
+p, root, d3d11, dxgi, d3d12, d3d12core = sys.argv[1:]
+manifest = os.path.join(p, ".vkmt", "staged-files.manifest")
+sources = {
+    "drive_c/windows/syswow64/d3d11.dll": d3d11,
+    "drive_c/windows/syswow64/dxgi.dll": dxgi,
+    "drive_c/windows/syswow64/d3d12.dll": d3d12,
+    "drive_c/windows/syswow64/d3d12core.dll": d3d12core,
+}
+rows = []
+found = set()
+for raw in open(manifest):
+    fields = raw.rstrip("\n").split("\t")
+    if fields[0] in sources:
+        source = sources[fields[0]]
+        digest = hashlib.sha256(open(source, "rb").read()).hexdigest()
+        target = os.path.join(p, fields[0])
+        if hashlib.sha256(open(target, "rb").read()).hexdigest() != digest:
+            raise SystemExit("staged graphics32 provider hash mismatch: " + fields[0])
+        fields[1:] = [digest, os.path.relpath(source, root)]
+        found.add(fields[0])
+    rows.append("\t".join(fields))
+missing = set(sources) - found
+if missing:
+    raise SystemExit("graphics32 manifest entries missing: " + ",".join(sorted(missing)))
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(manifest), prefix=".staged-files.manifest.graphics32.", text=True)
+with os.fdopen(fd, "w") as out:
+    out.write("\n".join(rows) + "\n")
+os.replace(tmp, manifest)
+receipt = os.path.join(p, ".vkmt", "receipt.json")
+data = json.load(open(receipt))
+data["metadata"]["staged-files.manifest"] = hashlib.sha256(open(manifest, "rb").read()).hexdigest()
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(receipt), prefix=".receipt.graphics32.", text=True)
+with os.fdopen(fd, "w") as out:
+    json.dump(data, out, sort_keys=True, indent=2)
+    out.write("\n")
+os.replace(tmp, receipt)
+PY
   printf 'dxvk_d3d11_sha256=%s\ndxvk_dxgi_sha256=%s\nvkd3d_d3d12_sha256=%s\nvkd3d_d3d12core_sha256=%s\n' \
     "$(sha "$dxvk32/d3d11.dll")" "$(sha "$dxvk32/dxgi.dll")" \
     "$(sha "$vkd3d32/d3d12.dll")" "$(sha "$vkd3d32/d3d12core.dll")" >"$(meta "$p")/graphics32-sync.receipt"

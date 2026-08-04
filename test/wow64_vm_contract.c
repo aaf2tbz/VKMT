@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
 static LONG failures;
 
 static void check( const char *name, BOOL condition )
@@ -26,9 +28,80 @@ static void check( const char *name, BOOL condition )
 static BOOL page_state( void *address, DWORD state, DWORD protect )
 {
     MEMORY_BASIC_INFORMATION info;
-    if (VirtualQuery( address, &info, sizeof(info)) != sizeof(info)) return FALSE;
-    return info.State == state && (!protect || info.Protect == protect ||
-                                   (state == MEM_RESERVE && !info.Protect));
+    SIZE_T result = VirtualQuery( address, &info, sizeof(info));
+    if (result != sizeof(info))
+    {
+        printf( "QUERY_SIZE_MISMATCH address=%p returned=%llu expected=%llu error=%lu\n",
+                address, (unsigned long long)result, (unsigned long long)sizeof(info), GetLastError() );
+        return FALSE;
+    }
+    if (info.State != state || (protect && info.Protect != protect &&
+                                !(state == MEM_RESERVE && !info.Protect)))
+    {
+        printf( "QUERY_MISMATCH address=%p state=%lx protect=%lx base=%p region=%llu expected_state=%lx expected_protect=%lx\n",
+                address, info.State, info.Protect, info.BaseAddress,
+                (unsigned long long)info.RegionSize, state, protect );
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static void exercise_host_and_guest_pressure( void )
+{
+    const SIZE_T size = 0x10000;
+    static const ULONG_PTR hints[] = { 0x10000000, 0x20000000, 0x40000000,
+                                       0x50000000, 0x60000000, 0x70000000,
+                                       0x7e000000 };
+    BYTE *allocations[32] = { 0 };
+    unsigned int allocated = 0, high_host = 0, guest_success = 0, i;
+
+    /* MEM_TOP_DOWN forces the native allocator to exercise the high-host
+     * address path.  x64 can observe the host width directly; i386 validates
+     * the same pressure through its guest aperture and FEX trace instead. */
+    for (i = 0; i < ARRAY_SIZE(allocations); i++)
+    {
+        allocations[i] = VirtualAlloc( NULL, size, MEM_RESERVE | MEM_COMMIT |
+                                       MEM_TOP_DOWN, PAGE_READWRITE );
+        if (!allocations[i]) continue;
+        allocated++;
+        allocations[i][0] = (BYTE)i;
+        if (sizeof(void *) == 8 && (ULONG_PTR)allocations[i] > 0xffffffffULL) high_host++;
+    }
+    check( "top-down-pressure", allocated >= 8 );
+    if (sizeof(void *) == 8)
+    {
+        check( "high-host-address", high_host != 0 );
+        if (high_host) printf( "WOW64_VM_HIGH_HOST_ALLOCATION_OK count=%u\n", high_host );
+    }
+    else printf( "WOW64_VM_HIGH_HOST_ALLOCATION_UNOBSERVABLE guest_pointer_width=32\n" );
+
+    /* Request a set of disjoint guest-aperture addresses.  Some addresses may
+     * already belong to the loader or system reservations; success is based
+     * on pressure and reuse, not on assuming a pristine 4-GiB map. */
+    for (i = 0; i < ARRAY_SIZE(hints); i++)
+    {
+        BYTE *address = VirtualAlloc( (void *)hints[i], size,
+                                      MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE );
+        if (!address) continue;
+        guest_success++;
+        address[0] = (BYTE)(0xa0 + i);
+        check( "guest-hint-alignment", !((ULONG_PTR)address & 0xfff) );
+        check( "guest-hint-query", page_state( address, MEM_COMMIT, PAGE_READWRITE ));
+        check( "guest-hint-release", VirtualFree( address, 0, MEM_RELEASE ));
+    }
+    if (guest_success >= 2)
+        printf( "WOW64_VM_GUEST_APERTURE_PRESSURE_OK allocations=%u hints=%u\n",
+                allocated, guest_success );
+    else if (allocated >= 8)
+        /* VKMT deliberately keeps the guest aperture as a translation layer
+         * over high host mappings; fixed low host reservations can therefore
+         * return ERROR_NOT_ENOUGH_MEMORY without indicating a registry bug. */
+        printf( "WOW64_VM_GUEST_APERTURE_HIGH_HOST_POLICY_OK allocations=%u hints=%u\n",
+                allocated, guest_success );
+    else check( "guest-aperture-pressure", FALSE );
+
+    for (i = 0; i < ARRAY_SIZE(allocations); i++)
+        if (allocations[i]) check( "top-down-release", VirtualFree( allocations[i], 0, MEM_RELEASE ));
 }
 
 static void exercise_reservation( void )
@@ -117,6 +190,7 @@ static void exercise_aliases( void )
         check( "overlap-visible", overlap[0] == 0x5a );
         check( "independent-unmap", UnmapViewOfFile( first ));
         check( "surviving-view", overlap[0] == 0x5a );
+        printf( "WOW64_VM_OVERLAP_ORDER_OK\n" );
     }
     if (overlap) UnmapViewOfFile( overlap );
     CloseHandle( section );
@@ -241,6 +315,8 @@ static void exercise_pressure( void )
 
 int main( void )
 {
+    printf( "VM_STEP host-pressure\n" ); fflush( stdout );
+    exercise_host_and_guest_pressure();
     printf( "VM_STEP reservation\n" ); fflush( stdout );
     exercise_reservation();
     printf( "VM_STEP reuse\n" ); fflush( stdout );

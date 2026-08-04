@@ -48,6 +48,38 @@ cleanup()
         rm -rf "$EVIDENCE/traces"
         cp -R "$run_root/traces" "$EVIDENCE/traces"
     fi
+    {
+        printf '# WoW64 VM contract — P8\n\n'
+        printf 'Prefix: `%s`\n\n' "$PREFIX"
+        printf '| Architecture | rc | status |\n|---|---:|---|\n'
+        for label in x64 i386; do
+            if test -f "$run_root/$label.log" && grep -q 'WOW64_VM_CONTRACT_ALL_OK' "$run_root/$label.log"; then
+                printf '| %s | 0 | PASS |\n' "$label"
+            else
+                printf '| %s | 1 | FAIL |\n' "$label"
+            fi
+        done
+        printf '\n## Coverage\n\n'
+        printf -- '- reserve/commit/decommit/recommit/release, protection, reuse, overlap ordering, file views, concurrent pressure, high-host allocation, guest-aperture policy, and executable-map reuse are emitted as independent markers.\n'
+        printf -- '- i386 FEX invalidation requires a correlated nonzero maintenance summary.\n'
+        printf -- '- All FEX TSO settings are zero.\n\n'
+        if test "$status" = 0; then printf '**WOW64_VM_CONTRACT_ALL_OK**\n'; else printf '**WOW64_VM_CONTRACT_FAILED**\n'; fi
+    } >"$EVIDENCE/RESULTS.md"
+    {
+        printf 'arch\tmarker\tvalue\n'
+        for label in x64 i386; do
+            test -f "$run_root/$label.log" || continue
+            grep '^WOW64_VM_' "$run_root/$label.log" | while IFS= read -r line; do
+                line=${line%$'\r'}
+                marker=${line%% *}; value=${line#"$marker"}
+                if test -n "$value"; then
+                    printf '%s\t%s\t%s\n' "$label" "$marker" "$value"
+                else
+                    printf '%s\t%s\n' "$label" "$marker"
+                fi
+            done
+        done
+    } >"$EVIDENCE/capability.tsv"
     WINEPREFIX="$PREFIX" "${WINEBUILDDIR:-$ROOT/wine/build-ec}/server/wineserver" -k >/dev/null 2>&1 || true
     WINEPREFIX="$PREFIX" "${WINEBUILDDIR:-$ROOT/wine/build-ec}/server/wineserver" -w >/dev/null 2>&1 || true
     case "$run_root" in "$ROOT"/build/probe-runs/*) rm -rf "$run_root";; esac
@@ -79,6 +111,10 @@ grep -q 'WOW64_VM_CONCURRENT_OK' "$run_root/x64.log"
 grep -q 'WOW64_VM_CONCURRENT_OK' "$run_root/i386.log"
 grep -q 'WOW64_VM_MAPPING_PRESSURE_OK' "$run_root/x64.log"
 grep -q 'WOW64_VM_MAPPING_PRESSURE_OK' "$run_root/i386.log"
+grep -Eq 'WOW64_VM_GUEST_APERTURE_(PRESSURE|HIGH_HOST_POLICY)_OK' "$run_root/x64.log"
+grep -Eq 'WOW64_VM_GUEST_APERTURE_(PRESSURE|HIGH_HOST_POLICY)_OK' "$run_root/i386.log"
+grep -q 'WOW64_VM_OVERLAP_ORDER_OK' "$run_root/x64.log"
+grep -q 'WOW64_VM_OVERLAP_ORDER_OK' "$run_root/i386.log"
 grep -q 'WOW64_VM_ADDRESS_REUSE_OK' "$run_root/x64.log"
 grep -q 'WOW64_VM_ADDRESS_REUSE_OK' "$run_root/i386.log"
 grep -q 'WOW64_VM_EXECUTABLE_REUSE_OK' "$run_root/x64.log"

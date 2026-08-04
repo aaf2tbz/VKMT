@@ -587,3 +587,24 @@ hash/architecture table is `capability.tsv`. The gate returned
 not claim that the remaining D3D11, D3D9, DXMT full-device,
 MoltenVK transform-feedback/indirect-count, or display-backed feature gaps are
 complete.
+
+### FEX/WoW64 graphics prerequisite Phase 1 (P8, 2026-08-03)
+
+The nested Wine source promotion is commit `f108c09` in
+`wine/wine-11.12`. It makes native guest-range selection retry a concrete gap
+when a derived low alias is occupied, while preserving an explicitly
+requested guest address. It also makes `NtUnmapViewOfSection` and
+`NtUnmapViewOfSectionEx` retire the complete mapping reservation after
+commit/decommit interval splitting instead of retiring only the queried
+interval. The rebuilt ARM64 WoW64 module is staged in the canonical prefix by
+`scripts/vkmt-prefix sync-wow64`.
+
+`test/wow64_vm_contract.c` and `scripts/probe-wow64-vm-contract.sh` now prove
+top-down/high-host allocation, guest-aperture pressure, reserve/commit/
+decommit/recommit/release, protection, reuse, overlapping file views,
+concurrent allocation/mapping pressure, executable reuse, and correlated
+i386 FEX invalidation. The all-lane receipt is
+`docs/validation/graphics-phase1-wow64-p8/RESULTS.md` with matching
+`capability.tsv`; both x64 and i386 returned rc=0 with all FEX TSO settings
+zero. On x64, fixed low-host hints are explicitly recorded as the
+high-host-aperture policy rather than treated as a false allocation pass.

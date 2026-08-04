@@ -17,6 +17,11 @@
 - `wine-11.12-no-tso-steam-runtime.patch` — the final Wine WoW64, networking,
   browser, loader, and Winemac cross-process presentation delta committed as
   `03cd2bd` in the local Wine tree.
+- `wine-wow64-phase1-f108c09.patch` — the P8 graphics prerequisite delta from
+  nested Wine commit `f108c09`. It preserves an explicit guest address while
+  falling back from an occupied derived low alias, and retires complete mapped
+  reservations after WoW64 interval splitting. Apply after the canonical
+  `wine-11.12-vkmt.patch` delta.
 - `wine-11.12-arm64-mono-fusion.patch` — native ARM64 `mscoree` fallback
   plus the same-bitness PE32+ IL-only process/loader/server contract.
   `scripts/build-wine-mono-arm64.sh` applies it and rebuilds only ARM64X

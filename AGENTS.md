@@ -2136,3 +2136,19 @@ The direct receipt is
 not turn the existing D3D11 structured-UAV, D3D9 textured-draw, DXMT full
 device, MoltenVK transform-feedback/indirect-count, or headless-present gaps
 into passes.
+
+### 2026-08-03 — P8 FEX/WoW64 graphics prerequisite Phase 1
+
+Nested Wine commit `f108c09` repairs two concrete memory lifecycle cases:
+derived low aliases now fall back to a free guest gap when the alias is
+occupied, and section unmap retires the complete reservation after interval
+splitting. The rebuilt `wine/build-ec/dlls/wow64/aarch64-windows/wow64.dll`
+was staged with `scripts/vkmt-prefix sync-wow64` without Wineboot.
+
+The expanded `test/wow64_vm_contract.c` covers high-host/top-down allocation,
+guest-aperture pressure, reserve/commit/decommit/recommit/release,
+protection, reuse, overlapping file views, concurrent allocation/mapping,
+executable reuse, and i386 FEX invalidation. The retained P8 receipt is
+`docs/validation/graphics-phase1-wow64-p8/RESULTS.md`; x64 and i386 both
+returned rc=0 with all FEX TSO settings zero. Fixed low-host hints on the x64
+high-host mapping policy are explicitly recorded, not hidden as passes.
